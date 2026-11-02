@@ -1,0 +1,27 @@
+{
+  "contract": 1,
+  "package": "com.github.mytv.launcher",
+  "stateAuthority": "com.github.mytv.launcher.acceptance",
+  "gradle": {
+    "debugTask": ":app:assembleStandardDebug",
+    "releaseTask": ":app:assembleStandardRelease",
+    "debugApk": "app/build/outputs/apk/standard/debug/app-standard-debug.apk",
+    "releaseApk": "app/build/outputs/apk/standard/release/app-standard-release.apk",
+    "depsConfiguration": "standardReleaseRuntimeClasspath"
+  },
+  "fixturePackagePrefix": "com.github.mytv.mlfixture",
+  "fixtureCertA": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c",
+  "seriesCerts": {
+    "_note": "从本机已构建的 APK 读出（2026-11-02）。正式发布前由用户确认它们是发布签名。",
+    "com.github.mytv.bv": "0d65a406053257268ac43db34e9a3442d8376ff3a1fb2ef73032f05e49af9179",
+    "dev.aaa1115910.bv": "0d65a406053257268ac43db34e9a3442d8376ff3a1fb2ef73032f05e49af9179",
+    "com.github.mytv.dv": "509ef868469eef5714da6b5c4f42c98bd4b738f4a190754993d7831b7fd4a86d",
+    "com.github.mytv.android": "b142d58e6988f125c741f54b417da03979cc50d850ea1cd729820556f906fca0"
+  },
+  "realApks": {
+    "myBV": "C:/PythonProject/_apk_r1119/myBV-1.0.0.r1119.19397ab8.alpha_.apk",
+    "mydv": "C:/PythonProject/mydv/app/build/outputs/apk/release/myDV-2.1.1.apk"
+  },
+  "prototype": "tv-launcher-design-v3.html",
+  "fixtureCertB": "8acfbe42713ac55114769d3c525938d63f929c9bc537123b98f40438ebe5028e"
+}

@@ -1,0 +1,81 @@
+{
+  "_note": "夹具内容，取自设计稿原型（全部虚构）。art 对应 fixtures/art/art_<art>.jpg；icon/banner 对应 ico_<id>.png / app_<id>.jpg。aspect 取值：16:9 3:2 4:3 1:1 2:3 movie（1:1.441）。",
+  "apps": {
+    "dolphin": {"label": "海豚视频", "icon": "dolphin",
+      "channels": [{"key": "dolphin.featured", "name": "海豚精选", "request": true, "programs": [
+        {"key": "dolphin.ocean", "type": "tv_series", "title": "深海之歌", "art": "ocean", "aspect": "16:9", "weight": 100, "genre": "纪录片", "year": 2026, "desc": "跟随一头座头鲸穿越三大洋，记录两千米深处从未被拍到的发光生物与洋流迁徙。"},
+        {"key": "dolphin.forest", "type": "tv_series", "title": "林间四季", "art": "forest", "aspect": "16:9", "weight": 90, "genre": "少儿", "desc": "一只小狐狸在森林里过完春夏秋冬，每一集只讲一种植物和一位朋友。"}
+      ]}],
+      "watchNext": [
+        {"key": "dolphin.volcano", "type": "tv_episode", "title": "火山岛纪行", "episode": 2, "art": "volcano", "aspect": "16:9", "wnType": "continue", "durationMin": 48, "progress": 0.62, "rank": 1, "desc": "在仍在喷发的火山岛上驻扎 40 天，记录熔岩入海后新生的海岸线。"},
+        {"key": "dolphin.starry", "type": "movie", "title": "沙漠星空", "art": "starry", "aspect": "16:9", "wnType": "continue", "durationMin": 59, "progress": 0.12, "rank": 4, "desc": "在海拔 4500 米的无光害营地，用一整夜拍下银河的移动。"}
+      ]},
+    "spark": {"label": "星火影院", "icon": "spark",
+      "channels": [
+        {"key": "spark.weekly", "name": "星火影院 · 本周热映", "request": true, "programs": [
+          {"key": "spark.mars", "type": "movie", "title": "赤色行星", "art": "mars", "aspect": "2:3", "weight": 70, "desc": "第一支火星常驻小队的第 300 天，一场沙尘暴切断了与地球的全部通讯。"},
+          {"key": "spark.jelly", "type": "movie", "title": "水母之夜", "art": "jelly", "aspect": "2:3", "weight": 69, "desc": "潜入午夜的珊瑚礁，镜头跟着上万只发光水母一起上浮。"},
+          {"key": "spark.neon2", "type": "movie", "title": "霓虹回响", "art": "neon2", "aspect": "2:3", "weight": 68, "desc": "解散十年的乐队重聚，在旧城最后一家 Livehouse 演完告别场。"},
+          {"key": "spark.autumn", "type": "movie", "title": "秋日来信", "art": "autumn", "aspect": "2:3", "weight": 67, "desc": "小镇邮递员退休前的最后一个秋天，送出一封寄错了四十年的信。"},
+          {"key": "spark.snow", "type": "movie", "title": "初雪", "art": "snow", "aspect": "2:3", "weight": 66, "desc": "两个在雪夜错过末班车的陌生人，在车站等到了第二天的第一班车。"},
+          {"key": "spark.lotus", "type": "movie", "title": "莲池", "art": "lotus", "aspect": "2:3", "weight": 65, "desc": "一整年守在同一片荷塘边，看一池莲花从萌芽到枯荷。"},
+          {"key": "spark.dunes", "type": "movie", "title": "沙丘回声", "art": "dunes", "aspect": "2:3", "weight": 64, "genre": "剧情", "year": 2025, "desc": "失联的勘探队在沙海深处找到一座会发声的古城，回声里藏着三十年前的求救信号。"}
+        ]},
+        {"key": "spark.later", "name": "星火影院 · 稍后再看", "request": false, "programs": [
+          {"key": "spark.later.city", "type": "tv_series", "title": "霓虹夜行", "art": "city", "aspect": "2:3", "weight": 50, "desc": "深夜出租车司机在同一条环线上，连续七晚载到同一位一言不发的乘客。"}
+        ]}
+      ],
+      "watchNext": [
+        {"key": "spark.sakura", "type": "tv_episode", "title": "樱花街 7 号", "season": 1, "episode": 5, "art": "sakura", "aspect": "16:9", "wnType": "continue", "durationMin": 53, "progress": 0.83, "rank": 3, "desc": "老街区一家只在樱花季开门的面包店，和五位常客的故事。"}
+      ]},
+    "cloud": {"label": "云相册", "icon": "cloud",
+      "channels": [{"key": "cloud.memories", "name": "云相册 · 精选回忆", "request": true, "programs": [
+        {"key": "cloud.aurora", "type": "clip", "title": "北境极光", "art": "aurora", "aspect": "16:9", "weight": 80, "genre": "自然", "desc": "北纬 69° 的冬夜，用延时摄影拍下极光在冰原上空翻涌的四个小时。"}
+      ]}],
+      "watchNext": [
+        {"key": "cloud.glacier", "type": "movie", "title": "冰川来信", "art": "glacier", "aspect": "16:9", "wnType": "continue", "durationMin": 57, "progress": 0.28, "rank": 2, "desc": "一位冰川学者把二十年的观测笔记读给女儿听。"}
+      ]},
+    "prism": {"label": "棱镜直播", "icon": "prism",
+      "channels": [{"key": "prism.live", "name": "棱镜直播", "request": true, "programs": [
+        {"key": "prism.ch1", "type": "channel", "title": "棱镜 1 台", "logo": "prism", "live": true, "weight": 30, "desc": "霓虹夜行 · 正在直播"},
+        {"key": "prism.ch2", "type": "channel", "title": "棱镜 2 台", "logo": "prism", "live": true, "weight": 29, "desc": "深海之歌 · 正在直播"},
+        {"key": "prism.ch3", "type": "channel", "title": "棱镜 3 台", "logo": "prism", "live": true, "weight": 28, "desc": "林间四季 · 正在直播"}
+      ]}]},
+    "pulse": {"label": "律动音乐", "icon": "pulse",
+      "watchNext": [
+        {"key": "pulse.rain", "type": "clip", "title": "咖啡与雨", "art": "rain", "aspect": "16:9", "wnType": "continue", "durationMin": 43, "progress": 0.47, "rank": 5, "desc": "一档只在下雨天更新的播客，聊城市、咖啡和慢下来的生活。"}
+      ],
+      "widgets": [{"class": "MusicWidget", "label": "播放控制", "cells": "4x1", "kind": "image_buttons"}]},
+    "sky": {"label": "晴空天气", "icon": "sky",
+      "widgets": [{"class": "WeatherWidget", "label": "天气", "cells": "4x2", "kind": "text_buttons", "accentColors": true}]},
+    "files": {"label": "文件管理", "icon": "files"},
+    "store": {"label": "应用商店", "icon": "store"},
+    "fit": {"label": "燃动健身", "icon": "fit",
+      "widgets": [{"class": "FitWidget", "label": "今日活动", "cells": "2x2", "kind": "collection"}]},
+    "book": {"label": "有声书", "icon": "book",
+      "widgets": [{"class": "BookWidget", "label": "继续收听", "cells": "2x2", "kind": "configure", "reconfigurable": true}]},
+    "aspect": {"label": "比例测试", "icon": "store",
+      "channels": [{"key": "aspect.ratios", "name": "比例测试", "request": true, "programs": [
+        {"key": "aspect.16x9", "type": "movie", "title": "比例 16:9", "art": "mars", "aspect": "16:9", "weight": 60},
+        {"key": "aspect.3x2", "type": "movie", "title": "比例 3:2", "art": "jelly", "aspect": "3:2", "weight": 59},
+        {"key": "aspect.4x3", "type": "movie", "title": "比例 4:3", "art": "neon2", "aspect": "4:3", "weight": 58},
+        {"key": "aspect.1x1", "type": "movie", "title": "比例 1:1", "art": "autumn", "aspect": "1:1", "weight": 57},
+        {"key": "aspect.2x3", "type": "movie", "title": "比例 2:3", "art": "snow", "aspect": "2:3", "weight": 56},
+        {"key": "aspect.movie", "type": "movie", "title": "比例 电影海报", "art": "lotus", "aspect": "movie", "weight": 55},
+        {"key": "aspect.noart", "type": "movie", "title": "无图节目", "weight": 54},
+        {"key": "aspect.broken", "type": "movie", "title": "图片失效", "artUri": "missing", "aspect": "16:9", "weight": 53},
+        {"key": "aspect.evil", "type": "movie", "title": "越权跳转", "art": "rain", "aspect": "16:9", "weight": 52, "evilIntent": true}
+      ]}]},
+    "crash": {"label": "崩溃小组件", "icon": "files",
+      "widgets": [{"class": "CrashWidget", "label": "崩溃", "cells": "2x1", "kind": "crash"}]},
+    "series": {"label": "系列测试", "icon": "dolphin", "bridge": true,
+      "channels": [{"key": "series.main", "name": "系列测试 · 推荐", "request": true, "programs": [
+        {"key": "series.p1", "type": "clip", "title": "系列节目一", "art": "volcano", "aspect": "16:9", "weight": 40},
+        {"key": "series.p2", "type": "clip", "title": "系列节目二", "art": "rain", "aspect": "16:9", "weight": 39}
+      ]}]},
+    "rogue": {"label": "野生桥接", "icon": "store", "bridge": true,
+      "channels": [{"key": "rogue.main", "name": "野生桥接 · 推荐", "request": true, "programs": [
+        {"key": "rogue.p1", "type": "clip", "title": "野生节目", "art": "snow", "aspect": "16:9", "weight": 20}
+      ]}]}
+  }
+}

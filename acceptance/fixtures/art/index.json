@@ -1,0 +1,242 @@
+{
+ "art:ocean": {
+  "file": "art_ocean.jpg",
+  "seed": "#408dbb",
+  "w": 640,
+  "h": 360
+ },
+ "art:dunes": {
+  "file": "art_dunes.jpg",
+  "seed": "#fbcc94",
+  "w": 640,
+  "h": 360
+ },
+ "art:aurora": {
+  "file": "art_aurora.jpg",
+  "seed": "#1f5581",
+  "w": 640,
+  "h": 360
+ },
+ "art:city": {
+  "file": "art_city.jpg",
+  "seed": "#481665",
+  "w": 640,
+  "h": 360
+ },
+ "art:forest": {
+  "file": "art_forest.jpg",
+  "seed": "#b2daa0",
+  "w": 640,
+  "h": 360
+ },
+ "art:volcano": {
+  "file": "art_volcano.jpg",
+  "seed": "#34110a",
+  "w": 640,
+  "h": 360
+ },
+ "art:glacier": {
+  "file": "art_glacier.jpg",
+  "seed": "#5d9bbd",
+  "w": 640,
+  "h": 360
+ },
+ "art:sakura": {
+  "file": "art_sakura.jpg",
+  "seed": "#f692ba",
+  "w": 640,
+  "h": 360
+ },
+ "art:starry": {
+  "file": "art_starry.jpg",
+  "seed": "#593b99",
+  "w": 640,
+  "h": 360
+ },
+ "art:rain": {
+  "file": "art_rain.jpg",
+  "seed": "#e48140",
+  "w": 640,
+  "h": 360
+ },
+ "art:mars": {
+  "file": "art_mars.jpg",
+  "seed": "#f19864",
+  "w": 640,
+  "h": 360
+ },
+ "art:jelly": {
+  "file": "art_jelly.jpg",
+  "seed": "#5d3ca1",
+  "w": 640,
+  "h": 360
+ },
+ "art:neon2": {
+  "file": "art_neon2.jpg",
+  "seed": "#043542",
+  "w": 640,
+  "h": 360
+ },
+ "art:autumn": {
+  "file": "art_autumn.jpg",
+  "seed": "#fec785",
+  "w": 640,
+  "h": 360
+ },
+ "art:snow": {
+  "file": "art_snow.jpg",
+  "seed": "#5d6675",
+  "w": 640,
+  "h": 360
+ },
+ "art:lotus": {
+  "file": "art_lotus.jpg",
+  "seed": "#388660",
+  "w": 640,
+  "h": 360
+ },
+ "app:dolphin": {
+  "file": "app_dolphin.jpg",
+  "seed": "#73c3c9",
+  "w": 320,
+  "h": 180
+ },
+ "ico:dolphin": {
+  "file": "ico_dolphin.png",
+  "seed": "#1d9ea8",
+  "w": 160,
+  "h": 160
+ },
+ "app:spark": {
+  "file": "app_spark.jpg",
+  "seed": "#e84f4e",
+  "w": 320,
+  "h": 180
+ },
+ "ico:spark": {
+  "file": "ico_spark.png",
+  "seed": "#e2434d",
+  "w": 160,
+  "h": 160
+ },
+ "app:pulse": {
+  "file": "app_pulse.jpg",
+  "seed": "#c54fc8",
+  "w": 320,
+  "h": 180
+ },
+ "ico:pulse": {
+  "file": "ico_pulse.png",
+  "seed": "#c64ec5",
+  "w": 160,
+  "h": 160
+ },
+ "app:prism": {
+  "file": "app_prism.jpg",
+  "seed": "#f6a612",
+  "w": 320,
+  "h": 180
+ },
+ "ico:prism": {
+  "file": "ico_prism.png",
+  "seed": "#f7aa16",
+  "w": 160,
+  "h": 160
+ },
+ "app:cloud": {
+  "file": "app_cloud.jpg",
+  "seed": "#37c176",
+  "w": 320,
+  "h": 180
+ },
+ "ico:cloud": {
+  "file": "ico_cloud.png",
+  "seed": "#35b877",
+  "w": 160,
+  "h": 160
+ },
+ "app:sky": {
+  "file": "app_sky.jpg",
+  "seed": "#4c93ec",
+  "w": 320,
+  "h": 180
+ },
+ "ico:sky": {
+  "file": "ico_sky.png",
+  "seed": "#4791eb",
+  "w": 160,
+  "h": 160
+ },
+ "app:files": {
+  "file": "app_files.jpg",
+  "seed": "#4285f4",
+  "w": 320,
+  "h": 180
+ },
+ "ico:files": {
+  "file": "ico_files.png",
+  "seed": "#4285f4",
+  "w": 160,
+  "h": 160
+ },
+ "app:hdmi1": {
+  "file": "app_hdmi1.jpg",
+  "seed": "#5d7290",
+  "w": 320,
+  "h": 180
+ },
+ "ico:hdmi1": {
+  "file": "ico_hdmi1.png",
+  "seed": "#5d7290",
+  "w": 160,
+  "h": 160
+ },
+ "app:store": {
+  "file": "app_store.jpg",
+  "seed": "#7a4fff",
+  "w": 320,
+  "h": 180
+ },
+ "ico:store": {
+  "file": "ico_store.png",
+  "seed": "#7556ff",
+  "w": 160,
+  "h": 160
+ },
+ "app:fit": {
+  "file": "app_fit.jpg",
+  "seed": "#ff835b",
+  "w": 320,
+  "h": 180
+ },
+ "ico:fit": {
+  "file": "ico_fit.png",
+  "seed": "#ff7e5c",
+  "w": 160,
+  "h": 160
+ },
+ "app:book": {
+  "file": "app_book.jpg",
+  "seed": "#329d9d",
+  "w": 320,
+  "h": 180
+ },
+ "ico:book": {
+  "file": "ico_book.png",
+  "seed": "#3ba4a1",
+  "w": 160,
+  "h": 160
+ },
+ "app:hdmi2": {
+  "file": "app_hdmi2.jpg",
+  "seed": "#5d7290",
+  "w": 320,
+  "h": 180
+ },
+ "ico:hdmi2": {
+  "file": "ico_hdmi2.png",
+  "seed": "#5d7290",
+  "w": 160,
+  "h": 160
+ }
+}

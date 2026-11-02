@@ -1,0 +1,73 @@
+{
+  "_note": "使用本机已有的 AVD；验收不擦除数据，只安装/卸载桌面与 com.github.mytv.mlfixture.* 并在结束后恢复原默认桌面。可改用自己新建的 AVD，改这里即可（会改变工具包哈希，需重新冻结）。",
+  "devices": {
+    "api23": {
+      "avd": "Television_720p_2",
+      "api": 23,
+      "kind": "atv",
+      "size": "1280x720"
+    },
+    "api28": {
+      "avd": "Television_720p",
+      "api": 28,
+      "kind": "atv",
+      "size": "1280x720"
+    },
+    "api31g": {
+      "avd": "Television_1080p",
+      "api": 31,
+      "kind": "gtv",
+      "size": "1920x1080"
+    },
+    "api34g": {
+      "avd": "Television_4K",
+      "api": 34,
+      "kind": "gtv",
+      "size": "3840x2160"
+    },
+    "api36": {
+      "avd": "ATV16_Test",
+      "api": 36,
+      "kind": "atv",
+      "size": "1920x1080"
+    }
+  },
+  "milestones": {
+    "M0": [
+      "api23",
+      "api28",
+      "api31g",
+      "api34g",
+      "api36"
+    ],
+    "M1": [
+      "api23",
+      "api28",
+      "api31g"
+    ],
+    "M2": [
+      "api23",
+      "api28",
+      "api31g",
+      "api36"
+    ],
+    "M3": [
+      "api23",
+      "api28",
+      "api34g",
+      "api36"
+    ],
+    "M4": [
+      "api28",
+      "api31g",
+      "api34g"
+    ],
+    "M5": [
+      "api23",
+      "api28",
+      "api31g",
+      "api34g",
+      "api36"
+    ]
+  }
+}

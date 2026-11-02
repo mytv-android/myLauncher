@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="w_accent">@android:color/system_accent1_200</color>
+    <color name="w_on_accent">@android:color/system_accent1_900</color>
+    <color name="w_surface">@android:color/system_accent1_800</color>
+</resources>

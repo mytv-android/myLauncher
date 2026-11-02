@@ -1,0 +1,134 @@
+{
+ "certA": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c",
+ "certB": "8acfbe42713ac55114769d3c525938d63f929c9bc537123b98f40438ebe5028e",
+ "apks": [
+  {
+   "id": "dolphin",
+   "file": "dolphin.apk",
+   "package": "com.github.mytv.mlfixture.dolphin",
+   "signer": "A",
+   "sha256": "da53b9efe781008d6ee0d21e385c97cc85698acea7cc06432371491eff109a05",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "spark",
+   "file": "spark.apk",
+   "package": "com.github.mytv.mlfixture.spark",
+   "signer": "A",
+   "sha256": "783164665db79c804b61517a5ea25764bd8f9de98d621472abcfbc870a11f5a0",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "cloud",
+   "file": "cloud.apk",
+   "package": "com.github.mytv.mlfixture.cloud",
+   "signer": "A",
+   "sha256": "ad171cf08843f390d6050cb12c20753bcbfd75d2eb886d78309880c493894ca9",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "prism",
+   "file": "prism.apk",
+   "package": "com.github.mytv.mlfixture.prism",
+   "signer": "A",
+   "sha256": "c790e0d293e7ddb9273d82896ae0b5a2e8f9be94845b11878c602c413187721d",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "pulse",
+   "file": "pulse.apk",
+   "package": "com.github.mytv.mlfixture.pulse",
+   "signer": "A",
+   "sha256": "e6068c98c902151c4c561bb142590af2c6eae56f51c178ba790cedb616d727ce",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "sky",
+   "file": "sky.apk",
+   "package": "com.github.mytv.mlfixture.sky",
+   "signer": "A",
+   "sha256": "26ffe4afe3e2b4b0fb8818869cefa7feecb4ad8025eed0e9573ad4905c2bd1ce",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "files",
+   "file": "files.apk",
+   "package": "com.github.mytv.mlfixture.files",
+   "signer": "A",
+   "sha256": "bbcdc55c1e6f06362d85db162f283c7bbf7b8b6ec1df9bfa3a2773fdfdadf5ba",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "store",
+   "file": "store.apk",
+   "package": "com.github.mytv.mlfixture.store",
+   "signer": "A",
+   "sha256": "c77968a8614d87fe4fcaa26a7525f12fbdf6efcab3836649f530a258b666149e",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "fit",
+   "file": "fit.apk",
+   "package": "com.github.mytv.mlfixture.fit",
+   "signer": "A",
+   "sha256": "e338d40a05adc42c68a9118420f6b41c7ad6f61cfd23796e81b3fba1e1961187",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "book",
+   "file": "book.apk",
+   "package": "com.github.mytv.mlfixture.book",
+   "signer": "A",
+   "sha256": "be621b321b488bf90be76defbe76e3062d3942092abe3196939490c506fcb750",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "aspect",
+   "file": "aspect.apk",
+   "package": "com.github.mytv.mlfixture.aspect",
+   "signer": "A",
+   "sha256": "6937e3d2eda392708ec45b7db2a7ab9a5ec97868b84f1ce83d4bb1de2952efc8",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "crash",
+   "file": "crash.apk",
+   "package": "com.github.mytv.mlfixture.crash",
+   "signer": "A",
+   "sha256": "dd1b3b9e44c5f59c59f553e7d2743322df5c47d4177a85b09b739343b398dbe7",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "series",
+   "file": "series.apk",
+   "package": "com.github.mytv.mlfixture.series",
+   "signer": "A",
+   "sha256": "0c7389b7ae6ccb2a133f5d5c5a875ffc9e0e08e6c8e8656347e8fb56c7ef221f",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "series_impostor",
+   "file": "series_impostor.apk",
+   "package": "com.github.mytv.mlfixture.series",
+   "signer": "B",
+   "sha256": "1789b5040fdf92bf449942a9afd59cc6c175070a36901ff7a07888b5e56c2c72",
+   "certSha256": "8acfbe42713ac55114769d3c525938d63f929c9bc537123b98f40438ebe5028e"
+  },
+  {
+   "id": "rogue",
+   "file": "rogue.apk",
+   "package": "com.github.mytv.mlfixture.rogue",
+   "signer": "A",
+   "sha256": "54205c96588c5c2189f006a2cfdded03199bc3ff5811419a1946accd4d07adc1",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  },
+  {
+   "id": "probe",
+   "file": "probe.apk",
+   "package": "com.github.mytv.mlfixture.probe",
+   "signer": "A",
+   "sha256": "4979e23842b14398a4e1e231d7452308c7361efe7a18cbbafe49e6463cb73d42",
+   "certSha256": "9168ea28aebc901cb78f79776dbc415233e7f8a231ca13b70a27958fd79bf49c"
+  }
+ ]
+}

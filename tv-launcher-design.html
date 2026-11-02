@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>TV Launcher 详细设计方案｜Aerial 技术参考 × Material 3 Expressive</title>
+  <style>
+    :root {
+      --ink:#172033; --muted:#637089; --paper:#f5f6fa; --card:#ffffff;
+      --line:#dde2ec; --navy:#111522; --blue:#3659c7; --blue-soft:#e8edff;
+      --lime:#d9f99d; --focus:#a8c7fa; --violet:#8b5cf6; --orange:#ea7b45; --green:#187c61;
+      --code:#111827; --shadow:0 16px 50px rgba(27,39,74,.08); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:24px}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:"Segoe UI","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;line-height:1.72;font-size:16px}
+    a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+    button{font:inherit} code,kbd,pre{font-family:"Cascadia Code","SFMono-Regular",Consolas,monospace}
+    :focus-visible{outline:3px solid #7357e8;outline-offset:4px}
+    .skip{position:fixed;left:16px;top:-80px;background:#fff;padding:10px 18px;border-radius:12px;z-index:100}
+    .skip:focus{top:16px}
+    .layout{display:grid;grid-template-columns:260px minmax(0,1fr);max-width:1540px;margin:auto}
+    .sidebar{position:sticky;top:0;height:100vh;padding:28px 18px;overflow:auto;border-right:1px solid var(--line);background:#fbfbfd;z-index:5}
+    .brand{display:flex;gap:11px;align-items:center;padding:0 10px 22px;font-weight:800;letter-spacing:.02em}
+    .brand-mark{width:38px;height:38px;border-radius:13px;background:linear-gradient(145deg,#758cff,#7748c9);position:relative;box-shadow:inset 0 0 0 1px #ffffff40}
+    .brand-mark:after{content:"";position:absolute;width:14px;height:14px;border:3px solid white;border-radius:50%;left:9px;top:9px}
+    .brand small{display:block;font-weight:500;color:var(--muted);font-size:11px;letter-spacing:.12em}
+    .nav-label{padding:14px 12px 5px;font-size:11px;color:#8a94a8;letter-spacing:.16em;font-weight:800}
+    .sidebar nav a{display:flex;gap:10px;padding:7px 12px;color:#526078;border-radius:10px;font-size:13px;line-height:1.45}
+    .sidebar nav a:hover,.sidebar nav a.active{background:var(--blue-soft);color:#2946a5;text-decoration:none}
+    .nav-num{font-variant-numeric:tabular-nums;color:#9aa4b8;width:20px}
+    .side-actions{display:grid;gap:8px;padding:20px 8px}
+    .btn{border:0;border-radius:12px;padding:10px 14px;cursor:pointer;background:var(--navy);color:white;font-weight:650}
+    .btn.secondary{background:#edf0f6;color:#354159}
+    main{min-width:0}
+    .hero{background:#111318;color:#e4e7ed;padding:48px clamp(28px,5vw,76px) 44px;position:relative;overflow:hidden;border-bottom:1px solid #2b3039}
+    .hero:before{display:none}
+    .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:#a8c7fa;font-weight:750;margin:0 0 14px}
+    h1{font-size:clamp(36px,4.4vw,54px);line-height:1.08;letter-spacing:-.035em;margin:0;max-width:920px}
+    .hero-sub{font-size:18px;color:#bdc4cf;max-width:900px;margin:20px 0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 26px}
+    .chip{display:inline-flex;align-items:center;border:1px solid #3a414d;border-radius:8px;padding:5px 11px;font-size:12px;background:#1b1e24;color:#dbe0e8}
+    .chip.constraint{background:#d0e2ff;color:#12345b;border-color:transparent;font-weight:750}
+    .doc-meta{display:flex;gap:22px;flex-wrap:wrap;color:#939daa;font-size:12px}
+    .tv-stage{margin-top:34px;background:#101318;border:1px solid #363d48;border-radius:16px;padding:0 26px 24px;position:relative;overflow:hidden;box-shadow:none}
+    .mock-top{height:66px;display:flex;align-items:center;gap:24px;color:#e2e6ed;font-size:12px;border-bottom:1px solid #2a3039}
+    .mock-profile{width:28px;height:28px;border-radius:50%;background:#8ab4f8;color:#102d50;display:grid;place-items:center;font-weight:800;flex:none}
+    .mock-tabs{display:flex;align-self:stretch;gap:25px}
+    .mock-tab{display:flex;align-items:center;border-bottom:3px solid transparent;color:#aab3c0;white-space:nowrap;font-weight:600}.mock-tab.on{color:#a8c7fa;border-bottom-color:#a8c7fa;font-weight:750}
+    .mock-actions{margin-left:auto;color:#c2c9d4;white-space:nowrap}.mock-clock{font-size:13px;color:#c2c9d4;white-space:nowrap}
+    .mock-feature{margin-top:22px;min-height:176px;display:grid;grid-template-columns:1.2fr 1fr;background:#20242c;border:3px solid #a8c7fa;border-radius:20px;overflow:hidden}
+    .feature-copy{padding:22px 24px;position:relative}.feature-eyebrow{display:block;color:#a8c7fa;font-size:10px;font-weight:750;letter-spacing:.04em;margin-bottom:7px}.feature-copy>strong{display:block;font-size:27px;line-height:1.2;color:#f2f4f8}.feature-copy>p{font-size:11px;color:#b6bfcc;margin:7px 0 16px}
+    .feature-actions{display:flex;gap:9px}.feature-button{border-radius:999px;padding:7px 16px;font-size:11px;font-weight:750;background:#343c49;color:#e4e8ef}.feature-button.primary{background:#a8c7fa;color:#102d50}
+    .feature-progress{height:3px;background:#4b5667;width:150px;margin-top:15px}.feature-progress>i{display:block;width:62%;height:100%;background:#a8c7fa}
+    .feature-art{background:#27465c;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:20px}.feature-art:before{content:"";position:absolute;width:62%;height:150%;left:12%;top:-30%;background:#407793;transform:rotate(24deg)}.feature-art:after{content:"";position:absolute;width:46%;height:110%;right:-8%;top:15%;background:#86b7b0;transform:rotate(-18deg)}.feature-art b{position:relative;z-index:1;color:#eef8fa;font-size:28px;line-height:1.05;letter-spacing:.08em}
+    .mock-section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 0 11px;font-size:13px;font-weight:750;color:#edf0f5}.mock-section-title span{font-size:10px;color:#aab4c2;font-weight:500}
+    .mock-apps{display:flex;gap:22px;align-items:flex-start}.mock-app-item{width:56px;flex:none;text-align:center}.mock-app{width:56px;height:56px;border-radius:14px;background:#e7ebf2;display:grid;place-items:center;font-weight:850;font-size:18px;color:#26324b}
+    .mock-app-item:nth-child(2) .mock-app{background:#ef715e;color:white}.mock-app-item:nth-child(3) .mock-app{background:#242832;color:#75d9ef}.mock-app-item:nth-child(4) .mock-app{background:#8b77d8;color:white}.mock-app-item:nth-child(5) .mock-app{background:#e5bf53}.mock-app-item:nth-child(6) .mock-app{background:#6eb79d}.mock-app-item:nth-child(7) .mock-app{background:#303744;color:white}
+    .mock-label{display:block;margin-top:7px;font-size:10px;color:#c9d0da;white-space:nowrap}
+    .mock-programs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mock-program{height:78px;border-radius:12px;background:#78594f;position:relative;overflow:hidden}.mock-program-wrap:nth-child(2) .mock-program{background:#365a70}.mock-program-wrap:nth-child(3) .mock-program{background:#766741}.mock-program-wrap:nth-child(4) .mock-program{background:#496553}.mock-program:after{content:"";position:absolute;inset:18px 35% 0 0;background:#ffffff12;transform:skewX(-20deg)}.mock-program i{position:absolute;left:0;bottom:0;width:55%;height:3px;background:#a8c7fa;z-index:1}.mock-program-title{display:block;font-size:11px;color:#e1e5eb;margin-top:7px}.mock-program-meta{display:block;font-size:9px;color:#99a5b5;margin-top:2px}
+    .content{padding:32px clamp(22px,4vw,62px) 80px;max-width:1180px}
+    section{scroll-margin-top:24px;margin:0 0 52px}
+    .section-head{display:flex;gap:15px;align-items:flex-start;margin-bottom:20px}
+    .section-index{flex:none;color:#8c96ab;font-size:13px;font-weight:800;letter-spacing:.1em;margin-top:10px}
+    h2{font-size:30px;line-height:1.25;letter-spacing:-.025em;margin:0}h3{font-size:20px;line-height:1.4;margin:30px 0 10px}h4{font-size:16px;margin:22px 0 8px}
+    .lead{font-size:18px;color:#46536a;max-width:900px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:0 6px 20px #25315104;margin:16px 0}
+    .grid-2,.grid-3,.grid-4{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .grid-2>.card,.grid-3>.card,.grid-4>.card{margin:0}
+    .stat{border-top:4px solid var(--blue);padding-top:14px}.stat b{display:block;font-size:22px;line-height:1.35}.stat span{color:var(--muted);font-size:13px}
+    .callout{border-left:4px solid var(--blue);background:#eef2ff;border-radius:0 16px 16px 0;padding:16px 20px;margin:18px 0}
+    .callout.warning{border-color:var(--orange);background:#fff3eb}.callout.success{border-color:var(--green);background:#eaf8f2}.callout.dark{border-color:#95a9ff;background:var(--navy);color:#eef1fa}
+    .callout strong:first-child{display:block;margin-bottom:4px}.callout p{margin:5px 0}
+    .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.03em;border-radius:6px;padding:2px 7px;background:#e9edf4;color:#58657b;vertical-align:middle;white-space:nowrap}
+    .tag.verified{background:#e4f5ed;color:#116348}.tag.custom{background:#eee8ff;color:#6740ad}.tag.gate{background:#fff0df;color:#9b4b11}.tag.p0{background:#e7edff;color:#3650a8}.tag.p1{background:#f2e9fb;color:#7c439f}.tag.p2{background:#eef0f3;color:#667080}
+    .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:#fff;margin:14px 0}
+    table{border-collapse:collapse;width:100%;min-width:680px;font-size:14px;line-height:1.55}
+    th{text-align:left;background:#eef1f6;color:#43506a;font-size:12px;letter-spacing:.03em;padding:12px 15px;border-bottom:1px solid var(--line)}
+    td{padding:12px 15px;border-bottom:1px solid #e8ebf1;vertical-align:top}tr:last-child td{border-bottom:0}
+    td strong{color:#26334d} .yes{color:#137256;font-weight:750}.no{color:#b44f3e;font-weight:750}.partial{color:#966018;font-weight:750}
+    ul,ol{padding-left:23px}li{margin:5px 0}.tight li{margin:2px 0}.clean{list-style:none;padding:0}.clean li{margin:0}
+    .checklist{list-style:none;padding:0}.checklist li{padding-left:28px;position:relative;margin:9px 0}.checklist li:before{content:"✓";position:absolute;left:0;top:1px;color:var(--green);font-weight:900}
+    .decision{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:15px 0;border-bottom:1px solid var(--line)}.decision:last-child{border:0}.decision b{color:#354b97}
+    pre{background:var(--code);color:#dce5f5;border-radius:16px;padding:20px;overflow:auto;font-size:12px;line-height:1.65;tab-size:2}
+    pre .c{color:#8a99b3}pre .k{color:#c5a3ff}pre .s{color:#b9dd9b}pre .n{color:#f6bf87}
+    code.inline{background:#e9edf5;color:#344362;padding:2px 6px;border-radius:5px;font-size:.9em}
+    .flow{display:flex;gap:8px;align-items:stretch;overflow:auto;padding:5px 0 12px}.flow-node{min-width:130px;flex:1;background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;text-align:center;font-size:13px}.flow-node b{display:block}.arrow{align-self:center;color:#8d98ac;font-weight:800}
+    .arch{background:#111827;color:#e5e9f3;border-radius:22px;padding:24px;overflow:auto;margin:18px 0}.arch-layer{display:grid;grid-template-columns:135px 1fr;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff16}.arch-layer:last-child{border:0}.arch-label{color:#9aabc8;font-size:12px;font-weight:750}.arch-boxes{display:flex;gap:8px;flex-wrap:wrap}.arch-box{border:1px solid #ffffff24;background:#ffffff0a;border-radius:10px;padding:8px 12px;font-size:12px}.arch-box.hot{background:#4054a8;border-color:#7f91e2}.arch-box.green{background:#174d44;border-color:#3c8f7c}
+    .wireframe{background:#111318;color:#e4e7ed;border:1px solid #343b47;border-radius:16px;padding:20px;overflow:hidden}.wf-bar{height:34px;border-bottom:1px solid #343b47;margin-bottom:16px}.wf-hero{height:130px;border-radius:16px;background:#20242c;padding:20px}.wf-kicker{display:block;font-size:9px;color:#a8c7fa;margin-bottom:5px}.wf-hero b{font-size:24px}.wf-actions{display:flex;gap:8px;margin-top:18px}.wf-actions i{display:block;width:72px;height:22px;border-radius:999px;background:#a8c7fa}.wf-actions i+ i{width:58px;background:#3a4351}.wf-label{font-size:10px;color:#bdc5d0;margin:14px 0 7px}.wf-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:0}.wf-tile{height:58px;border-radius:12px;background:#303744}.wf-row.apps .wf-tile{height:42px;border-radius:10px;background:#465266}.wf-tile.focus{border:3px solid var(--focus);transform:scale(1.02);background:#35465b}.wf-caption{font-size:11px;color:#aab3c0;margin-top:15px}
+    .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.swatch{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fff}.swatch-color{height:65px}.swatch-text{padding:9px;font-size:11px}.swatch-text b{display:block;font-family:Consolas,monospace}
+    .component-demo{background:#111318;border:1px solid #343b47;border-radius:16px;padding:25px;color:#e4e7ed}.demo-cards{display:flex;gap:20px;align-items:center;flex-wrap:wrap}.demo-card{width:150px;height:96px;border-radius:16px;background:#20242c;display:grid;place-items:center;font-weight:700}.demo-card.focus{transform:scale(1.03);border:3px solid var(--focus);border-radius:20px;box-shadow:none}.demo-pill{border-radius:999px;background:#a8c7fa;color:#102d50;padding:11px 24px;font-weight:750}.demo-caption{font-size:11px;color:#aab3c0;text-align:center;margin-top:9px}
+    .matrix{font-size:13px}.matrix td:first-child{min-width:150px}
+    .priority{display:flex;gap:10px;align-items:flex-start}.priority .tag{margin-top:5px;flex:none}
+    .source-list{font-size:13px;word-break:break-word}.source-list li{margin:10px 0}.source-list a{font-family:Consolas,monospace;font-size:12px}
+    .footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:12px}
+    .mobile-title{display:none}
+    .top-link{position:fixed;right:22px;bottom:22px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:#354159;box-shadow:var(--shadow);cursor:pointer}
+    @media(max-width:1050px){.layout{grid-template-columns:1fr}.sidebar{display:none}.mobile-title{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line);font-size:13px;font-weight:700}.content{padding-top:22px}.grid-4{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:700px){.hero{padding:36px 20px}.hero h1{font-size:38px}.hero-sub{font-size:16px}.content{padding:20px 16px 60px}.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.tv-stage{padding:0 16px 18px}.mock-top{gap:14px;height:58px}.mock-tabs{gap:14px}.mock-actions{display:none}.mock-clock{margin-left:auto;font-size:12px}.mock-feature{grid-template-columns:1fr}.feature-art{display:none}.feature-copy{padding:20px}.mock-apps{gap:14px}.mock-app-item:nth-child(n+5){display:none}.mock-programs{grid-template-columns:repeat(2,1fr)}.mock-program-wrap:nth-child(n+3){display:none}.swatches{grid-template-columns:repeat(2,1fr)}.decision{grid-template-columns:1fr;gap:4px}.arch-layer{grid-template-columns:1fr}.section-head{gap:8px}h2{font-size:25px}}
+    @media print{body{background:#fff;font-size:11pt}.layout{display:block}.sidebar,.mobile-title,.top-link,.btn{display:none!important}.hero{background:#111522!important;color:#fff!important;padding:30px;print-color-adjust:exact;-webkit-print-color-adjust:exact}.tv-stage{box-shadow:none}.content{max-width:none;padding:24px 0}.card,.callout,.table-wrap{box-shadow:none;break-inside:avoid}section{break-before:auto;margin-bottom:32px}h2{break-after:avoid}pre{white-space:pre-wrap;word-break:break-word}.source-list a{color:#333}a{text-decoration:none}.grid-2,.grid-3{break-inside:avoid}}
+  </style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<div class="mobile-title"><span>TV Launcher 设计方案</span><button class="btn secondary" onclick="window.print()">打印</button></div>
+<div class="layout">
+  <aside class="sidebar" aria-label="文档目录">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div>TV LAUNCHER<small>DESIGN PROPOSAL · V2.0</small></div></div>
+    <nav>
+      <div class="nav-label">方案总览</div>
+      <a href="#overview"><span class="nav-num">01</span>执行摘要与关键决策</a>
+      <a href="#reference"><span class="nav-num">02</span>参考项目拆解</a>
+      <a href="#product"><span class="nav-num">03</span>产品定位与范围</a>
+      <div class="nav-label">体验与视觉</div>
+      <a href="#experience"><span class="nav-num">04</span>信息架构</a>
+      <a href="#visual"><span class="nav-num">05</span>M3 Expressive 视觉系统</a>
+      <a href="#interaction"><span class="nav-num">06</span>遥控器与焦点</a>
+      <a href="#screens"><span class="nav-num">07</span>核心页面</a>
+      <div class="nav-label">系统能力</div>
+      <a href="#channels"><span class="nav-num">08</span>Android TV Channel</a>
+      <a href="#widgets"><span class="nav-num">09</span>桌面小组件</a>
+      <a href="#media"><span class="nav-num">10</span>环境媒体与屏保</a>
+      <a href="#companion"><span class="nav-num">11</span>手机协同与控制中心</a>
+      <div class="nav-label">工程落地</div>
+      <a href="#architecture"><span class="nav-num">12</span>技术架构</a>
+      <a href="#data"><span class="nav-num">13</span>数据与状态</a>
+      <a href="#compatibility"><span class="nav-num">14</span>兼容、安全与隐私</a>
+      <a href="#performance"><span class="nav-num">15</span>性能与资源预算</a>
+      <a href="#delivery"><span class="nav-num">16</span>测试与验收</a>
+      <a href="#roadmap"><span class="nav-num">17</span>里程碑与交付物</a>
+      <a href="#risks"><span class="nav-num">18</span>风险与决策记录</a>
+      <a href="#references"><span class="nav-num">19</span>依据与参考来源</a>
+    </nav>
+    <div class="side-actions"><button class="btn" onclick="window.print()">打印 / 导出 PDF</button><a class="btn secondary" href="#overview" style="text-align:center">返回摘要</a></div>
+  </aside>
+
+  <main id="main">
+    <header class="hero">
+      <p class="eyebrow">Design proposal v2.0 · Google TV structure × Material 3 Expressive</p>
+      <h1>TV Launcher<br>详细设计方案</h1>
+      <p class="hero-sub">内容优先的 Google TV 信息结构，Material 3 Expressive 的组件与状态语言。默认使用中性实体表面和清晰内容分区；aerial-tv 仅作为应用管理、媒体缓存与设备适配的技术参考。</p>
+      <div class="chips">
+        <span class="chip constraint">minSdk 23 · Android 6.0+</span>
+        <span class="chip constraint">标准 Jetpack Compose + Material 3 手机版控件</span>
+        <span class="chip">禁用 androidx.tv 组件库</span>
+        <span class="chip">Channel 三种接入模式</span>
+        <span class="chip">AppWidgetHost 小组件</span>
+        <span class="chip">普通版 / OEM 特权版</span>
+      </div>
+      <div class="doc-meta"><span>文档版本：2.0 · UI 重做</span><span>日期：2026-11-02</span><span>视觉基线：实体表面 / 内容优先 / 无玻璃拟态</span><span>尺寸与性能数值为方案目标</span></div>
+
+      <div class="tv-stage" role="img" aria-label="新版首页示意：中性背景、文字导航、续看主卡、常用应用行与观看下一步内容行，不使用玻璃或视频背景">
+        <div class="mock-top"><span class="mock-profile">L</span><div class="mock-tabs"><span class="mock-tab on">推荐</span><span class="mock-tab">应用</span><span class="mock-tab">小组件</span></div><span class="mock-actions">搜索&nbsp;&nbsp; 设置</span><span class="mock-clock">20:08</span></div>
+        <div class="mock-feature">
+          <div class="feature-copy"><span class="feature-eyebrow">继续观看 · 视频</span><strong>蓝色星球 II</strong><p>第 4 集 · 深海&nbsp;&nbsp;|&nbsp;&nbsp;剩余 28 分钟</p><div class="feature-actions"><span class="feature-button primary">继续播放</span><span class="feature-button">查看详情</span></div><div class="feature-progress"><i></i></div></div>
+          <div class="feature-art"><b>BLUE<br>PLANET</b></div>
+        </div>
+        <div class="mock-section-title">常用应用 <span>全部应用&nbsp; →</span></div>
+        <div class="mock-apps">
+          <div class="mock-app-item"><div class="mock-app">▶</div><span class="mock-label">视频</span></div><div class="mock-app-item"><div class="mock-app">N</div><span class="mock-label">Netflix</span></div><div class="mock-app-item"><div class="mock-app">TV</div><span class="mock-label">电视</span></div><div class="mock-app-item"><div class="mock-app">M</div><span class="mock-label">音乐</span></div><div class="mock-app-item"><div class="mock-app">Y</div><span class="mock-label">YouTube</span></div><div class="mock-app-item"><div class="mock-app">H</div><span class="mock-label">HDMI 1</span></div><div class="mock-app-item"><div class="mock-app">•••</div><span class="mock-label">更多</span></div>
+        </div>
+        <div class="mock-section-title">观看下一步 <span>4 个来源 · 管理频道</span></div>
+        <div class="mock-programs"><div class="mock-program-wrap"><div class="mock-program"><i></i></div><b class="mock-program-title">自然纪事 · 第 3 集</b><span class="mock-program-meta">视频 · 剩余 18 分钟</span></div><div class="mock-program-wrap"><div class="mock-program"><i></i></div><b class="mock-program-title">城市夜色</b><span class="mock-program-meta">纪录片 · 继续观看</span></div><div class="mock-program-wrap"><div class="mock-program"><i></i></div><b class="mock-program-title">本周新片</b><span class="mock-program-meta">影视 · 新内容</span></div><div class="mock-program-wrap"><div class="mock-program"><i></i></div><b class="mock-program-title">稍后再看</b><span class="mock-program-meta">我的清单 · 12 项</span></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <section id="overview">
+        <div class="section-head"><span class="section-index">01</span><div><h2>执行摘要与关键决策</h2><p class="lead">默认体验是“内容优先、启动可靠、无商业推荐”。首页采用实体表面、续看主卡和横向内容行；应用与小组件始终是独立主目标。航拍仅属于可选屏保与环境模式，不再作为首页视觉背景，更不能阻塞应用启动。</p></div></div>
+        <div class="grid-4">
+          <div class="card stat"><b>23–36</b><span>SDK 覆盖范围；所有高版本能力运行时门控</span></div>
+          <div class="card stat"><b>3 个主导航</b><span>推荐 / 应用 / 小组件，搜索与控制中心为辅助入口</span></div>
+          <div class="card stat"><b>2 个发行轨道</b><span>标准安装版与 OEM 系统版共享 UI 和领域层</span></div>
+          <div class="card stat"><b>0 个 androidx.tv 依赖</b><span>仅使用标准 Compose 与 Material 3 手机版组件</span></div>
+        </div>
+        <div class="card">
+          <div class="decision"><b>界面技术</b><div><strong>标准 Jetpack Compose + <code class="inline">androidx.compose.material3:material3</code>。</strong>使用 Material 3 的 Card、Button、Chip、Tab、Dialog、Switch、Slider 等手机版/通用控件；不引入 <code class="inline">androidx.tv:tv-material</code>、<code class="inline">androidx.tv:tv-foundation</code>。D-pad 适配由项目内 <code class="inline">core:tvinteraction</code> 完成。</div></div>
+          <div class="decision"><b>视觉路径</b><div>Google TV 负责“顶部文字导航、续看主卡、横向内容行、海报与来源归属”；M3 Expressive 负责组件状态、色彩、形状和弹性反馈。<strong>明确禁用玻璃拟态、悬浮应用坞、首页全屏视频背景、问候语首屏和全导航胶囊化。</strong>不是复制 Google TV 皮肤，也不把移动端规范原样放大。</div></div>
+          <div class="decision"><b>Channel 策略</b><div>系统推荐 Channel 仅在 API 26+ 尝试接入。普通版采用“系统可见数据 + 授权合作方数据”；OEM 版通过系统集成（系统签名或 <code class="inline">priv-app</code> 授权路径，按 ROM 配置白名单）获得全量读取。API 23–25 不伪装支持系统 Channel，只显示本地或合作方内容。</div></div>
+          <div class="decision"><b>小组件策略</b><div>使用公开 <code class="inline">AppWidgetHost</code> / <code class="inline">AppWidgetHostView</code>，经系统绑定授权与可选配置 Activity。Compose 只负责外层页面和 M3 边框，真实 Widget 用 <code class="inline">AndroidView</code> 承载。</div></div>
+          <div class="decision"><b>性能策略</b><div>缓存首页先行，网络和图片后补；首页固定使用静态中性表面，视频仅用于独立环境模式与屏保。低配置模式减少阴影、并发图片和活动 Widget 数，而不是降低焦点反馈。</div></div>
+          <div class="decision"><b>分发策略</b><div>标准版只使用公开 API，不以隐藏 API、Root 或隐蔽保活作为前提。厂商接管、开机直达、全量频道、直接亮度控制等能力进入 OEM 适配层。</div></div>
+        </div>
+        <div class="callout warning"><strong>先过技术闸门，再承诺 UI</strong><p>第一项开发任务不是画首页，而是在目标 ROM 上验证：默认 HOME、TvProvider 实际可见行、Widget 绑定/配置、D-pad 操作 RemoteViews、HDMI 切换、视频解码。任何一项未通过，都按本文定义的降级路径呈现。</p></div>
+      </section>
+
+      <section id="reference">
+        <div class="section-head"><span class="section-index">02</span><div><h2>参考项目拆解：借鉴什么，不复制什么</h2><p class="lead">调研基于 2026-11-02 的 aerial-tv <code class="inline">main</code> 分支公开源码。仓库当时使用 Kotlin、标准 Compose、Media3、NanoHTTPD 与 ZXing，应用模块 <code class="inline">minSdk 21</code>、<code class="inline">compileSdk 36</code>。本方案只借鉴其能力分层和工程思路，不复用其品牌与界面。</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>aerial-tv 已确认的能力</th><th>值得借鉴的工程思路</th><th>本方案的处理</th></tr></thead><tbody>
+          <tr><td>应用网格、文件夹、隐藏、改名、自定义图标、排序</td><td>首页布局独立于应用列表持久化；包变更后增量刷新</td><td><strong>P0 保留</strong>，改为 M3 Expressive 网格与焦点反馈</td></tr>
+          <tr><td>HDMI / 信号源固定到首页，部分品牌专门适配</td><td>通用 TvInputManager + 厂商适配，不假设所有 ROM 行为一致</td><td><strong>P0 基础入口</strong>，品牌适配按实机逐项验收</td></tr>
+          <tr><td>航拍壁纸、系统 DreamService 屏保、本地照片与视频</td><td>首页与屏保共享媒体缓存；Media3 缓冲、重试、解码能力探测</td><td><strong>P1 独立环境模式 / 屏保</strong>，不进入推荐首页背景，媒体需自有或已授权</td></tr>
+          <tr><td>二维码手机整理页面</td><td>电视提供局域网配置入口，手机负责复杂拖拽和文字输入</td><td><strong>P1 可选</strong>，缩短 Token 有效期、服务按需启动、增加速率与上传限制</td></tr>
+          <tr><td>标准版与 guard 版；无障碍、通知监听、用量统计等桌面守护</td><td>把国产 ROM 差异隔离在设备适配层</td><td><strong>不作为默认核心</strong>；优先默认 HOME，守护需单独合规评审和明确授权</td></tr>
+          <tr><td>低配置“流畅”效果、Baseline Profile、R8、首屏分段加载</td><td>性能是功能，不是最后优化</td><td><strong>P0 保留</strong>，建立设备等级与可观测预算</td></tr>
+        </tbody></table></div>
+        <div class="grid-2">
+          <div class="card"><h3 style="margin-top:0">可以直接借鉴</h3><ul class="checklist"><li>首页先显示缓存，应用列表与媒体异步补齐</li><li>长按 OK 进入整理，而不是把所有设置堆在首屏</li><li>应用、文件夹、信号源统一为可排序 HomeItem</li><li>视频缓存按能力、清晰度与可用空间设上限</li><li>针对国产 ROM 做能力探测与适配白名单</li></ul></div>
+          <div class="card"><h3 style="margin-top:0">需要重新设计</h3><ul><li>aerial-tv 当前没有 Channel / AppWidget 宿主模型，本方案新增完整数据层。</li><li>手机配置服务不能只靠长期有效的 URL Token；本方案改为按需服务和短期配对。</li><li>Apple 航拍影片版权归 Apple，不能因公开可访问就默认可商用分发或长期热链。</li><li>桌面守护不等于标准 Launcher 必需能力，不能用权限堆叠掩盖系统限制。</li></ul></div>
+        </div>
+        <p><span class="tag verified">已核实</span> 参考仓库声明主代码 MIT、Inter 字体 OFL；引用源码仍需保留相应许可。本方案是独立设计文档，不包含其源代码。</p>
+      </section>
+
+      <section id="product">
+        <div class="section-head"><span class="section-index">03</span><div><h2>产品定位、用户与范围</h2><p class="lead">目标设备是 Android TV、Google TV、电视盒子与投影；兼容国产 Android 固件，但不承诺所有厂商都允许第三方桌面接管。webOS、Tizen 和非 Android 系统不在范围内。</p></div></div>
+        <div class="grid-3">
+          <div class="card"><span class="tag custom">核心用户</span><h3>效率型家庭用户</h3><p>希望按 HOME 就看到常用 App 和 HDMI，不被运营内容打断；要求少按键、字大、焦点明确。</p></div>
+          <div class="card"><span class="tag custom">增长用户</span><h3>内容续看用户</h3><p>希望从不同视频 App 回到观看进度。是否能聚合取决于 ROM 权限与内容方授权，而非 UI 开关。</p></div>
+          <div class="card"><span class="tag custom">进阶用户</span><h3>桌面整理爱好者</h3><p>需要文件夹、图标、排序、小组件、环境屏保和手机整理，同时接受部分第三方 Widget 对遥控器支持有限。</p></div>
+        </div>
+        <h3>设计原则</h3>
+        <div class="grid-2">
+          <div class="card"><ol><li><strong>两步内启动：</strong>首页任何常用 App、HDMI 或续看内容最多两次方向键加 OK 到达。</li><li><strong>启动路径零网络依赖：</strong>断网时本地应用、文件夹和已绑定 Widget 仍可操作。</li><li><strong>焦点永远有答案：</strong>看得见、移得回、不会消失；加载与空状态也不能造成焦点丢失。</li><li><strong>内容来源透明：</strong>每个频道和节目显示来源 App，不将合作方内容伪装成桌面自有内容。</li><li><strong>能力缺失可解释：</strong>用简短空状态说明系统版本、权限或来源限制，不显示永久转圈。</li></ol></div>
+          <div class="card"><h4>非目标</h4><ul><li>不做电视直播 EPG、播放器或 TvInputService。</li><li>不绕过系统签名、用户授权或 Widget 配置流程。</li><li>不在标准版承诺“与 Google TV 首页完全相同的频道数据”。</li><li>不以广告推荐、桌面竞价排名或隐蔽保活作为商业/技术前提。</li><li>不强制云端账号；布局默认保存在本机。</li></ul></div>
+        </div>
+        <h3>功能优先级</h3>
+        <div class="table-wrap"><table><thead><tr><th>级别</th><th>功能</th><th>完成定义</th></tr></thead><tbody>
+          <tr><td><span class="tag p0">P0</span></td><td>HOME、应用/文件夹、排序、静态主题背景、D-pad、设置、缓存与低配置模式</td><td>Android 6 真机可安装为默认桌面，断网完成核心操作</td></tr>
+          <tr><td><span class="tag p0">P0</span></td><td>Widget 选择、绑定、配置、摆放、移除与生命周期</td><td>测试 Widget 全流程通过；失败有可恢复状态</td></tr>
+          <tr><td><span class="tag p0">P0</span></td><td>Channel 能力门控、OEM 聚合、合作方接入、内容跳转</td><td>按发行版通过权限与数据来源验收，不伪造空推荐</td></tr>
+          <tr><td><span class="tag p1">P1</span></td><td>独立环境模式、屏保、手机整理、全局搜索、更多个性化</td><td>不影响 P0 性能预算，可独立关闭</td></tr>
+          <tr><td><span class="tag p2">P2</span></td><td>语音、云备份、多用户、儿童空间、主题商店</td><td>单独立项，不进入首版关键路径</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="experience">
+        <div class="section-head"><span class="section-index">04</span><div><h2>信息架构与首屏布局</h2><p class="lead">采用 Google TV 的内容浏览骨架，而不是 tvOS 的应用坞。顶部是文字 Tab，下面是续看主卡与内容行；背景始终为静态中性色，所有标题、来源和操作都有固定位置。</p></div></div>
+        <div class="grid-2">
+          <div class="wireframe"><div class="wf-bar"></div><div class="wf-hero"><span class="wf-kicker">继续观看 · 来源 App</span><b>内容主卡</b><div class="wf-actions"><i></i><i></i></div></div><div class="wf-label">常用应用</div><div class="wf-row apps"><div class="wf-tile"></div><div class="wf-tile"></div><div class="wf-tile"></div><div class="wf-tile"></div><div class="wf-tile"></div></div><div class="wf-label">观看下一步</div><div class="wf-row"><div class="wf-tile focus" style="grid-column:span 2"></div><div class="wf-tile" style="grid-column:span 2"></div><div class="wf-tile"></div></div><div class="wf-caption">结构线框：文字导航 / 续看主卡 / App 行 / 内容行。无玻璃层、无悬浮 Dock、无背景视频。</div></div>
+          <div class="card"><h3 style="margin-top:0">首页行的默认顺序</h3><ol><li><strong>续看主卡：</strong>只展示一项明确的继续观看或来源精选，含标题、来源、进度与主操作；无内容时整块移除。</li><li><strong>常用应用：</strong>7–10 个，图标与名称始终可见，不做悬浮底板。</li><li><strong>观看下一步：</strong>横向 16:9 卡片，标题和来源位于海报下方，进度位于海报底边。</li><li><strong>内容频道：</strong>每行一个来源，默认展示一行，其余由用户开启。</li><li><strong>小组件速览：</strong>可选且位于内容之后；完整画布在独立 Tab。</li></ol><p><span class="tag custom">方案自定</span> 无任何合法内容来源时，首屏直接以常用应用开始，不展示伪造推荐、问候语或巨大空状态。</p></div>
+        </div>
+        <h3>首屏区域规格</h3>
+        <div class="table-wrap"><table><thead><tr><th>区域</th><th>建议尺寸（逻辑 dp）</th><th>表面与排版</th><th>焦点</th></tr></thead><tbody>
+          <tr><td>顶部导航</td><td>高 64，安全边距 48</td><td>背景色；文字 Tab + 3dp active indicator</td><td>Tab 本身，无外层胶囊底板</td></tr>
+          <tr><td>续看主卡</td><td>高 200–224，宽度占满内容区</td><td>Surface Container；左侧信息/操作，右侧 artwork</td><td>主卡 3dp Primary 描边，主按钮可单独聚焦</td></tr>
+          <tr><td>应用行</td><td>图标 56–64，标签 14–16sp</td><td>图标保留来源形状，名称永远在下方</td><td>外框 1.03×，不加底板光晕</td></tr>
+          <tr><td>内容行</td><td>海报 16:9；标题与来源两行</td><td>卡片与背景分层，行间距 28–32</td><td>海报形变 16→20dp，文字不躲藏</td></tr>
+        </tbody></table></div>
+        <h3>导航模型</h3>
+        <div class="flow" aria-label="主导航流程"><div class="flow-node"><b>顶部文字 Tab</b>推荐 / 应用 / 小组件</div><div class="arrow">→</div><div class="flow-node"><b>主卡与内容行</b>上下切区，左右切项</div><div class="arrow">→</div><div class="flow-node"><b>详情 / 文件夹</b>临时层级</div><div class="arrow">→</div><div class="flow-node"><b>系统返回</b>逐级回到原焦点</div></div>
+        <div class="table-wrap"><table><thead><tr><th>区域</th><th>默认焦点</th><th>上 / 下</th><th>OK</th><th>返回</th></tr></thead><tbody>
+          <tr><td>推荐页</td><td>恢复上次有效项；有主卡时为“继续播放”，否则第一个常用 App</td><td>主卡 / App 行 / 内容行按区域切换</td><td>执行主操作、启动 App 或内容</td><td>顶部导航 → 推荐页默认项</td></tr>
+          <tr><td>应用页</td><td>上次网格项</td><td>固定列数网格导航</td><td>启动；长按进入整理菜单</td><td>退出整理 → 关闭文件夹 → 推荐页</td></tr>
+          <tr><td>小组件页</td><td>Widget 外框</td><td>按画布几何最近邻</td><td>进入 Widget 内部交互</td><td>退出内部交互，再离开页面</td></tr>
+          <tr><td>顶部 Tab</td><td>当前页 Tab</td><td>下进入页面，左右切 Tab</td><td>切换并恢复原页面焦点</td><td>回到当前页默认项</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="visual">
+        <div class="section-head"><span class="section-index">05</span><div><h2>Material 3 Expressive 电视视觉系统</h2><p class="lead">新版明确放弃 tvOS 的玻璃、悬浮与全屏氛围背景。M3 Expressive 用于组件状态、强调色、形状变化和弹性反馈，Google TV 用于内容结构。以下 dp、sp、时长、断点均为本方案 token，不冒充官方 TV 数值。</p></div></div>
+        <div class="callout"><strong>实现约束已锁定</strong><p>使用标准 <code class="inline">MaterialTheme</code> 与 Material 3 手机版组件，以项目锁定稳定版本中可用的 Expressive API 为准；不依赖 <code class="inline">MaterialExpressiveTheme</code> 或 <code class="inline">MotionScheme</code> 等未经版本确认的 API 名称。自定义 <code class="inline">LauncherTheme</code> 注入色彩、字体、形状和动效 token。</p></div>
+        <div class="grid-2">
+          <div class="card"><h3 style="margin-top:0">不再使用</h3><ul><li>全屏航拍或视频作为首页背景</li><li>半透明玻璃、背景模糊、悬浮 Dock</li><li>“晚上好”等无信息问候语占据主区域</li><li>大圆角图标阵列、光晕和聚焦后才显示标题</li><li>整组导航都做成胶囊</li></ul></div>
+          <div class="card"><h3 style="margin-top:0">新的视觉依据</h3><ul class="checklist"><li>Surface / Surface Container 建立稳定层级</li><li>主卡、App 行、内容行拥有不同信息密度</li><li>Primary 只用于当前 Tab、焦点和主操作</li><li>海报是内容，不作为整个页面的皮肤</li><li>M3 按钮、Chip、Card 的状态变化承担 Expressive</li></ul></div>
+        </div>
+        <h3>5.1 色彩：中性表面，有限强调</h3>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch-color" style="background:#111318"></div><div class="swatch-text">背景 / Background<b>#111318</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#20242c"></div><div class="swatch-text">内容表面 / Container<b>#20242C</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#a8c7fa"></div><div class="swatch-text">主色与焦点 / Primary<b>#A8C7FA</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#d0e2ff"></div><div class="swatch-text">主按钮 / Primary Container<b>#D0E2FF</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#e4e7ed"></div><div class="swatch-text">主文字 / On Surface<b>#E4E7ED</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#aab3c0"></div><div class="swatch-text">次文字 / On Surface Var<b>#AAB3C0</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#d5c5f5"></div><div class="swatch-text">辅助表达 / Secondary<b>#D5C5F5</b></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#f2b8c6"></div><div class="swatch-text">点缀与警示 / Tertiary<b>#F2B8C6</b></div></div>
+        </div>
+        <ul><li>首页 Background 固定为中性深色，不随海报或壁纸整屏换色；内容卡使用 Surface Container 分区。</li><li>海报取色只允许进入主卡的局部 artwork，不扩散为光晕、模糊或整屏渐变。</li><li>Primary 同时用于当前 Tab、焦点描边和主按钮，建立统一操作语义；Secondary/Tertiary 只用于少量状态标签。</li><li>正文与背景目标对比度至少 4.5:1，大字至少 3:1；焦点同时有形状和描边，不能只靠颜色。</li><li>API 31+ 可选用系统动态色，但只能映射到 Surface 与按钮角色；API 23–30 使用内置配色。</li></ul>
+        <h3>5.2 形状、字体与间距</h3>
+        <div class="table-wrap"><table><thead><tr><th>Token</th><th>建议值</th><th>用途</th><th>电视化处理</th></tr></thead><tbody>
+          <tr><td>Shape Small / Medium / Large</td><td>8 / 16 / 24 dp</td><td>Chip、海报/应用卡、主卡与面板</td><td>焦点时海报 16→20dp，不做 28dp 以上的“苹果式”膨胀圆角</td></tr>
+          <tr><td>Shape Full</td><td>999 dp</td><td>主按钮、Chip、短状态标签</td><td>只用于 M3 控件，不用于整组 Tab、应用坞或背景容器</td></tr>
+          <tr><td>Display / Hero</td><td>36 / 28 sp</td><td>页面标题、续看主卡标题</td><td>最多两行；不使用细字重和大面积问候语</td></tr>
+          <tr><td>Title / Body / Label</td><td>24 / 18 / 16 sp</td><td>行标题、正文、App 名称</td><td>核心文字不低于 16sp；辅助信息最低 14sp</td></tr>
+          <tr><td>Space 1–6</td><td>4 / 8 / 12 / 16 / 24 / 32 dp</td><td>组件与行间距</td><td>以 4dp 为基线，不用零散数值</td></tr>
+          <tr><td>Safe Inset</td><td>横向 48dp，纵向 36dp 起</td><td>过扫描安全区</td><td>按实机 overscan 增加；焦点描边也不能被裁切</td></tr>
+          <tr><td>Minimum Focus Target</td><td>56 × 56dp</td><td>图标按钮、Chip</td><td>继承手机版控件交互面积，再按电视放大</td></tr>
+        </tbody></table></div>
+        <p>字体优先使用系统中文无衬线与 Roboto；若捆绑字体，需要核查许可和 APK 体积。标题字重 600–700，正文 400–500，不使用过细字重。数字时钟启用等宽数字，避免每分钟宽度跳动。</p>
+        <h3>5.3 焦点组件与弹性动效</h3>
+        <div class="component-demo"><div class="demo-cards"><div><div class="demo-card">内容卡片</div><div class="demo-caption">默认：16dp / Surface</div></div><div><div class="demo-card focus">内容卡片</div><div class="demo-caption">焦点：1.03× / 20dp / 3dp Primary</div></div><div><div class="demo-pill">继续播放</div><div class="demo-caption">Filled Button：仅主操作使用胶囊</div></div></div></div>
+        <div class="grid-3">
+          <div class="card"><h4>Focus · 160–200ms</h4><p>缩放 1.00 → 1.03、Primary 描边、16→20dp 形变；标题和来源始终可见。快速连按时取消旧动画。</p></div>
+          <div class="card"><h4>Press · 90–120ms</h4><p>缩放至 0.98，释放后启动。用 M3 状态层表达按压，不使用悬浮上升和光晕。</p></div>
+          <div class="card"><h4>Spatial · 220–280ms</h4><p>主卡与行滚动使用短促 spring；页面没有视差，焦点始终先于滚动定位。</p></div>
+        </div>
+        <p><strong>减少动态效果：</strong>设置中提供“完整 / 简洁 / 关闭”。简洁模式去除回弹与空间位移，保留 100–150ms 状态淡入和焦点描边；关闭模式即时切换。</p>
+        <h3>5.4 手机版 Material 3 控件的实际分工</h3>
+        <div class="table-wrap"><table><thead><tr><th>标准控件</th><th>电视界面中的位置</th><th>禁止的用法</th></tr></thead><tbody>
+          <tr><td>TopAppBar + Tab</td><td>推荐 / 应用 / 小组件；自定义 64dp 高度与 active indicator</td><td>不套玻璃背景，不变成一排悬浮胶囊</td></tr>
+          <tr><td>Card</td><td>续看主卡、海报卡、应用详情</td><td>不让所有页面元素都成为同等重量的大圆角卡</td></tr>
+          <tr><td>Button / FilledTonalButton</td><td>继续播放、查看详情、确认操作</td><td>不在海报上堆多个漂浮圆形按钮</td></tr>
+          <tr><td>Chip / FilterChip</td><td>内容筛选、来源过滤</td><td>不承担主导航</td></tr>
+          <tr><td>NavigationRail / Drawer</td><td>设置与控制中心等工具型页面</td><td>推荐首页保持顶部内容导航，不增加左右两套导航</td></tr>
+          <tr><td>AlertDialog / Switch / Slider</td><td>系统确认、动效、音量与布局设置</td><td>不直接沿用手机尺寸，必须接入 D-pad 焦点契约</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="interaction">
+        <div class="section-head"><span class="section-index">06</span><div><h2>手机版控件的电视化：遥控器、焦点与滚动</h2><p class="lead">这是“不用 Compose for TV”后最重要的工程模块。Material 3 手机版控件保留其视觉、语义和状态，但焦点导航、按键、自动滚动与恢复必须显式实现。</p></div></div>
+        <h3>6.1 自建 <code class="inline">core:tvinteraction</code></h3>
+        <div class="card"><ul class="checklist"><li><code class="inline">TvFocusableCard</code>：Material 3 Card + InteractionSource 焦点状态 + 外描边 + 语义。</li><li><code class="inline">TvFocusRow</code>：标准 LazyRow + 每行独立 FocusRequester + BringIntoViewRequester。</li><li><code class="inline">TvFocusGrid</code>：标准 LazyVerticalGrid + 固定列映射与跨区最近邻规则。</li><li><code class="inline">TvKeyEvents</code>：统一 DPAD、OK、BACK、MENU、长按和连发节流。</li><li><code class="inline">TvFocusMemory</code>：按页面与行保存逻辑 item key，进程恢复后找最近有效项。</li><li><code class="inline">TvDialog</code>：Material 3 AlertDialog 外层建立 focusGroup，默认焦点在安全的非破坏操作。</li></ul></div>
+        <pre><code><span class="k">@Composable</span>
+<span class="k">fun</span> <span class="n">TvFocusableCard</span>(
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  content: <span class="k">@Composable</span> () -> Unit
+) {
+  <span class="k">val</span> interactionSource = remember { MutableInteractionSource() }
+  <span class="k">val</span> focused by interactionSource.collectIsFocusedAsState()
+  Card(
+    onClick = onClick,
+    interactionSource = interactionSource,
+    modifier = modifier
+      .onFocusChanged { <span class="c">/* 上报焦点、请求 bringIntoView */</span> }
+      .tvFocusRing(focused),
+    shape = tvCardShape(focused),
+    colors = CardDefaults.cardColors()
+  ) { content() }
+}</code></pre>
+        <p class="lead" style="font-size:14px">示意代码只表达职责，不要求逐字采用；具体 Card 参数与实验性 API 以锁定 Compose 版本为准。不要把 <code class="inline">focusable()</code> 无差别叠加到已可点击控件上，以免产生两个焦点节点。</p>
+        <h3>6.2 按键契约</h3>
+        <div class="table-wrap"><table><thead><tr><th>按键</th><th>默认行为</th><th>例外与保护</th></tr></thead><tbody>
+          <tr><td>DPAD 四向</td><td>移动唯一焦点；到达边缘停止或进入明确相邻区域</td><td>不默认循环，不跨越不可见 Dialog；长按连发不启动多个 Activity</td></tr>
+          <tr><td>DPAD_CENTER / ENTER</td><td>激活当前项</td><td>启动中项显示 pressed/loading，500ms 内去重</td></tr>
+          <tr><td>长按 OK / MENU</td><td>打开上下文菜单：移动、隐藏、卸载、频道管理、Widget 设置</td><td>无可用操作时不震动、不播放错误音；菜单键不拦截系统保留行为</td></tr>
+          <tr><td>BACK</td><td>关闭最上层状态</td><td>Dialog → 编辑模式 → 文件夹 → 页面默认焦点；不形成 HOME 自启动循环</td></tr>
+          <tr><td>HOME</td><td>由系统返回 Launcher</td><td>恢复上次页、实体表面与原焦点，不创建媒体播放器</td></tr>
+          <tr><td>PLAY / PAUSE</td><td>仅屏保预览或媒体预览可见时接管</td><td>其他页面不消费，避免破坏系统媒体键</td></tr>
+        </tbody></table></div>
+        <h3>6.3 焦点算法与异常恢复</h3>
+        <ol><li><strong>逻辑坐标优先：</strong>规则网格按列索引；频道行按可见中心 X；Widget 画布按矩形中心距离加方向惩罚。</li><li><strong>只导航到可见且可用项：</strong>过滤 disabled、隐藏、移除中和被 Dialog 遮罩的节点。</li><li><strong>滚动先于焦点丢失：</strong>目标取得焦点前后都请求 bringIntoView，目标位置预留焦点放大与标题空间。</li><li><strong>数据变化找稳定 key：</strong>App 使用 ComponentName，Channel 使用 namespaced ID，Widget 使用 appWidgetId，不使用 Lazy 列表位置作为永久身份。</li><li><strong>原项消失：</strong>同行下一项 → 上一项 → 行标题 → 首页默认项；同时记录诊断事件。</li><li><strong>进程死亡：</strong>只恢复页面、行与 item key，不恢复临时 Dialog、绑定授权或半完成拖拽。</li></ol>
+        <div class="callout warning"><strong>手机版控件不会自动成为优秀电视控件</strong><p>必须为 Card、Tab、Chip、Switch、Slider、Dialog、LazyRow/LazyColumn/LazyVerticalGrid 做真机 D-pad 测试。Slider 使用左右键步进、OK 进入调节、BACK 退出；Switch 整行可聚焦，不能只有小滑块能操作。</p></div>
+      </section>
+
+      <section id="screens">
+        <div class="section-head"><span class="section-index">07</span><div><h2>核心页面与状态设计</h2></div></div>
+        <h3>7.1 推荐首页</h3><p>首页为固定中性背景，顶部使用 TopAppBar + 文字 Tab、搜索、设置与时钟。续看主卡左侧显示来源、标题、进度和 M3 主按钮，右侧为局部 artwork；应用行使用 56–64dp 图标并始终显示名称；内容卡使用 16:9 海报，标题与来源置于海报下方。每行末尾有“管理”，长按不是唯一入口。</p>
+        <h3>7.2 全部应用与整理模式</h3><ul><li>网格支持 4 / 5 / 6 / 7 列（依宽度 dp 自动限制），搜索过滤时保持固定列与焦点。</li><li>长按 OK 打开 M3 菜单：移动、加入文件夹、重命名、替换图标、隐藏、应用信息、卸载。</li><li>移动模式用焦点描边变为表达色，并显示“方向键移动 · OK 放下 · 返回取消”；事务未完成不写入最终顺序。</li><li>卸载调用系统确认；系统应用只提供“停用/隐藏”可用入口，不伪装已卸载。</li><li>包安装、更新、卸载通过广播与 PackageManager 重新对账，更新期间保留用户布局。</li></ul>
+        <h3>7.3 小组件画布</h3><p>采用独立页面而非把所有 Widget 塞进首页。默认 8 × 4 逻辑网格，Widget 依据 minWidth/minHeight 与 resizeMode 换算占位；外框显示来源、尺寸和焦点。OK 进入内部交互，BACK 返回外框，长按打开移动/缩放/移除。手机版 Widget 不一定支持 D-pad，无法操作时明确提示“该小组件可能需要鼠标或触摸”，不拦截系统外接输入设备。</p>
+        <h3>7.4 频道与内容详情</h3><p>频道头显示来源 App、频道名和可见状态。海报卡 OK 直接触发来源提供的 Intent；长按提供“打开来源应用 / 在本桌面隐藏 / 内容信息”。详情面板不是第二个播放器，只补充描述、时长、进度与打开按钮。失效链接显示可返回的错误，不让 Launcher 崩溃。</p>
+        <h3>7.5 控制中心与设置</h3><p>从顶部右侧或 MENU 进入右侧 M3 面板：信号源、网络、音量、可用时的亮度、环境与屏保、个性化、系统设置。普通版无法直接修改的设置跳转系统页面。危险操作如清空布局、解绑全部 Widget 使用二次确认，默认焦点为“取消”。</p>
+        <h3>7.6 必须设计的非理想状态</h3>
+        <div class="table-wrap"><table><thead><tr><th>状态</th><th>呈现</th><th>焦点策略</th></tr></thead><tbody>
+          <tr><td>首次启动</td><td>选择常用 App、动效等级、是否启用内容来源；屏保与环境模式稍后发现，不强迫一次授予全部权限</td><td>主按钮“完成”，可跳过 Channel/Widget</td></tr>
+          <tr><td>无网络</td><td>保留缓存海报和静态背景；状态栏离线，不重试弹窗</td><td>本地 App 不受影响</td></tr>
+          <tr><td>无频道权限 / 无来源</td><td>隐藏聚合行，在频道管理内解释原因与可用操作</td><td>焦点跳过整行</td></tr>
+          <tr><td>Widget 加载失败</td><td>保留占位、来源和“重试 / 移除”</td><td>占位仍可操作，不空白</td></tr>
+          <tr><td>低内存 / 低存储</td><td>关闭环境媒体、停止预取、提示清理媒体缓存；首页实体表面不变</td><td>不自动删除布局或 Widget 绑定</td></tr>
+          <tr><td>内容图片失败</td><td>来源色实体占位 + 标题，不显示破图</td><td>内容仍可打开</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="channels">
+        <div class="section-head"><span class="section-index">08</span><div><h2>Android TV Channel：可落地的三种接入模式</h2><p class="lead">“接收 Channel 推送”必须拆成系统推荐频道、合作方主动同步和直播 EPG。前两者进入首页内容行；直播 EPG 不属于本方案的推荐数据源。</p></div></div>
+        <div class="callout dark"><strong>AOSP 权限事实</strong><p>TvProvider 的全量 EPG 数据访问权限是 <code class="inline" style="background:#ffffff18;color:#fff">com.android.providers.tv.permission.ACCESS_ALL_EPG_DATA</code>，在 AOSP 清单中为 <code class="inline" style="background:#ffffff18;color:#fff">signature|privileged</code>。普通调用方的 SQL 会被按包名过滤；持 READ_TV_LISTINGS 的查询可见范围仍受“自有 + 可搜索”等条件限制。不同 ROM 必须实测，不能把“声明权限”当成“获得全量数据”。</p></div>
+        <h3>8.1 三种来源，不在 UI 上混为一谈</h3>
+        <div class="table-wrap"><table><thead><tr><th>模式</th><th>适用版本 / 分发</th><th>数据范围</th><th>实现</th><th>承诺</th></tr></thead><tbody>
+          <tr><td><strong>System Visible</strong></td><td>API 26+ 标准版</td><td>ROM 实际允许读取的推荐 Channel / Program，可能只有部分</td><td>运行时能力探测；必要时申请 READ_TV_LISTINGS；空 selection 查询并本地过滤</td><td><span class="partial">尽力展示</span>，不声称完整镜像</td></tr>
+          <tr><td><strong>Partner Bridge</strong></td><td>API 23+ 标准版</td><td>用户明确授权的合作方内容</td><td>版本化 Binder/ContentProvider Bridge，校验调用 UID、来源授权、配额和数据结构</td><td><span class="yes">可完整支持合作方</span>，但不是系统 TvProvider 聚合</td></tr>
+          <tr><td><strong>System Aggregate</strong></td><td>API 26+ OEM 系统版</td><td>系统允许的全量 Channel / PreviewProgram / WatchNextProgram</td><td>系统集成（系统签名或 priv-app 授权路径）+ ACCESS_ALL_EPG_DATA</td><td><span class="yes">OEM 合同范围内支持</span>，仍需逐 ROM 验证</td></tr>
+        </tbody></table></div>
+        <p><strong>API 23–25：</strong>隐藏“系统 Channel”入口，Partner Bridge 和本地频道仍可用。推荐 Channel 是 Android 8.0 / API 26 起的机制，<code class="inline">tvprovider</code> 兼容库可以让代码在低版本编译，但不会给 Android 6/7 创造出系统推荐 Provider。</p>
+        <h3>8.2 数据接入时序</h3>
+        <div class="flow"><div class="flow-node"><b>Capability Probe</b>SDK / Provider / 权限 / 来源</div><div class="arrow">→</div><div class="flow-node"><b>Initial Snapshot</b>后台查询，生成稳定 ID</div><div class="arrow">→</div><div class="flow-node"><b>Room Diff</b>事务插入、更新、过期</div><div class="arrow">→</div><div class="flow-node"><b>StateFlow</b>按行分页暴露给 UI</div><div class="arrow">→</div><div class="flow-node"><b>ContentObserver</b>去抖增量对账</div></div>
+        <ol><li>冷启动先读 Room 缓存，绝不等待 TvProvider 或网络。</li><li>系统源查询不传自定义 WHERE；AOSP 对无全量权限调用方限制 selection。过滤 TYPE_PREVIEW、browsable、节目类型与过期时间在本地完成。</li><li>ContentObserver 只发出“需要同步”信号，500ms 去抖后在 IO 调度器重新查询；不在主线程持有 Cursor。</li><li>使用 <code class="inline">(origin, sourcePackage, externalId)</code> 唯一键对账。包卸载后标记来源失效并清理缓存。</li><li>只读取需要列，不读取或展示 <code class="inline">INTERNAL_PROVIDER_DATA</code> 等来源私有字段；不修改其他 App 的 Channel。</li><li>Uri 图片异步加载并检查尺寸；IntentUri 延迟到点击时解析，捕获格式错误、ActivityNotFoundException 与 SecurityException。</li><li>系统数据、合作方数据和本地布局分别保存，避免一次 Provider 异常清空用户布局。</li></ol>
+        <h3>8.3 Partner Bridge：标准版的开放补充</h3>
+        <div class="card"><h4>注册与推送</h4><ol><li>来源 App 调用 <code class="inline">registerSource(packageInfo, capabilities)</code>；Launcher 弹出用户授权，记录 UID、包名、证书摘要与配额。</li><li>注册成功后返回来源级会话 Token。后续 <code class="inline">upsertChannel / upsertPrograms / removePrograms / publishWatchNext</code> 同时校验 Binder 调用 UID 与 Token。</li><li>只接受显式版本号和结构化数据；Bitmap 不走 Binder，海报通过 HTTPS 或有读授权的 content Uri 传递。</li><li>不接受任意隐式广播作为推送通道，避免伪造来源；Token 可撤销，卸载与签名变化立即失效。</li></ol><h4>建议初始配额（可通过能力协商调整）</h4><ul><li>每来源最多 3 个频道、每频道 50 个 Program、每次同步 100 条；单来源每分钟 20 次变更。</li><li>必须提供稳定 externalId、标题、来源包名和 Intent；expiresAt 到期后由 Launcher 隐藏。</li><li>连续 schema 错误或 Uri 异常进入退避，不影响其他来源；所有拒绝只记录必要诊断，不记录内容隐私。</li></ul></div>
+        <h3>8.4 Watch Next 与内容操作</h3><ul><li>Watch Next 在 OEM 聚合模式中按最后互动时间、来源与类型排序；同一内容以来源包名 + externalId 去重，不跨来源猜测合并。</li><li>“在本桌面隐藏”只修改 Launcher 本地可见性；“不再感兴趣”只有在系统或来源提供对应契约时才回传，不能静默删除他人 Provider 数据。</li><li>点击频道 Logo 使用 appLinkIntentUri，点击节目使用 intentUri；失败时提供“打开来源应用”备选。</li><li>普通合作方内容必须标注来源；商业合作排序若未来出现，必须单独标识，首版无商业排序。</li></ul>
+        <h3>8.5 明确排除：直播电视 Channel</h3><p><code class="inline">TvContract.Channels</code> 同时承载直播 EPG 的概念不等于它们都应进入推荐流。直播频道、节目时间表、 parental rating 与 TvInputService 属于另一条产品链路。本方案只用 TvInputManager 发现并启动 HDMI/输入源，不把直播 EPG 当内容推荐抓取。</p>
+      </section>
+
+      <section id="widgets">
+        <div class="section-head"><span class="section-index">09</span><div><h2>桌面小组件：公开 AppWidgetHost 全流程</h2><p class="lead">Widget 体系从 API 3 起存在，绑定授权相关 API 从 15 起可用，因此 minSdk 23 可以托管。真正的兼容性难点是第三方 RemoteViews 的遥控器支持、配置 Activity、尺寸和生命周期。进入选择器前先检测 <code class="inline">PackageManager.FEATURE_APP_WIDGETS</code>，设备未提供该系统特性时隐藏入口并保留其他桌面功能。</p></div></div>
+        <h3>9.1 添加流程</h3>
+        <div class="flow"><div class="flow-node"><b>选择 Provider</b>预览、来源、尺寸</div><div class="arrow">→</div><div class="flow-node"><b>分配 ID</b>allocateAppWidgetId</div><div class="arrow">→</div><div class="flow-node"><b>系统授权</b>bindIfAllowed / ACTION_APPWIDGET_BIND</div><div class="arrow">→</div><div class="flow-node"><b>可选配置</b>ACTION_APPWIDGET_CONFIGURE</div><div class="arrow">→</div><div class="flow-node"><b>创建视图</b>createView / AndroidView</div></div>
+        <pre><code><span class="k">val</span> id = appWidgetHost.allocateAppWidgetId()
+<span class="k">if</span> (!appWidgetHost.bindAppWidgetIdIfAllowed(id, info.provider)) {
+  bindPermissionLauncher.launch(
+    Intent(AppWidgetManager.ACTION_APPWIDGET_BIND)
+      .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+      .putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.provider)
+  )
+}
+<span class="c">// 授权或配置取消：host.deleteAppWidgetId(id)，清理 pending 状态。</span>
+<span class="c">// configure != null：配置 RESULT_OK 后才创建并保存 WidgetInstance。</span></code></pre>
+        <h3>9.2 宿主生命周期</h3><ul><li>整个进程一个 <code class="inline">AppWidgetHost</code> 与固定 hostId；主线程创建，Activity <code class="inline">onStart</code> 调 <code class="inline">startListening()</code>，<code class="inline">onStop</code> 调 <code class="inline">stopListening()</code>。</li><li>Room 只保存 appWidgetId、provider、位置、尺寸和选项；RemoteViews 不可持久化，重启后由系统重新下发。</li><li>Compose 使用稳定 key 的 <code class="inline">AndroidView</code> 创建 <code class="inline">AppWidgetHostView</code>，重组时更新尺寸，不重复 allocate/bind。</li><li>移除、绑定拒绝、配置取消、Provider 卸载均回收对应 ID；不能因清空 UI 忘记 <code class="inline">deleteAppWidgetId()</code>。</li><li>从后台返回时对账 <code class="inline">getAppWidgetInfo(id)</code>；为 null 显示“来源不可用”占位，而不是直接丢弃用户位置。</li></ul>
+        <h3>9.3 尺寸与缩放</h3><div class="table-wrap"><table><thead><tr><th>项目</th><th>规则</th></tr></thead><tbody>
+          <tr><td>初始跨度</td><td>依据 minWidth/minHeight 与可用网格求最小可容纳跨度；旧式 70×n−30 公式只作估算，最终以实际布局测试为准。</td></tr>
+          <tr><td>resizeMode</td><td>仅允许声明方向的缩放；不支持 resize 的 Widget 锁定跨度。</td></tr>
+          <tr><td>尺寸 Options</td><td>尺寸变化后调用 updateAppWidgetOptions，写入实际 min/max width/height；高版本额外字段按 SDK 门控。</td></tr>
+          <tr><td>预览</td><td>API 23–30 使用 previewImage / 图标；API 31+ 可使用 previewLayout、targetCellWidth/Height 等可用信息。</td></tr>
+          <tr><td>外框</td><td>M3 焦点环和“移动/缩放”UI 在 RemoteViews 外部，避免第三方视图遮挡 Launcher 操作。</td></tr>
+        </tbody></table></div>
+        <h3>9.4 D-pad 与 RemoteViews 的边界</h3><ol><li>外框是主焦点；OK 后将焦点交给 AppWidgetHostView 内第一个可聚焦节点。</li><li>内部方向键优先由 RemoteViews 处理；到边界或无可用焦点时返回外框，但必须保留明确退出路径。</li><li>集合 Widget、时钟和简单按钮通常更可控；依赖触摸滑动、复杂 WebView 或自定义触摸的 Widget 不保证可操作。</li><li>不对 RemoteViews 强行改色、改字体或注入 M3 样式；M3 只负责外部容器。</li><li>首页最多放 2 个低刷新速览 Widget，完整画布限制活动实例数；更新频率仍由 Provider 与系统决定。</li></ol>
+        <div class="callout warning"><strong>验收不能说“支持所有小组件”</strong><p>准确承诺是“支持系统 AppWidget 宿主协议”。需建立天气、时钟、音乐、集合列表、带配置 Activity、无预览、无法绑定、Provider 崩溃等测试样本，并公开不兼容提示。</p></div>
+      </section>
+
+      <section id="media">
+        <div class="section-head"><span class="section-index">10</span><div><h2>环境媒体与屏保</h2><p class="lead">aerial-tv 的 Media3 播放与共享缓存只作为技术参考。推荐、应用和小组件界面不使用视频或照片作为全屏皮肤；媒体能力被限制在独立环境模式与系统屏保中。</p></div></div>
+        <div class="grid-3"><div class="card"><h3>Launcher 实体表面</h3><p>首页、应用和 Widget 页面只使用主题 Background 与 Surface Container。无需解码壁纸，不随内容换肤，确保内容层级和低端设备启动稳定。</p></div><div class="card"><h3>独立环境模式</h3><p>由用户从控制中心主动开启的全屏媒体页，可显示已授权航拍、照片或简洁时钟。没有导航和海报悬浮其上，BACK 立即返回原焦点。</p></div><div class="card"><h3>DreamService 屏保</h3><p>按系统屏保入口启动，与环境模式共享媒体索引和缓存。时钟防烧屏采用低亮度、缓慢位移与有限静态元素。</p></div></div>
+        <h3>播放与缓存策略</h3><ul><li>Media3 ExoPlayer + CacheDataSource；单进程共享一个 SimpleCache 实例，避免目录锁冲突。</li><li>能力探测依次决定 Dolby Vision / 4K / 1080p / 静态图，不能仅根据分辨率或宣传参数判断解码能力。</li><li>弱网使用短超时、有限重试和指数退避；起播失败回到静态图，不循环弹错。</li><li>缓存上限取“可用空间比例与绝对上限”的较小值；建议从 256MB（低配）/ 1GB（标准）起，允许用户清理。</li><li>4K 仅在非计量网络、存储充足和设备能力通过时预取；只有进入环境模式或 Dream 才开始播放，首页不创建播放器。</li><li>Activity onStop、进入其他 App、系统 Dream 结束立即释放播放器与解码器。</li></ul>
+        <div class="callout warning"><strong>版权闸门</strong><p>aerial-tv README 明确航拍影片版权归 Apple。生产版本只使用自有、明确授权或许可条款允许的内容与图片源；“能从服务器播放”不等于“可以捆绑、镜像、商用或长期热链”。上线前需完成内容清单、许可凭证与下架替换机制。</p></div>
+      </section>
+
+      <section id="companion">
+        <div class="section-head"><span class="section-index">11</span><div><h2>手机协同、HDMI 与控制中心</h2></div></div>
+        <h3>11.1 手机整理（P1）</h3><p>复杂拖拽、批量改名和图标选择在手机上完成，电视扫码打开局域网页面。参考 aerial-tv 的 QR + 本地 HTTP 思路，但安全基线改为：仅用户打开配对页时启动服务；使用 SecureRandom 生成高熵短期会话；5–10 分钟无活动自动关闭；写接口要求会话凭证和来源校验；失败限速；上传按 Content-Length 与实际流双重限制；校验解码后的媒体尺寸和剩余空间；不开放诊断与应用列表给未配对请求。</p>
+        <div class="flow"><div class="flow-node"><b>电视显示 QR</b>一次性配对 + 局域网地址</div><div class="arrow">→</div><div class="flow-node"><b>手机建立会话</b>电视确认来源名称</div><div class="arrow">→</div><div class="flow-node"><b>读取最小快照</b>布局、图标、可写设置</div><div class="arrow">→</div><div class="flow-node"><b>版本化提交</b>revision 冲突检测</div><div class="arrow">→</div><div class="flow-node"><b>电视事务更新</b>失效会话即关闭</div></div>
+        <h3>11.2 HDMI / 输入源</h3><ul><li>通用层通过 TvInputManager 枚举输入并构建系统可识别的启动入口；无输入、无授权或 ROM 不支持时不显示假按钮。</li><li>设备适配层只负责品牌差异，如输入标签、图标、显式系统 Intent；禁止在 UI 中堆品牌 if/else。</li><li>信号源作为 HomeItem 参与排序与文件夹之外的固定区，启动失败提供系统输入源面板备选。</li></ul>
+        <h3>11.3 控制中心</h3><p>音量优先调用系统控件；亮度、网络、直接信号源切换按能力展示。普通版无法修改时跳转系统设置。OEM 能力通过独立接口注入，并在权限撤销时优雅退化。桌面不读取通知内容，也不以无障碍读取屏幕文字作为控制中心实现方式。</p>
+      </section>
+
+      <section id="architecture">
+        <div class="section-head"><span class="section-index">12</span><div><h2>技术架构与模块划分</h2><p class="lead">单 Activity + 标准 Compose 多页面；Kotlin Coroutines / Flow 单向状态；Room 保存结构化布局与内容快照，DataStore 保存偏好。Widget 是唯一必须跨回传统 View 的核心 UI 边界。</p></div></div>
+        <div class="arch" role="img" aria-label="分层架构：手机版 Material 3 UI、电视交互层、领域层、数据网关、Android 系统服务">
+          <div class="arch-layer"><div class="arch-label">UI · 标准手机版控件</div><div class="arch-boxes"><span class="arch-box hot">Material 3 Card / Button / Chip / Tab</span><span class="arch-box">Dialog / Switch / Slider</span><span class="arch-box">LazyRow / LazyGrid</span><span class="arch-box">AndroidView · AppWidgetHostView</span></div></div>
+          <div class="arch-layer"><div class="arch-label">TV INTERACTION · 自建</div><div class="arch-boxes"><span class="arch-box hot">FocusGraph</span><span class="arch-box hot">FocusMemory</span><span class="arch-box">D-pad KeyEvents</span><span class="arch-box">BringIntoView</span><span class="arch-box">MotionTokens</span></div></div>
+          <div class="arch-layer"><div class="arch-label">DOMAIN</div><div class="arch-boxes"><span class="arch-box">HomeLayout</span><span class="arch-box">ChannelAggregator</span><span class="arch-box">WidgetCoordinator</span><span class="arch-box">LaunchResolver</span><span class="arch-box">IdleController</span></div></div>
+          <div class="arch-layer"><div class="arch-label">DATA</div><div class="arch-boxes"><span class="arch-box">Room / DataStore</span><span class="arch-box">PackageRepository</span><span class="arch-box">TvProviderGateway</span><span class="arch-box green">PartnerChannelGateway</span><span class="arch-box">WidgetHostRepository</span><span class="arch-box">MediaRepository</span></div></div>
+          <div class="arch-layer"><div class="arch-label">ANDROID / OEM</div><div class="arch-boxes"><span class="arch-box">PackageManager</span><span class="arch-box">AppWidgetManager</span><span class="arch-box">TvProvider</span><span class="arch-box">TvInputManager</span><span class="arch-box">Media3</span><span class="arch-box green">DeviceCapability / OEM Adapter</span></div></div>
+        </div>
+        <h3>12.1 建议 Gradle 模块</h3><div class="table-wrap"><table><thead><tr><th>模块</th><th>职责</th><th>边界</th></tr></thead><tbody>
+          <tr><td><code class="inline">app</code></td><td>HOME Activity、导航、发行版组合、Manifest</td><td>不写数据查询和焦点算法</td></tr>
+          <tr><td><code class="inline">core:designsystem</code></td><td>M3 手机版控件封装、色彩、字体、形状、动效</td><td>禁止 androidx.tv；不包含业务状态</td></tr>
+          <tr><td><code class="inline">core:tvinteraction</code></td><td>D-pad、焦点、自动滚动、遥控器测试工具</td><td>标准 Compose Foundation，可独立测试</td></tr>
+          <tr><td><code class="inline">core:database</code> / <code class="inline">core:settings</code></td><td>Room、DataStore、Migration</td><td>数据库不持有 Android View / RemoteViews</td></tr>
+          <tr><td><code class="inline">feature:home</code> / <code class="inline">apps</code> / <code class="inline">widgets</code> / <code class="inline">channels</code></td><td>页面、ViewModel、UI State</td><td>通过 Repository 接口访问数据</td></tr>
+          <tr><td><code class="inline">data:system</code> / <code class="inline">data:partner</code> / <code class="inline">data:media</code></td><td>系统源、合作方源、媒体与设备网关</td><td>OEM 权限不进入共享 UI</td></tr>
+          <tr><td><code class="inline">oem</code>（可选）</td><td>特权 Manifest、厂商能力、系统集成</td><td>独立 productFlavor / 预装包</td></tr>
+        </tbody></table></div>
+        <h3>12.2 构建基线</h3><pre><code>android {
+  namespace = <span class="s">"com.example.tvlauncher"</span>
+  compileSdk = 36
+  defaultConfig {
+    minSdk = 23
+    targetSdk = 36
+  }
+  buildFeatures { compose = true }
+  compileOptions {
+    isCoreLibraryDesugaringEnabled = true
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+}
+dependencies {
+  implementation(platform(<span class="s">"androidx.compose:compose-bom:&lt;locked&gt;"</span>))
+  implementation(<span class="s">"androidx.compose.material3:material3"</span>)
+  implementation(<span class="s">"androidx.compose.ui:ui"</span>)
+  implementation(<span class="s">"androidx.compose.foundation:foundation"</span>)
+  <span class="c">// 禁止：androidx.tv:tv-material / androidx.tv:tv-foundation</span>
+}</code></pre>
+        <p>Compose BOM、Material 3、Media3、Room 等版本在 M0 统一锁定，并记录各库的 minSdk 与行为变化；lint 将 NewApi 设为错误，使用 desugaring 解决受支持的 Java 语言/库 API，不用它替代 Android API 门控。</p>
+        <h3>12.3 Manifest 关键结构</h3><pre><code>&lt;uses-feature android:name=<span class="s">"android.hardware.touchscreen"</span> android:required=<span class="s">"false"</span> /&gt;
+&lt;uses-feature android:name=<span class="s">"android.software.leanback"</span> android:required=<span class="s">"false"</span> /&gt;
+&lt;activity android:name=<span class="s">".MainActivity"</span> android:exported=<span class="s">"true"</span>
+  android:launchMode=<span class="s">"singleTask"</span> android:excludeFromRecents=<span class="s">"true"</span>&gt;
+  &lt;intent-filter&gt;
+    &lt;action android:name=<span class="s">"android.intent.action.MAIN"</span> /&gt;
+    &lt;category android:name=<span class="s">"android.intent.category.HOME"</span> /&gt;
+    &lt;category android:name=<span class="s">"android.intent.category.DEFAULT"</span> /&gt;
+  &lt;/intent-filter&gt;
+  &lt;intent-filter&gt;
+    &lt;action android:name=<span class="s">"android.intent.action.MAIN"</span> /&gt;
+    &lt;category android:name=<span class="s">"android.intent.category.LEANBACK_LAUNCHER"</span> /&gt;
+  &lt;/intent-filter&gt;
+&lt;/activity&gt;</code></pre>
+        <p>是否额外声明普通 LAUNCHER、RECEIVE_BOOT_COMPLETED、DreamService 等按发行版决定。标准版 BOOT_COMPLETED 只用于刷新缓存，不假设可以从后台强制拉起 Activity；默认 HOME 是主路径。Application 还需提供符合当前 TV 质量要求的 320 × 180px banner（含应用名）；若上架 Google Play，按当期 TV-G6 等规则验证 ABI 与 16KB 页大小兼容。</p>
+      </section>
+
+      <section id="data">
+        <div class="section-head"><span class="section-index">13</span><div><h2>数据模型、状态与持久化</h2></div></div>
+        <h3>13.1 Room 核心实体</h3><div class="table-wrap"><table><thead><tr><th>实体</th><th>关键字段</th><th>唯一性 / 生命周期</th></tr></thead><tbody>
+          <tr><td>HomeItem</td><td>id, type, refId, parentId, rowId, position, hidden</td><td>用户布局；类型为 App / Folder / Source / WidgetShortcut</td></tr>
+          <tr><td>AppOverride</td><td>packageName, activityName, customLabel, iconUri, hidden</td><td>ComponentName 唯一；包更新保留，卸载后按策略归档</td></tr>
+          <tr><td>Folder</td><td>id, name, iconStyle, createdAt</td><td>与 HomeItem 同事务；解散不删除 App</td></tr>
+          <tr><td>WidgetInstance</td><td>id, appWidgetId, providerPackage, providerClass, pageId, x, y, spanX, spanY</td><td>appWidgetId 唯一；删除实体同时回收系统 ID</td></tr>
+          <tr><td>ChannelEntity</td><td>origin, sourcePackage, externalId, title, logoUri, browsable, position</td><td>(origin, sourcePackage, externalId) 唯一</td></tr>
+          <tr><td>ProgramEntity</td><td>channelId, externalId, title, posterUri, ratio, intentUri, progress, expiresAt</td><td>级联清理；图片存文件缓存，不入库</td></tr>
+          <tr><td>SourceGrant</td><td>uid, packageName, certDigest, capabilities, quota, enabled</td><td>签名变化、卸载或用户撤销即失效</td></tr>
+        </tbody></table></div>
+        <p>DataStore 保存主题、动效、环境媒体模式、设备等级、首页行设置与焦点记忆。偏好与结构化布局分离，避免用 JSON 大字符串承担所有迁移。Room 每次升级提供 Migration 与导出/导入测试。</p>
+        <h3>13.2 单向状态</h3><pre><code><span class="k">data class</span> <span class="n">HomeUiState</span>(
+  <span class="k">val</span> apps: LoadState&lt;List&lt;HomeItem&gt;&gt;,
+  <span class="k">val</span> channels: List&lt;ChannelRowUi&gt;,
+  <span class="k">val</span> widgets: List&lt;WidgetShortcutUi&gt;,
+  <span class="k">val</span> capabilities: DeviceCapabilities,
+  <span class="k">val</span> focusedKey: String?,
+  <span class="k">val</span> editMode: EditMode = EditMode.None,
+  <span class="k">val</span> notice: Notice? = <span class="k">null</span>
+)</code></pre>
+        <ul><li>UI 发送 Intent（MoveItem、HideChannel、RemoveWidget），ViewModel 调用领域用例，Repository 写事务，Flow 驱动重组。</li><li>App、Channel、Widget 的错误分别建模；一个来源失败不能把整个 HomeUiState 变成 Error。</li><li>布局操作采用 revision，手机端与电视端同时修改时拒绝覆盖旧版本并重新读取。</li><li>焦点 key 是 UI 状态，不写高频数据库；只保存到内存/SavedState，低频持久化最后页面。</li></ul>
+      </section>
+
+      <section id="compatibility">
+        <div class="section-head"><span class="section-index">14</span><div><h2>兼容、安全、隐私与权限</h2></div></div>
+        <h3>14.1 版本能力矩阵</h3><div class="table-wrap"><table class="matrix"><thead><tr><th>能力</th><th>API 23–25</th><th>API 26–30</th><th>API 31+</th><th>降级 / 注意</th></tr></thead><tbody>
+          <tr><td>HOME、应用、文件夹</td><td class="yes">公开 API</td><td class="yes">公开 API</td><td class="yes">公开 API</td><td>包可见性按版本处理</td></tr>
+          <tr><td>系统推荐 Channel</td><td class="no">无系统推荐机制</td><td class="partial">可见范围依权限/ROM</td><td class="partial">可见范围依权限/ROM</td><td>隐藏系统源，保留 Partner</td></tr>
+          <tr><td>OEM 全量 Channel</td><td class="no">不承诺</td><td class="partial">需特权集成</td><td class="partial">需特权集成</td><td>签名 + 白名单 + 实机合同测试</td></tr>
+          <tr><td>AppWidgetHost</td><td class="yes">支持</td><td class="yes">支持</td><td class="yes">支持</td><td>高版本预览/尺寸字段门控</td></tr>
+          <tr><td>动态色</td><td class="no">内置主题</td><td class="no">内置主题</td><td class="partial">可选用</td><td>不影响焦点对比度</td></tr>
+          <tr><td>后台启动 Activity</td><td class="partial">ROM 差异</td><td class="partial">限制增加</td><td class="partial">限制更严格</td><td>依赖默认 HOME，不做强拉</td></tr>
+          <tr><td>包可见性</td><td class="yes">旧模型</td><td class="partial">API 30 起受限</td><td class="partial">受限</td><td>queries 优先，QUERY_ALL_PACKAGES 单独合规</td></tr>
+        </tbody></table></div>
+        <h3>14.2 权限最小化</h3><div class="table-wrap"><table><thead><tr><th>权限 / 能力</th><th>何时需要</th><th>拒绝后的行为</th></tr></thead><tbody>
+          <tr><td>INTERNET / ACCESS_NETWORK_STATE</td><td>图片、授权媒体、合作方网络内容</td><td>本地桌面完整可用</td></tr>
+          <tr><td>READ_TV_LISTINGS</td><td>尝试读取 ROM 暴露的电视清单/可搜索数据</td><td>不循环请求；切换 Partner 或 OEM 源</td></tr>
+          <tr><td>ACCESS_ALL_EPG_DATA</td><td>OEM 全量聚合</td><td>标准版不能通过运行时弹窗获得，直接禁用该模式</td></tr>
+          <tr><td>RECEIVE_BOOT_COMPLETED</td><td>开机后对账本地数据/媒体</td><td>首次回 HOME 时延迟刷新</td></tr>
+          <tr><td>REQUEST_DELETE_PACKAGES</td><td>用户主动卸载</td><td>跳转应用信息</td></tr>
+          <tr><td>位置 / 存储 / 无障碍 / 通知监听</td><td>只有对应可选功能确有需要</td><td>默认不申请；单独说明，不与核心 Launcher 捆绑</td></tr>
+        </tbody></table></div>
+        <h3>14.3 安全与隐私基线</h3><ul class="checklist"><li>不记录通知正文、屏幕内容、观看内容全文、Wi-Fi 密码或账号凭据。</li><li>诊断日志默认仅包含 SDK、设备能力、耗时、错误码；包名与内容来源提供脱敏开关。</li><li>外部 IntentUri、content Uri、RemoteViews 均视为不可信输入，逐项异常隔离。</li><li>Partner Bridge 校验 UID + 签名 + 用户授权 + 配额，不能只信任调用方自报 packageName。</li><li>上传文件按字节流限额、媒体解码限额、存储配额处理；路径由 Launcher 生成，不采用客户端文件名拼接。</li><li>布局导出不含 Token、系统权限和私有 Provider 字段；导入需要用户确认并 schema 校验。</li><li>不 Root、不加载隐藏 API、不通过隐蔽保活绕过系统限制；OEM 能力留在签名构建。</li></ul>
+      </section>
+
+      <section id="performance">
+        <div class="section-head"><span class="section-index">15</span><div><h2>性能、媒体与资源预算</h2><p class="lead">以下为开发验收目标，不是当前实测。最终阈值在 M0 用一台 API 23 低配设备和一台主流 2GB 设备校准。</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>指标</th><th>标准设备目标</th><th>低配设备目标</th><th>测量方式</th></tr></thead><tbody>
+          <tr><td>缓存首页首帧</td><td>P95 ≤ 1.0s</td><td>P95 ≤ 1.8s</td><td>冷启动，断网/联网各 20 次</td></tr>
+          <tr><td>本地应用可交互</td><td>P95 ≤ 1.5s</td><td>P95 ≤ 2.5s</td><td>不等待海报、天气或视频</td></tr>
+          <tr><td>HOME 热恢复</td><td>P95 ≤ 500ms</td><td>P95 ≤ 900ms</td><td>从视频 App 返回</td></tr>
+          <tr><td>焦点反馈</td><td>≤ 50ms 开始</td><td>≤ 100ms 开始</td><td>按键时间戳至首帧变化</td></tr>
+          <tr><td>滚动帧预算</td><td>P95 ≤ 16.7ms</td><td>P95 ≤ 33ms</td><td>固定海报集连续 500 次移动</td></tr>
+          <tr><td>静态首页 PSS</td><td>目标 ≤ 180MB</td><td>目标 ≤ 150MB</td><td>稳定 5 分钟后，无视频</td></tr>
+          <tr><td>后台活动</td><td>无播放、无持续轮询</td><td>同左</td><td>离开首页 10 分钟采样</td></tr>
+        </tbody></table></div>
+        <h3>15.1 实现策略</h3><div class="grid-2"><div class="card"><ul><li>首页查询限量：每频道先取 20 条，首屏图片预取 6–8 张，其余滚动加载。</li><li>图片按目标像素尺寸解码，统一 Coil/等效图片层；失败占位不重复重组。</li><li>ViewModel 状态按行拆分，焦点变化不触发所有海报重组。</li><li>图标、海报、文件夹合成图使用内存 + 磁盘缓存，包更新使对应缓存失效。</li><li>Baseline Profile 覆盖冷启动、HOME 恢复、首行滚动和应用页。</li></ul></div><div class="card"><ul><li>低配自动或手动关闭大面积阴影、非必要图片预取和环境媒体自动预载；首页本来就没有实时模糊、视差或视频。</li><li>活动 Widget 建议标准版最多 8 个、低配最多 4 个；这是产品预算，不是系统上限。</li><li>媒体缓存从 256MB / 1GB 起，受剩余空间约束；存储不足先停预取。</li><li>Provider 同步去抖、合并与取消，避免连续广播造成全表刷新。</li><li>R8 / 资源压缩 / 启动耗时日志，禁止在主线程查询 Provider 或解码大图。</li></ul></div></div>
+        <h3>15.2 设备等级</h3><p><code class="inline">DeviceClass</code> 不只按 RAM 判断：综合 API、ActivityManager 内存等级、可用存储、解码能力、历史帧耗时。首次以保守配置启动，运行数据只用于本地效果降级，不做隐蔽设备画像。用户手动选择优先，但“高效果”仍需通过解码与存储闸门。</p>
+      </section>
+
+      <section id="delivery">
+        <div class="section-head"><span class="section-index">16</span><div><h2>测试策略与验收矩阵</h2></div></div>
+        <h3>16.1 自动化测试</h3><div class="table-wrap"><table><thead><tr><th>层级</th><th>覆盖内容</th><th>必须通过的异常用例</th></tr></thead><tbody>
+          <tr><td>单元测试</td><td>焦点最近邻、行/列映射、布局事务、Channel diff、配额、过期、Intent 校验</td><td>空列表、焦点项删除、重复 ID、恶意 Uri、时钟回拨</td></tr>
+          <tr><td>Robolectric</td><td>API 23 / 26 / 30 / 36 能力门控、包变更、Room Migration</td><td>Provider 不存在、权限拒绝、包更新与卸载</td></tr>
+          <tr><td>Compose UI</td><td>M3 手机版控件的 D-pad、Dialog 焦点、LazyRow 自动滚动、减少动效</td><td>快速连按、字体放大、内容异步插入</td></tr>
+          <tr><td>Widget 测试 Provider</td><td>绑定、配置、更新、集合、缩放、移除、进程重启</td><td>拒绝绑定、取消配置、空 RemoteViews、Provider 崩溃</td></tr>
+          <tr><td>集成 / Macrobenchmark</td><td>冷启动、HOME 恢复、500 次焦点移动、内存与帧时间</td><td>低存储、断网、慢 Provider、反复进程死亡</td></tr>
+        </tbody></table></div>
+        <h3>16.2 计划真机矩阵（不代表已测试）</h3><div class="table-wrap"><table><thead><tr><th>类别</th><th>最低覆盖</th><th>重点</th></tr></thead><tbody>
+          <tr><td>系统版本</td><td>Android 6 (23)、7.1 (25)、8/9、11、12/14/16</td><td>能力门控、后台限制、包可见性、动态色</td></tr>
+          <tr><td>桌面形态</td><td>AOSP Android TV、Google TV、国产 PatchWall/酷开等代表 ROM</td><td>HOME 接管、TvProvider 数据范围、系统设置跳转</td></tr>
+          <tr><td>硬件</td><td>1–1.5GB 低配盒、2GB 1080p 电视、4K 电视/投影</td><td>内存、帧率、解码、存储、待机恢复</td></tr>
+          <tr><td>显示</td><td>720p / 1080p / 4K，常见 density 与 overscan</td><td>dp 布局、字体、焦点描边裁切</td></tr>
+          <tr><td>输入</td><td>四向遥控器、带菜单遥控器、蓝牙遥控、可选鼠标</td><td>OK 长按、无 MENU、Widget 内部退出</td></tr>
+          <tr><td>网络</td><td>Wi-Fi、以太网、断网、弱网、计量网络</td><td>缓存优先、预取停止、错误恢复</td></tr>
+        </tbody></table></div>
+        <h3>16.3 发布验收清单</h3><div class="grid-2"><div class="card"><ul class="checklist"><li>只用遥控器可完成安装后全部核心流程</li><li>Android 6 不出现 API 26 类加载或调用崩溃</li><li>断网冷启动仍可启动本地 App</li><li>连续 500 次移动无焦点丢失与明显内存增长</li><li>Widget 取消授权后无泄漏 ID 和空占位</li><li>Channel 权限撤销后旧数据按策略隐藏并说明</li><li>卸载/更新来源 App 后布局与频道正确对账</li></ul></div><div class="card"><ul class="checklist"><li>72 小时待机/HOME/屏保循环无播放器泄漏</li><li>环境媒体播放失败自动回静态帧并可用 BACK 退出</li><li>所有外部链接失败都有返回路径</li><li>所有主要文字通过对比度与 overscan 检查</li><li>标准版 APK 无特权权限授权假设</li><li>依赖扫描确认没有 androidx.tv 组件库</li><li>媒体、字体、图标和内容来源许可归档</li></ul></div></div>
+      </section>
+
+      <section id="roadmap">
+        <div class="section-head"><span class="section-index">17</span><div><h2>里程碑、交付物与团队节奏</h2><p class="lead">以下为 1 名 Android 技术负责人、2 名 Android 工程师、1 名设计、1 名测试的参考节奏，总计约 12–14 周；不是固定工期承诺。OEM 商务/授权与真机到位是前置条件。</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>阶段</th><th>参考时长</th><th>范围</th><th>退出条件</th></tr></thead><tbody>
+          <tr><td><strong>M0 · 技术闸门</strong></td><td>1–2 周</td><td>API 23 构建、手机版 M3 控件 D-pad 原型、TvProvider 权限验证、Widget 绑定/配置、目标 ROM HOME/HDMI/解码</td><td>输出能力报告；标准/OEM 范围签字；阻塞项有降级</td></tr>
+          <tr><td><strong>M1 · 可用桌面</strong></td><td>3 周</td><td>HOME、应用/文件夹、排序、静态主题背景、Room、焦点系统、离线启动</td><td>Android 6 与主流电视完成核心验收</td></tr>
+          <tr><td><strong>M2 · Widget + 个性化</strong></td><td>2–3 周</td><td>Widget 全生命周期、画布、控制中心、低配置模式</td><td>测试 Provider 全用例通过，72 小时稳定性起步</td></tr>
+          <tr><td><strong>M3 · Channel</strong></td><td>3 周</td><td>三种来源、缓存对账、频道管理、Watch Next、深链与来源撤销</td><td>按发行版完成权限与来源合同测试</td></tr>
+          <tr><td><strong>M4 · 媒体与发布</strong></td><td>3 周</td><td>Media3 环境模式/屏保、手机整理、性能、兼容矩阵、发布文档</td><td>性能预算、版权、隐私、回滚与 Beta 验收完成</td></tr>
+        </tbody></table></div>
+        <h3>每阶段固定交付物</h3><div class="grid-4"><div class="card"><b>可安装 APK</b><p>standard 与 oem 变体，能力差异可观察。</p></div><div class="card"><b>设计标注</b><p>Figma/等效源文件、token、焦点与空状态。</p></div><div class="card"><b>兼容报告</b><p>真实设备、ROM 版本、权限和失败原因。</p></div><div class="card"><b>测试证据</b><p>启动/帧率/内存报告与关键路径录像。</p></div></div>
+      </section>
+
+      <section id="risks">
+        <div class="section-head"><span class="section-index">18</span><div><h2>主要风险与决策记录</h2></div></div>
+        <div class="table-wrap"><table><thead><tr><th>风险</th><th>等级</th><th>早期信号</th><th>缓解</th></tr></thead><tbody>
+          <tr><td>OEM 不授予全量 Channel 权限</td><td><span class="tag gate">高</span></td><td>查询只有自有/可搜索行，白名单申请无结果</td><td>M0 验证；标准版切换 Partner，不伪造完整聚合</td></tr>
+          <tr><td>第三方 Widget 不支持 D-pad</td><td><span class="tag gate">高</span></td><td>内部无法聚焦、滑动集合无法退出</td><td>外框两级交互、兼容清单、鼠标提示，不承诺全部 Widget</td></tr>
+          <tr><td>手机版 M3 控件焦点行为不一致</td><td><span class="tag gate">高</span></td><td>Dialog/LazyGrid 焦点丢失、连按跳动</td><td>core:tvinteraction 先行，组件级遥控器测试作为合并门槛</td></tr>
+          <tr><td>航拍/图片版权不清</td><td><span class="tag gate">高</span></td><td>只有公开 URL，没有分发许可</td><td>换自有/授权源，发布前完成许可清单</td></tr>
+          <tr><td>低配设备 4K/图片导致 OOM</td><td><span class="tag custom">中</span></td><td>PSS 上升、解码失败、滚动掉帧</td><td>按尺寸解码、设备等级、缓存上限、静态降级</td></tr>
+          <tr><td>厂商禁止 HOME 或清理后台</td><td><span class="tag gate">高</span></td><td>HOME 回原厂桌面、开机不能恢复</td><td>设备适配与说明；守护功能另评，不做隐蔽绕过</td></tr>
+          <tr><td>包可见性导致 App 缺失</td><td><span class="tag custom">中</span></td><td>API 30+ 只能看到部分应用</td><td>queries 覆盖启动 Intent；确需 QUERY_ALL_PACKAGES 时走分发合规</td></tr>
+        </tbody></table></div>
+        <h3>决策记录（ADR 摘要）</h3><div class="card">
+          <div class="decision"><b>ADR-001</b><div><strong>拒绝 Compose for TV 组件库。</strong>遵从项目约束，使用 Material 3 手机版控件；代价是自建焦点、方向键和电视布局，独立模块与测试承担复杂度。</div></div>
+          <div class="decision"><b>ADR-002</b><div><strong>不以 WebView 实现桌面。</strong>原生 Compose 保证包管理、Widget、焦点、媒体与低配置控制；手机配置页才使用 Web 技术。</div></div>
+          <div class="decision"><b>ADR-003</b><div><strong>Channel 采用多源聚合。</strong>系统可见、合作方与 OEM 全量实现同一领域接口，UI 无需感知权限细节，但来源必须可追溯。</div></div>
+          <div class="decision"><b>ADR-004</b><div><strong>Widget 不强行 Compose 化。</strong>RemoteViews 必须留在 AppWidgetHostView 内，M3 容器与系统 Provider 的边界不可混淆。</div></div>
+          <div class="decision"><b>ADR-005</b><div><strong>本地缓存优先于实时推荐。</strong>桌面首先是启动器；网络失败、Provider 失败不能影响应用入口。</div></div>
+        </div>
+      </section>
+
+      <section id="references">
+        <div class="section-head"><span class="section-index">19</span><div><h2>依据与参考来源</h2><p class="lead">技术事实优先参考仓库源码、Android 官方文档与 AOSP。网页可能更新，实施时应按锁定 SDK、AndroidX 版本和目标 ROM 再核对。</p></div></div>
+        <ol class="source-list">
+          <li id="ref-aerial"><strong>aerial-tv 仓库与 README：</strong>功能、安装、standard/guard/Lite、航拍来源和许可。<br><a href="https://github.com/pengchujin/aerial-tv" target="_blank" rel="noopener noreferrer">github.com/pengchujin/aerial-tv</a></li>
+          <li><strong>aerial-tv 构建与清单：</strong>Compose、Media3、NanoHTTPD、ZXing、SDK 与 Launcher/Service 配置。<br><a href="https://github.com/pengchujin/aerial-tv/blob/main/app/build.gradle.kts" target="_blank" rel="noopener noreferrer">app/build.gradle.kts</a> · <a href="https://github.com/pengchujin/aerial-tv/blob/main/app/src/main/AndroidManifest.xml" target="_blank" rel="noopener noreferrer">app/src/main/AndroidManifest.xml</a></li>
+          <li><strong>aerial-tv 关键实现：</strong>HomeViewModel、AerialStream、PhoneServer，用于确认布局编排、Media3 缓存与本地服务方式。<br><a href="https://github.com/pengchujin/aerial-tv/tree/main/app/src/main/java/app/orchard/tv" target="_blank" rel="noopener noreferrer">app/src/main/java/app/orchard/tv</a></li>
+          <li><strong>Android TV 首页推荐 Channel：</strong>API 26+、默认频道、用户批准、PreviewProgram 与 Watch Next 发布方契约。<br><a href="https://developer.android.com/training/tv/discovery/recommendations-channel" target="_blank" rel="noopener noreferrer">developer.android.com/training/tv/discovery/recommendations-channel</a></li>
+          <li><strong>AOSP TvProvider：</strong>查询调用方过滤、selection 限制、包名归属与权限检查。<br><a href="https://android.googlesource.com/platform/packages/providers/TvProvider/+/refs/heads/main/src/com/android/providers/tv/TvProvider.java" target="_blank" rel="noopener noreferrer">TvProvider.java</a></li>
+          <li><strong>AOSP TvProvider Manifest：</strong>ACCESS_ALL_EPG_DATA = signature|privileged，READ_TV_LISTINGS = dangerous，Provider URI 权限配置。<br><a href="https://android.googlesource.com/platform/packages/providers/TvProvider/+/refs/heads/main/AndroidManifest.xml" target="_blank" rel="noopener noreferrer">TvProvider/AndroidManifest.xml</a></li>
+          <li><strong>AndroidX TV Provider：</strong>Channel、PreviewProgram、WatchNextProgram 与兼容 URI 契约。<br><a href="https://developer.android.com/reference/androidx/tvprovider/media/tv/TvContractCompat" target="_blank" rel="noopener noreferrer">androidx.tvprovider.media.tv.TvContractCompat</a></li>
+          <li><strong>AppWidgetHost / AppWidgetManager：</strong>绑定、授权、createView、监听生命周期与尺寸 Options。<br><a href="https://developer.android.com/reference/android/appwidget/AppWidgetHost" target="_blank" rel="noopener noreferrer">AppWidgetHost</a> · <a href="https://developer.android.com/reference/android/appwidget/AppWidgetManager" target="_blank" rel="noopener noreferrer">AppWidgetManager</a></li>
+          <li><strong>标准 Compose Material 3：</strong>Material 3 手机版/通用组件、主题与 M3 Expressive 说明；本方案不使用 Compose for TV。<br><a href="https://developer.android.com/develop/ui/compose/designsystems/material3" target="_blank" rel="noopener noreferrer">developer.android.com/develop/ui/compose/designsystems/material3</a></li>
+          <li><strong>Material Design 3：</strong>色彩、形状、排版、动效与 Expressive 的设计依据。<br><a href="https://m3.material.io/" target="_blank" rel="noopener noreferrer">m3.material.io</a></li>
+          <li><strong>Android TV 设计与质量：</strong>十英尺体验、D-pad、导航和电视应用质量。<br><a href="https://developer.android.com/design/ui/tv" target="_blank" rel="noopener noreferrer">developer.android.com/design/ui/tv</a> · <a href="https://developer.android.com/docs/quality-guidelines/tv-app-quality" target="_blank" rel="noopener noreferrer">TV app quality</a></li>
+        </ol>
+        <div class="callout success"><strong>文档结论</strong><p>本方案可以在 minSdk 23 下交付完整的应用桌面与系统 Widget 宿主；系统 Channel 的覆盖范围必须由 API 版本、ROM 权限和发行版决定。视觉可以完全基于标准 Material 3 手机版控件实现，电视化工作的核心是自建焦点与遥控器层，而不是更换组件库。</p></div>
+      </section>
+
+      <footer class="footer">TV Launcher 详细设计方案 · 单文件 HTML，无外部脚本、字体或图片依赖 · 建议使用桌面浏览器查看，可通过左侧按钮打印或导出 PDF。</footer>
+    </div>
+  </main>
+</div>
+<button class="top-link" aria-label="回到顶部" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script>
+  (() => {
+    const links = [...document.querySelectorAll('.sidebar nav a')];
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a,b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (!visible) return;
+        links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + visible.target.id));
+      }, {rootMargin:'-10% 0px -72% 0px', threshold:0});
+      sections.forEach(s => observer.observe(s));
+    }
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+{
+ "minSdk": 23,
+ "material3": "1.5.0-alpha25",
+ "haze": "2.0.1",
+ "apkVersionFiles": {
+  "androidx.compose.material3_material3.version": "^1\\.5\\.0-alpha25$",
+  "androidx.compose.ui_ui.version": "^1\\.12\\.",
+  "androidx.compose.foundation_foundation.version": "^1\\.12\\."
+ },
+ "forbiddenDeps": [
+  "androidx\\.tv:",
+  "dev\\.chrisbanes\\.haze:haze-glass",
+  "androidx\\.compose\\.material3:material3:[^ ]*-> 1\\.5\\.0-(alpha2[6-9]|alpha[3-9]\\d|beta|rc)",
+  "androidx\\.compose\\.(ui|foundation):[a-z-]+:[^ ]*-> 1\\.1[3-9]\\."
+ ],
+ "requiredDepsByMilestone": {
+  "M1": [
+   "androidx.compose.material3:material3",
+   "dev.chrisbanes.haze:haze:2.0.1",
+   "androidx.tvprovider:tvprovider",
+   "androidx.room:room-runtime",
+   "androidx.datastore:datastore"
+  ],
+  "M2": [
+   "dev.chrisbanes.haze:haze-blur:2.0.1",
+   "io.coil-kt.coil3:coil"
+  ],
+  "M3": [
+   "androidx.work:work-runtime"
+  ],
+  "M4": [
+   "androidx.media3:media3-exoplayer",
+   "org.nanohttpd:nanohttpd",
+   "com.google.zxing:core"
+  ],
+  "M5": [
+   "androidx.profileinstaller:profileinstaller"
+  ]
+ },
+ "requiredDexClassesByMilestone": {
+  "M2": [
+   "QuantizerCelebi",
+   "DynamicScheme",
+   "Hct"
+  ]
+ },
+ "modulesByMilestone": {
+  "M1": [
+   ":app",
+   ":core:designsystem",
+   ":core:tvfocus",
+   ":core:glass",
+   ":data:apps",
+   ":data:channels",
+   ":feature:home",
+   ":feature:apps",
+   ":feature:settings"
+  ],
+  "M2": [
+   ":core:dynamiccolor",
+   ":core:ambient",
+   ":feature:quicksettings"
+  ],
+  "M3": [
+   ":data:series",
+   ":data:widgets",
+   ":feature:widgets",
+   ":opt:shizuku",
+   ":data:weather"
+  ],
+  "M4": [
+   ":data:media",
+   ":feature:phone-organizer",
+   ":data:restricted",
+   ":core:diag"
+  ],
+  "M5": [
+   ":feature:onboarding",
+   ":oem",
+   ":core:update"
+  ]
+ },
+ "moduleRules": [
+  {
+   "from": ":core:",
+   "mustNotDependOn": [
+    ":data:",
+    ":feature:",
+    ":app",
+    ":opt:"
+   ]
+  },
+  {
+   "from": ":data:",
+   "mustNotDependOn": [
+    ":feature:",
+    ":app"
+   ]
+  },
+  {
+   "from": ":feature:",
+   "mustNotDependOn": [
+    ":feature:",
+    ":app"
+   ]
+  }
+ ],
+ "sourceRules": [
+  {
+   "id": "no-androidx-tv",
+   "pattern": "import\\s+androidx\\.tv\\.",
+   "scope": "all"
+  },
+  {
+   "id": "no-texture-view",
+   "pattern": "\\bTextureView\\b",
+   "scope": "all"
+  },
+  {
+   "id": "expressive-api-only-in-designsystem",
+   "pattern": "MaterialShapes|ExperimentalMaterial3ExpressiveApi",
+   "scope": "outside:core/designsystem"
+  },
+  {
+   "id": "no-cjk-literals",
+   "pattern": "\"[^\"\\n]*[一-鿿][^\"\\n]*\"",
+   "scope": "kotlin-main"
+  },
+  {
+   "id": "no-renderscript",
+   "pattern": "\\bRenderScript\\b|renderscript",
+   "scope": "all"
+  }
+ ],
+ "requiredSymbols": [
+  {
+   "id": "expressive-theme",
+   "pattern": "MaterialExpressiveTheme",
+   "milestone": "M1"
+  },
+  {
+   "id": "test-tags-as-resource-id",
+   "pattern": "testTagsAsResourceId",
+   "milestone": "M1"
+  },
+  {
+   "id": "force-material3",
+   "pattern": "force\\(.*material3.*1\\.5\\.0-alpha25|1\\.5\\.0-alpha25",
+   "files": "gradle",
+   "milestone": "M1"
+  },
+  {
+   "id": "motion-scheme",
+   "pattern": "MotionScheme",
+   "milestone": "M2"
+  },
+  {
+   "id": "material-shapes",
+   "pattern": "MaterialShapes",
+   "milestone": "M2"
+  },
+  {
+   "id": "haze-source",
+   "pattern": "hazeSource|hazeEffect",
+   "milestone": "M1"
+  }
+ ]
+}
