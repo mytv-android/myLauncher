@@ -1,0 +1,432 @@
+{
+ "dumps": [
+  {
+   "seq": 4,
+   "ts": 1793673746033,
+   "event": "dump_tv",
+   "table": "channels",
+   "total": 8,
+   "byPackage": {
+    "com.google.android.tvrecommendations": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 1,
+       "name": "Apps Spotlight",
+       "ipid": "https://assets.androidtv.com/channel-assets/play_logo_160_33.png",
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 2,
+       "name": "TV Live",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      }
+     ]
+    },
+    "com.android.shell": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 3,
+       "name": "MyFav",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    },
+    "com.github.mytv.dv": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 9,
+       "name": "推荐",
+       "ipid": "mydv_recommend",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      },
+      {
+       "id": 10,
+       "name": "稍后再看",
+       "ipid": "mydv_watch_later",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 11,
+       "name": "海豚精选",
+       "ipid": "dolphin.featured",
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 12,
+       "name": "星火影院 · 本周热映",
+       "ipid": "spark.weekly",
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      },
+      {
+       "id": 13,
+       "name": "星火影院 · 稍后再看",
+       "ipid": "spark.later",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "seq": 5,
+   "ts": 1793673746186,
+   "event": "dump_tv",
+   "table": "preview_programs",
+   "total": 13,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 55,
+       "ch": 2,
+       "title": "Webview检测(应用不提供内置源，请自行添加)",
+       "ipid": "1600037354",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://gitee.com/mytv-android/myTVlogo/raw/master/img/Webview检测.png"
+      }
+     ]
+    },
+    "com.github.mytv.dv": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 70,
+       "ch": 9,
+       "title": "难怪网友们都说周董在那个年代都不算什么，2000-2009年的华语乐坛，简直就是神仙打架！ #音乐  #一代人的回忆  ",
+       "ipid": "7695742438735990031",
+       "type": 4,
+       "w": 30,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://p3-pc-sign.douyinpic.com/image-cut-tos-priv/dddaea503dfeda6b87489463fafb0614~tplv-dy-resize-origshort-autoq-75:330.jpeg?lk3s=138a59ce&x-expires=2108732400&x-signature=KqxJf9u3SVKcU4vW0oLxP3BxLMQ%3D&from=327834062&s=PackSourceEnum_FEED&se=false&sc=cover&biz_tag=pcweb_cover&l=202610302301498A119324CFC6A155755A"
+      },
+      {
+       "id": 71,
+       "ch": 9,
+       "title": "大黑牛李晨突袭校园？校园猫鼠游戏第四期！ @李晨 VS 八名同学 #未来导演扶持计划  #自制综艺  #上抖音精选App",
+       "ipid": "7680940030981868840",
+       "type": 4,
+       "w": 29,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://p3-pc-sign.douyinpic.com/image-cut-tos-priv/e407af4ecb9be9f561ab352114904ec8~tplv-dy-resize-origshort-autoq-75:330.jpeg?lk3s=138a59ce&x-expires=2108732400&x-signature=EG52vk50PYHAuuswCR4COa66cl8%3D&from=327834062&s=PackSourceEnum_FEED&se=false&sc=cover&biz_tag=pcweb_cover&l=202610302301498A119324CFC6A155755A"
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 72,
+       "ch": 11,
+       "title": "深海之歌",
+       "ipid": "dolphin.ocean",
+       "type": 1,
+       "w": 100,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.dolphin.art/ocean_16x9.jpg"
+      },
+      {
+       "id": 73,
+       "ch": 11,
+       "title": "林间四季",
+       "ipid": "dolphin.forest",
+       "type": 1,
+       "w": 90,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.dolphin.art/forest_16x9.jpg"
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 8,
+     "rows": [
+      {
+       "id": 74,
+       "ch": 12,
+       "title": "赤色行星",
+       "ipid": "spark.mars",
+       "type": 0,
+       "w": 70,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/mars_2x3.jpg"
+      },
+      {
+       "id": 75,
+       "ch": 12,
+       "title": "水母之夜",
+       "ipid": "spark.jelly",
+       "type": 0,
+       "w": 69,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/jelly_2x3.jpg"
+      },
+      {
+       "id": 76,
+       "ch": 12,
+       "title": "霓虹回响",
+       "ipid": "spark.neon2",
+       "type": 0,
+       "w": 68,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/neon2_2x3.jpg"
+      },
+      {
+       "id": 77,
+       "ch": 12,
+       "title": "秋日来信",
+       "ipid": "spark.autumn",
+       "type": 0,
+       "w": 67,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/autumn_2x3.jpg"
+      },
+      {
+       "id": 78,
+       "ch": 12,
+       "title": "初雪",
+       "ipid": "spark.snow",
+       "type": 0,
+       "w": 66,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/snow_2x3.jpg"
+      },
+      {
+       "id": 79,
+       "ch": 12,
+       "title": "莲池",
+       "ipid": "spark.lotus",
+       "type": 0,
+       "w": 65,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/lotus_2x3.jpg"
+      },
+      {
+       "id": 80,
+       "ch": 12,
+       "title": "沙丘回声",
+       "ipid": "spark.dunes",
+       "type": 0,
+       "w": 64,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/dunes_2x3.jpg"
+      },
+      {
+       "id": 81,
+       "ch": 13,
+       "title": "霓虹夜行",
+       "ipid": "spark.later.city",
+       "type": 1,
+       "w": 50,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/city_2x3.jpg"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "seq": 6,
+   "ts": 1793673746226,
+   "event": "dump_tv",
+   "table": "watch_next_programs",
+   "total": 9,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 64,
+       "title": "Webview检测(应用不提供内置源，请自行添加)",
+       "ipid": "-513116739",
+       "type": 0,
+       "wn": 0,
+       "t": 1793251508209,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.android.shell": {
+     "count": 5,
+     "rows": [
+      {
+       "id": 65,
+       "title": "TestA",
+       "ipid": null,
+       "type": 0,
+       "wn": null,
+       "t": null,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      },
+      {
+       "id": 66,
+       "title": "a/b",
+       "ipid": null,
+       "type": 0,
+       "wn": null,
+       "t": null,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      },
+      {
+       "id": 67,
+       "title": null,
+       "ipid": null,
+       "type": 0,
+       "wn": null,
+       "t": null,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      },
+      {
+       "id": 68,
+       "title": "abc",
+       "ipid": null,
+       "type": 0,
+       "wn": null,
+       "t": null,
+       "pos": null,
+       "dur": 60000,
+       "browsable": 1
+      },
+      {
+       "id": 69,
+       "title": "abc",
+       "ipid": "xyz",
+       "type": 0,
+       "wn": null,
+       "t": null,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 70,
+       "title": "火山岛纪行",
+       "ipid": "dolphin.volcano",
+       "type": 3,
+       "wn": 0,
+       "t": 1793673134186,
+       "pos": 1785600,
+       "dur": 2880000,
+       "browsable": 1
+      },
+      {
+       "id": 71,
+       "title": "沙漠星空",
+       "ipid": "dolphin.starry",
+       "type": 0,
+       "wn": 0,
+       "t": 1793671334186,
+       "pos": 424800,
+       "dur": 3540000,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 72,
+       "title": "樱花街 7 号",
+       "ipid": "spark.sakura",
+       "type": 3,
+       "wn": 0,
+       "t": 1793671938209,
+       "pos": 2639400,
+       "dur": 3180000,
+       "browsable": 1
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "selection": [
+  {
+   "seq": 7,
+   "ts": 1793673746397,
+   "event": "dump_tv_selection",
+   "uri": "content://android.media.tv/channel",
+   "selection": "type=?",
+   "securityException": true,
+   "message": "Selection not allowed for content://android.media.tv/channel"
+  },
+  {
+   "seq": 8,
+   "ts": 1793673746450,
+   "event": "dump_tv_selection",
+   "uri": "content://android.media.tv/preview_program",
+   "selection": "weight>=?",
+   "securityException": true,
+   "message": "Selection not allowed for content://android.media.tv/preview_program"
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+  "method": "spikes/app HazeActivity: scrolling high-frequency checkerboard behind a 120dp bar; Choreographer frame intervals over 8s after 1.5s warm-up; 3 cold trials per device, median reported",
+  "limitation": "All five AVDs run on the same x86_64 host; no three physical SoCs were available. Values are emulator reference values (headless host rendering), not SoC selection data. T1 requires API 31+.",
+  "devices": {
+    "api23": {
+      "t1": {"skipped": "api<31"},
+      "t3": {"p50": 47.55, "p90": 61.08, "p99": 64.18}
+    },
+    "api28": {
+      "t1": {"skipped": "api<31"},
+      "t3": {"p50": 158.98, "p90": 159.04, "p99": 176.66}
+    },
+    "api31g": {
+      "t1": {"p50": 50.01, "p90": 83.33, "p99": 100.0},
+      "t3": {"p50": 33.33, "p90": 33.34, "p99": 50.0}
+    },
+    "api34g": {
+      "t1": {"p50": 83.34, "p90": 116.67, "p99": 150.01},
+      "t3": {"p50": 66.67, "p90": 99.99, "p99": 133.34}
+    },
+    "api36": {
+      "t1": {"p50": 166.67, "p90": 233.33, "p99": 300.0},
+      "t3": {"p50": 50.0, "p90": 66.67, "p99": 83.33}
+    }
+  },
+  "evidence": [
+    "docs/m0/evidence/api23/haze-trials.jsonl",
+    "docs/m0/evidence/api28/haze-trials.jsonl",
+    "docs/m0/evidence/api31g/haze-trials.jsonl",
+    "docs/m0/evidence/api34g/haze-trials.jsonl",
+    "docs/m0/evidence/api36/haze-trials.jsonl",
+    "docs/m0/evidence/api31g/haze-t1.png"
+  ]
+}

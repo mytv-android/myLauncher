@@ -1,0 +1,27 @@
+{
+ "seq": 1,
+ "ts": 1793672807687,
+ "event": "handlers",
+ "api": 23,
+ "fingerprint": "generic_x86/sdk_google_atv_x86/generic_x86:6.0/MASTER/6695544:userdebug/test-keys",
+ "requestChannelBrowsable": [],
+ "appwidgetBind": [],
+ "home": [
+  "com.google.android.leanbacklauncher/.MainActivity"
+ ],
+ "homeDefault": "com.google.android.leanbacklauncher/.MainActivity",
+ "initializePrograms": [],
+ "channelBrowsableRequested": [
+  "com.github.mytv.mlfixture.probe/com.github.mytv.mlfixture.BrowsableRequestedReceiver"
+ ],
+ "bridgeProviders": [],
+ "features": {
+  "android.software.leanback": true,
+  "android.software.leanback_only": true,
+  "android.software.app_widgets": true,
+  "android.software.live_tv": true,
+  "com.google.android.feature.AMATI_EXPERIENCE": false
+ },
+ "tvProvider": "com.android.providers.tv",
+ "appWidgetService": true
+}

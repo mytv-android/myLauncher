@@ -1,0 +1,306 @@
+{
+  "items": {
+    "1": {
+      "title": "Haze T1 帧时间",
+      "conclusion": "T1 在 API 31+ 可运行，但五台模拟器都跑不到 60fps：api31g P50 50.01ms、api34g 83.34ms、api36 166.67ms（均为 3 次冷启动中位数）。五台 AVD 共用同一 x86 主机，不能替代设计要求的 3 种真实 SoC；这些数字是模拟器参考值，T1/T2/T3 的最终档位必须在真机复测。",
+      "data": {
+        "mediansMs": {
+          "api23": {"t1": "skipped api<31", "t3": {"p50": 47.55, "p90": 61.08, "p99": 64.18}},
+          "api28": {"t1": "skipped api<31", "t3": {"p50": 158.98, "p90": 159.04, "p99": 176.66}},
+          "api31g": {"t1": {"p50": 50.01, "p90": 83.33, "p99": 100.0}, "t3": {"p50": 33.33, "p90": 33.34, "p99": 50.0}},
+          "api34g": {"t1": {"p50": 83.34, "p90": 116.67, "p99": 150.01}, "t3": {"p50": 66.67, "p90": 99.99, "p99": 133.34}},
+          "api36": {"t1": {"p50": 166.67, "p90": 233.33, "p99": 300.0}, "t3": {"p50": 50.0, "p90": 66.67, "p99": 83.33}}
+        },
+        "socCount": 1,
+        "note": "所有 AVD 共用宿主 x86_64；不满足 3 种 SoC，需真机复测"
+      },
+      "evidence": [
+        "docs/m0/evidence/item01-haze.json",
+        "docs/m0/evidence/api23/haze-trials.jsonl",
+        "docs/m0/evidence/api28/haze-trials.jsonl",
+        "docs/m0/evidence/api31g/haze-trials.jsonl",
+        "docs/m0/evidence/api34g/haze-trials.jsonl",
+        "docs/m0/evidence/api36/haze-trials.jsonl",
+        "docs/m0/evidence/api31g/haze-t1.png"
+      ]
+    },
+    "2": {
+      "title": "T2 冻结玻璃的对齐与换背景耗时",
+      "conclusion": "按坐标取样的冻结位图方案在五台设备上对齐偏移均为 0px；生成一次 1280x720 模糊图耗时 54.9ms（api23）到 2005ms（api36），换背景耗时 29.5ms 到 1431ms。模拟器性能差异极大，真机需复测；T2 不依赖 RenderEffect，API 23 也能运行。",
+      "data": {
+        "devices": {
+          "api23": {"generateMs": 54.88, "swapMs": 53.96, "alignmentOffsetPx": 0},
+          "api28": {"generateMs": 58.14, "swapMs": 29.53, "alignmentOffsetPx": 0},
+          "api31g": {"generateMs": 421.27, "swapMs": 35.94, "alignmentOffsetPx": 0},
+          "api34g": {"generateMs": 830.4, "swapMs": 148.92, "alignmentOffsetPx": 0},
+          "api36": {"generateMs": 2004.96, "swapMs": 1431.43, "alignmentOffsetPx": 0}
+        }
+      },
+      "evidence": [
+        "docs/m0/evidence/item02-frozen.json",
+        "docs/m0/evidence/api23/frozen.json",
+        "docs/m0/evidence/api28/frozen.json",
+        "docs/m0/evidence/api31g/frozen.json",
+        "docs/m0/evidence/api34g/frozen.json",
+        "docs/m0/evidence/api36/frozen.json",
+        "docs/m0/evidence/api31g/frozen-t2.png"
+      ]
+    },
+    "3": {
+      "title": "PixelCopy 抓 SurfaceView",
+      "conclusion": "API 28+ 的 SurfaceView 抓帧均成功：61ms（api28）、112ms（api31g）、492ms（api34g）、240ms（api36），画面亮度正常、无全黑。Window 级抓帧在四台设备上都返回全黑，说明 SurfaceView 内容不能靠窗口抓帧获得。API 23 没有 PixelCopy；矩阵没有 API 24/26；模拟器没有受保护内容，DRM 路径未测。",
+      "data": {
+        "devices": {
+          "api23": {"skipped": "api<24"},
+          "api28": {"surfaceMs": 61, "surfaceOk": true, "windowMs": 25, "windowBlackRatio": 1.0},
+          "api31g": {"surfaceMs": 112, "surfaceOk": true, "windowMs": 144, "windowBlackRatio": 1.0},
+          "api34g": {"surfaceMs": 492, "surfaceOk": true, "windowMs": 161, "windowBlackRatio": 1.0},
+          "api36": {"surfaceMs": 240, "surfaceOk": true, "windowMs": 91, "windowBlackRatio": 1.0}
+        },
+        "drm": "not_tested"
+      },
+      "evidence": [
+        "docs/m0/evidence/item03-pixelcopy.json",
+        "docs/m0/evidence/api28/pixelcopy.json",
+        "docs/m0/evidence/api31g/pixelcopy.json",
+        "docs/m0/evidence/api34g/pixelcopy.json",
+        "docs/m0/evidence/api36/pixelcopy.json",
+        "docs/m0/evidence/api31g/spike-log-full.txt"
+      ]
+    },
+    "4": {
+      "title": "READ_TV_LISTINGS 的可见范围",
+      "conclusion": "API 28/31/34/36 上第三方应用持 READ_TV_LISTINGS 能读到 dolphin+spark 的 3 个频道、10 个预览节目、3 个 Watch Next 行；带 selection 的查询全部抛 SecurityException。API 23 有 TvProvider authority 但没有 preview/watch-next 表，P02 跳过。",
+      "data": {
+        "devices": {
+          "api23": {"otherSearchableRows": null, "selectionSecurityException": null, "tvProvider": true},
+          "api28": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+          "api31g": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+          "api34g": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+          "api36": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true}
+        }
+      },
+      "evidence": [
+        "docs/m0/evidence/item04-tv-listings.md",
+        "docs/m0/evidence/api23/P01-handlers.json",
+        "docs/m0/evidence/api28/P02-dump_tv.json",
+        "docs/m0/evidence/api31g/P02-dump_tv.json",
+        "docs/m0/evidence/api34g/P02-dump_tv.json",
+        "docs/m0/evidence/api36/P02-dump_tv.json"
+      ]
+    },
+    "5": {
+      "title": "ACTION_REQUEST_CHANNEL_BROWSABLE 的接收者",
+      "conclusion": "系统桌面仍安装时，API 26+ 的请求由系统推荐/桌面组件接管：AOSP ATV 为 tvrecommendations/.AddChannelActivity，Google TV 为 launcherx/.coreservices.localchannels.AddChannelActivity；API 23 没有处理者。桌面必须自己声明处理 Activity 并维护审批表。",
+      "data": {
+        "handlers": {
+          "api23": [],
+          "api28": ["com.google.android.tvrecommendations/.AddChannelActivity"],
+          "api31g": ["com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity"],
+          "api34g": ["com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity"],
+          "api36": ["com.google.android.tvrecommendations/.AddChannelActivity"]
+        }
+      },
+      "evidence": [
+        "docs/m0/evidence/item05-browsable.md",
+        "docs/m0/evidence/api23/P01-handlers.json",
+        "docs/m0/evidence/api28/P01-handlers.json",
+        "docs/m0/evidence/api31g/P01-handlers.json",
+        "docs/m0/evidence/api34g/P01-handlers.json",
+        "docs/m0/evidence/api36/P01-handlers.json"
+      ]
+    },
+    "6": {
+      "title": "小组件绑定与遥控器交互",
+      "conclusion": "五台设备都没有 ACTION_APPWIDGET_BIND 处理者，但 appwidget grantbind 后第三方宿主可以直接绑定（P03 全部通过）。探针在 api31g 成功绑定 sky 天气小组件并收到 onUpdate。Shizuku 与常见手机小组件的电视布局未实测，留到 M3/真机。",
+      "data": {
+        "appwidgetBindHandler": false,
+        "grantbindWorks": true,
+        "selftestOnApi31g": "K01-K08 pass",
+        "providerOnUpdate": true,
+        "shizuku": "not_tested",
+        "phoneWidgets": "not_tested"
+      },
+      "evidence": [
+        "docs/m0/evidence/item06-widgets.md",
+        "docs/m0/evidence/api31g/selftest-results.json",
+        "docs/m0/evidence/api31g/P-checks-results.json"
+      ]
+    },
+    "7": {
+      "title": "material3 1.5.0-alpha25 运行验证",
+      "conclusion": "material3 1.5.0-alpha25 + Compose 1.12.1 在 API 23/28/31/34/36 上均可运行 MaterialExpressiveTheme 与 MotionScheme，无崩溃；APK 内版本由 S04 确认。MaterialKolor 5.0.1 的 minSdk 21 可用，但会拉入 JetBrains Compose material3 1.10.0-alpha05，与锁定版本冲突；按 PLAN 直接用 MCU（minSdk 21，仅 stdlib/poko）。",
+      "data": {
+        "material3": "1.5.0-alpha25",
+        "compose": "1.12.1",
+        "minSdk": 23,
+        "coldStartMs": {"api23": 875, "api28": 1818, "api31g": 1615, "api34g": 1825, "api36": 7313},
+        "materialKolor": {"version": "5.0.1", "minSdk": 21, "conflict": "JetBrains Compose material3 1.10.0-alpha05"},
+        "mcu": {"version": "6.0.0", "minSdk": 21, "deps": ["kotlin-stdlib", "poko-annotations"]}
+      },
+      "evidence": [
+        "docs/m0/evidence/item07-material3.md",
+        "docs/m0/evidence/api31g/spike-log-full.txt"
+      ]
+    },
+    "8": {
+      "title": "系列应用直连联调",
+      "conclusion": "夹具 series 的 LAUNCHER_BRIDGE 直连在 api31g 通过（K08，含证书固定与 hello/init/approve/hide）。真实 myBV 1.0.0.r1119、myDV 2.1.1、mytv-android 3.0.0.2806 的 APK 都没有导出 LAUNCHER_BRIDGE Provider，无法与它们端到端联调；按 AGENTS.md 不修改这三个应用，需在系列应用侧补 Provider。",
+      "data": {
+        "fixtureBridge": "pass",
+        "realApks": {
+          "myBV": "no LAUNCHER_BRIDGE provider",
+          "mydv": "no LAUNCHER_BRIDGE provider",
+          "mytv-android": "no LAUNCHER_BRIDGE provider"
+        }
+      },
+      "evidence": [
+        "docs/m0/evidence/item08-series.md",
+        "docs/m0/evidence/api31g/selftest-results.json"
+      ]
+    },
+    "9": {
+      "title": "儿童模式的执行手段",
+      "conclusion": "Android 6/9 上后台拉起锁屏无需豁免即可成功；Android 12/14/16 上无豁免会被 Abort，授予 SYSTEM_ALERT_WINDOW appop 后成功。HOME 角色/默认桌面在 Google TV/ATV 模拟器上不生效（系统桌面被钉住），不能作为豁免来源。standard 变体的儿童模式必须依赖悬浮窗 appop；目标固件行为留待真机。",
+      "data": {
+        "devices": {
+          "api23": {"noExemption": "allowed", "overlay": "not_tested", "homeRole": "unavailable"},
+          "api28": {"noExemption": "allowed", "overlay": "not_tested", "homeRole": "no effect"},
+          "api31g": {"noExemption": "blocked", "overlay": "allowed", "homeRole": "blocked"},
+          "api34g": {"noExemption": "blocked", "overlay": "allowed", "homeRole": "blocked"},
+          "api36": {"noExemption": "blocked", "overlay": "allowed", "homeRole": "blocked"}
+        }
+      },
+      "evidence": [
+        "docs/m0/evidence/item09-kids.md",
+        "docs/m0/evidence/api31g/P-checks-results.json",
+        "docs/m0/evidence/api34g/P-checks-results.json",
+        "docs/m0/evidence/api36/P-checks-results.json"
+      ]
+    },
+    "10": {
+      "title": "HOME 兼容",
+      "conclusion": "五台模拟器上 cmd package set-home-activity 都返回 Success 但不改变实际 HOME；API 28 没有 cmd role 服务，API 31/34/36 可执行 add-role-holder 但 HOME 键仍启动系统桌面。api28 上停用系统桌面后 set-home-activity 才生效。COMMON_HOME/HOME.CC/TCL meta-data 在模拟器上无效果。该事实会让验收工具的 set_home 在 API>=24 上失败，M1 前必须由用户裁决。",
+      "data": {
+        "devices": {
+          "api23": {"setHome": "cmd unavailable", "role": "unavailable", "homeKey": "system launcher"},
+          "api28": {"setHome": "Success but no effect", "role": "service unavailable", "homeKey": "tvlauncher"},
+          "api31g": {"setHome": "Success but no effect", "role": "available, no effect", "homeKey": "launcherx"},
+          "api34g": {"setHome": "Success but no effect", "role": "available, no effect", "homeKey": "launcherx"},
+          "api36": {"setHome": "Success but no effect", "role": "available, no effect", "homeKey": "tvlauncher"}
+        },
+        "workaroundVerified": "pm disable-user com.google.android.tvlauncher then set-home-activity works (api28)"
+      },
+      "evidence": [
+        "docs/m0/evidence/item10-home.md",
+        "docs/m0/evidence/api28/P01-handlers.json",
+        "docs/m0/evidence/api31g/P01-handlers.json",
+        "docs/m0/evidence/api36/P01-handlers.json"
+      ]
+    },
+    "11": {
+      "title": "IP 推测服务的使用条款",
+      "conclusion": "ipinfo.io 现在必须带 API token；免费 Lite 只有国家级数据，城市级需要付费 Core；无 token 的 https://ipinfo.io/json 实测返回 HTTP 429，条款/AUP 也禁止未授权自动化访问。设计稿的“无密钥免费城市级 IP 推测”无法成立，M3 前需要用户在付费 token、换服务商或取消 IP 推测之间裁决（建议写 ADR）。",
+      "data": {
+        "provider": "ipinfo.io",
+        "tokenRequired": true,
+        "freeTier": "country-level only, unlimited",
+        "cityLevelPlan": "Core $26/month",
+        "tokenlessStatus": 429,
+        "aup": "unauthorized automated access prohibited",
+        "decision": "ADR required before M3"
+      },
+      "evidence": [
+        "docs/m0/evidence/item11-ipinfo.md"
+      ]
+    },
+    "12": {
+      "title": "文件与安装的系统入口",
+      "conclusion": "所有文件访问页在 API 34/36 的电视设置中存在，API 23/28/31 没有；安装未知应用页从 API 26 起存在，API 23 需要全局 secure 设置；DocumentsUI 在电视镜像上不可用，目录授权无法用遥控器完成。PackageInstaller 确认界面在五台设备上都能用遥控器完成安装与取消。api34g 的可移除 vfat 卷在 all-files 授权后才能写，其他设备没有可移除卷，U 盘需真机确认。",
+      "data": {
+        "settingsPages": {
+          "api23": {"allFiles": false, "unknownSources": false, "documentsUi": false},
+          "api28": {"allFiles": false, "unknownSources": true, "documentsUi": "package only, no activity"},
+          "api31g": {"allFiles": false, "unknownSources": true, "documentsUi": "framework stub"},
+          "api34g": {"allFiles": true, "unknownSources": true, "documentsUi": "framework stub"},
+          "api36": {"allFiles": true, "unknownSources": true, "documentsUi": "framework stub"}
+        },
+        "packageInstaller": {
+          "api23": {"install": true, "cancel": true, "note": "global install_non_market_apps=1"},
+          "api28": {"install": true, "cancel": true},
+          "api31g": {"install": true, "cancel": true},
+          "api34g": {"install": true, "cancel": true},
+          "api36": {"install": true, "cancel": true}
+        },
+        "storage": {
+          "api34g": {
+            "publicVolume": "/storage/0000-0000",
+            "allFilesDeny": "EPERM on public volume; Download new file allowed",
+            "allFilesAllow": "public volume write ok"
+          },
+          "otherDevices": "no removable volume"
+        }
+      },
+      "evidence": [
+        "docs/m0/evidence/item12-files-install.md",
+        "docs/m0/evidence/api23/install-dialog.png",
+        "docs/m0/evidence/api28/install-dialog.png",
+        "docs/m0/evidence/api31g/install-dialog.png",
+        "docs/m0/evidence/api36/install-dialog.png",
+        "docs/m0/evidence/api34g/P01-handlers.json"
+      ]
+    }
+  },
+  "devices": {
+    "api23": {
+      "appwidgetBindHandler": false,
+      "requestChannelBrowsableHandlers": [],
+      "tvProvider": true,
+      "leanback": true,
+      "gtv": false,
+      "readTvListings": {"otherSearchableRows": null, "selectionSecurityException": null},
+      "grantbindWorks": true,
+      "browsableRequestedDeliveredToThirdParty": null
+    },
+    "api28": {
+      "appwidgetBindHandler": false,
+      "requestChannelBrowsableHandlers": ["com.google.android.tvrecommendations/.AddChannelActivity"],
+      "tvProvider": true,
+      "leanback": true,
+      "gtv": false,
+      "readTvListings": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+      "grantbindWorks": true,
+      "browsableRequestedDeliveredToThirdParty": true
+    },
+    "api31g": {
+      "appwidgetBindHandler": false,
+      "requestChannelBrowsableHandlers": ["com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity"],
+      "tvProvider": true,
+      "leanback": true,
+      "gtv": true,
+      "readTvListings": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+      "grantbindWorks": true,
+      "browsableRequestedDeliveredToThirdParty": true
+    },
+    "api34g": {
+      "appwidgetBindHandler": false,
+      "requestChannelBrowsableHandlers": ["com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity"],
+      "tvProvider": true,
+      "leanback": true,
+      "gtv": true,
+      "readTvListings": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+      "grantbindWorks": true,
+      "browsableRequestedDeliveredToThirdParty": true
+    },
+    "api36": {
+      "appwidgetBindHandler": false,
+      "requestChannelBrowsableHandlers": ["com.google.android.tvrecommendations/.AddChannelActivity"],
+      "tvProvider": true,
+      "leanback": true,
+      "gtv": false,
+      "readTvListings": {"otherSearchableRows": {"channels": 3, "preview_programs": 10, "watch_next_programs": 3}, "selectionSecurityException": true},
+      "grantbindWorks": true,
+      "browsableRequestedDeliveredToThirdParty": true
+    }
+  }
+}

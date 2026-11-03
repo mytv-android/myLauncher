@@ -1,0 +1,304 @@
+{
+ "meta": {
+  "milestone": "M0",
+  "started": "20261103-101111",
+  "project": "C:\\PythonProject\\myLauncher",
+  "finished": "20261103-101207",
+  "counts": {
+   "PASS": 29
+  },
+  "verdict": "通过"
+ },
+ "results": [
+  {
+   "id": "K01",
+   "title": "安装夹具 dolphin",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 spark",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 cloud",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 prism",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 pulse",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 sky",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 files",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 store",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 fit",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 book",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 aspect",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 crash",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 series",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 series_impostor",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 rogue",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K01",
+   "title": "安装夹具 probe",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K02",
+   "title": "命令与日志通道",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671899497, \"event\": \"cert_set\", \"cert\": \"00\"}",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K03",
+   "title": "探针 probe_handlers",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671900710, \"event\": \"handlers\", \"api\": 31, \"fingerprint\": \"google/sdk_google_atv_amati_x86/generic_x86_arm:12/STT9.221129.002/9351024:user/dev-keys\", \"requestChannelBrowsable\": [\"com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity\"], \"requestChann",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "dolphin 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 3, \"ts\": 1793671901988, \"event\": \"published\", \"channels\": [{\"key\": \"dolphin.featured\", \"id\": 22, \"requestBrowsable\": \"called\", \"browsable\": 0}], \"programs\": [{\"key\": \"dolphin.ocean\", \"id\": 220",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "spark 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671903190, \"event\": \"published\", \"channels\": [{\"key\": \"spark.weekly\", \"id\": 23, \"requestBrowsable\": \"called\", \"browsable\": 0}, {\"key\": \"spark.later\", \"id\": 24, \"requestBrowsable\":",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "cloud 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671904388, \"event\": \"published\", \"channels\": [{\"key\": \"cloud.memories\", \"id\": 25, \"requestBrowsable\": \"called\", \"browsable\": 0}], \"programs\": [{\"key\": \"cloud.aurora\", \"id\": 230}],",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "pulse 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671905583, \"event\": \"published\", \"channels\": [], \"programs\": [], \"watchNext\": [{\"key\": \"pulse.rain\", \"id\": 138, \"lastEngagement\": 1793668905559}], \"removedChannels\": 0, \"deletedPr",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "prism 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671906769, \"event\": \"published\", \"channels\": [{\"key\": \"prism.live\", \"id\": 26, \"requestBrowsable\": \"called\", \"browsable\": 0}], \"programs\": [{\"key\": \"prism.ch1\", \"id\": 231}, {\"key\":",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "aspect 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671908005, \"event\": \"published\", \"channels\": [{\"key\": \"aspect.ratios\", \"id\": 27, \"requestBrowsable\": \"called\", \"browsable\": 0}], \"programs\": [{\"key\": \"aspect.16x9\", \"id\": 234}, {\"",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K04",
+   "title": "series 发布频道与节目",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 1, \"ts\": 1793671909320, \"event\": \"published\", \"channels\": [{\"key\": \"series.main\", \"id\": 28, \"requestBrowsable\": \"called\", \"browsable\": 0}], \"programs\": [{\"key\": \"series.p1\", \"id\": 243}, {\"key\"",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K05",
+   "title": "探针读取 TvProvider",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "[[\"channels\", 8, null], [\"preview_programs\", 26, null], [\"watch_next_programs\", 6, null]]",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K06",
+   "title": "探针绑定第三方小组件",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 13, \"ts\": 1793671916851, \"event\": \"bind_widget\", \"provider\": \"com.github.mytv.mlfixture.sky/com.github.mytv.mlfixture.WeatherWidget\", \"appWidgetId\": 4, \"ok\": true, \"label\": \"天气\", \"configure\": ",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K07",
+   "title": "小组件 provider 记录 onUpdate",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "K08",
+   "title": "直连 Provider 调用与记录",
+   "status": "PASS",
+   "device": "api31g",
+   "message": "{\"seq\": 2, \"ts\": 1793671919136, \"event\": \"bridge_call\", \"method\": \"hello\", \"arg\": \"\", \"extras\": null, \"caller\": \"com.github.mytv.mlfixture.probe\", \"callerUid\": 10127, \"callerCert\": \"9168ea28aebc901cb7",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  }
+ ]
+}

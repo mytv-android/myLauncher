@@ -1,0 +1,143 @@
+{
+ "meta": {
+  "milestone": "M0",
+  "started": "20261103-103328",
+  "project": "C:\\PythonProject\\myLauncher",
+  "formal": false,
+  "originalHome": {
+   "api34g": "com.google.android.apps.tv.launcherx/.home.HomeActivity"
+  },
+  "deviceSeconds": {
+   "api34g": 77
+  },
+  "finished": "20261103-103445",
+  "counts": {
+   "FAIL": 4
+  },
+  "verdict": "不通过"
+ },
+ "results": [
+  {
+   "id": "P01",
+   "title": "设备事实：系统界面处理者、特性、TvProvider（与 M0 报告一致）",
+   "status": "FAIL",
+   "device": "api34g",
+   "message": "requestChannelBrowsableHandlers：实测 ['com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity']，报告 []；tvProvider：实测 True，报告 False；gtv：实测 True，报告 False",
+   "evidence": [
+    "api34g/P01-handlers.json"
+   ],
+   "data": {
+    "appwidgetBindHandler": {
+     "measured": false,
+     "report": false
+    },
+    "requestChannelBrowsableHandlers": {
+     "measured": [
+      "com.google.android.apps.tv.launcherx/.coreservices.localchannels.AddChannelActivity"
+     ],
+     "report": []
+    },
+    "tvProvider": {
+     "measured": true,
+     "report": false
+    },
+    "leanback": {
+     "measured": true,
+     "report": true
+    },
+    "gtv": {
+     "measured": true,
+     "report": false
+    }
+   },
+   "seconds": 31.8
+  },
+  {
+   "id": "P02",
+   "title": "设备事实：第三方应用持 READ_TV_LISTINGS 能读到其他应用的哪些行",
+   "status": "FAIL",
+   "device": "api34g",
+   "message": "readTvListings.otherSearchableRows：实测 {'channels': 3, 'preview_programs': 10, 'watch_next_programs': 3}，报告 None；readTvListings.selectionSecurityException：实测 True，报告 None",
+   "evidence": [
+    "api34g/P02-dump_tv.json"
+   ],
+   "data": {
+    "readTvListings.otherSearchableRows": {
+     "measured": {
+      "channels": 3,
+      "preview_programs": 10,
+      "watch_next_programs": 3
+     },
+     "report": null
+    },
+    "readTvListings.selectionSecurityException": {
+     "measured": true,
+     "report": null
+    }
+   },
+   "seconds": 25.5
+  },
+  {
+   "id": "P03",
+   "title": "设备事实：appwidget grantbind 后第三方宿主能直接绑定",
+   "status": "FAIL",
+   "device": "api34g",
+   "message": "grantbindWorks：实测 True，报告 False",
+   "evidence": [],
+   "data": {
+    "before": {
+     "seq": 9,
+     "ts": 1793673272205,
+     "event": "bind_widget",
+     "provider": "com.github.mytv.mlfixture.sky/com.github.mytv.mlfixture.WeatherWidget",
+     "appWidgetId": 2,
+     "ok": false
+    },
+    "after": {
+     "seq": 10,
+     "ts": 1793673274689,
+     "event": "bind_widget",
+     "provider": "com.github.mytv.mlfixture.sky/com.github.mytv.mlfixture.WeatherWidget",
+     "appWidgetId": 3,
+     "ok": true,
+     "label": "天气",
+     "configure": null,
+     "minWidth": 500,
+     "minHeight": 220,
+     "widgetFeatures": 0
+    },
+    "grantbindWorks": {
+     "measured": true,
+     "report": false
+    }
+   },
+   "seconds": 7.6
+  },
+  {
+   "id": "P04",
+   "title": "设备事实：CHANNEL_BROWSABLE_REQUESTED 是否送达第三方接收器",
+   "status": "FAIL",
+   "device": "api34g",
+   "message": "browsableRequestedDeliveredToThirdParty：实测 True，报告 None",
+   "evidence": [],
+   "data": {
+    "event": {
+     "seq": 11,
+     "ts": 1793673279074,
+     "event": "browsable_requested",
+     "package": "com.github.mytv.mlfixture.spark",
+     "channelId": 7,
+     "extras": [
+      "android.media.tv.extra.CHANNEL_ID",
+      "android.media.tv.extra.PACKAGE_NAME"
+     ]
+    },
+    "browsableRequestedDeliveredToThirdParty": {
+     "measured": true,
+     "report": null
+    }
+   },
+   "seconds": 5.7
+  }
+ ]
+}

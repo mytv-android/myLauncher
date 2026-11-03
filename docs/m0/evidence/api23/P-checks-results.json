@@ -1,0 +1,110 @@
+{
+ "meta": {
+  "milestone": "M0",
+  "started": "20261103-102638",
+  "project": "C:\\PythonProject\\myLauncher",
+  "formal": false,
+  "originalHome": {
+   "api23": "as \"package/class\")."
+  },
+  "deviceSeconds": {
+   "api23": 25
+  },
+  "finished": "20261103-102703",
+  "counts": {
+   "FAIL": 2,
+   "SKIP": 2
+  },
+  "verdict": "不通过"
+ },
+ "results": [
+  {
+   "id": "P01",
+   "title": "设备事实：系统界面处理者、特性、TvProvider（与 M0 报告一致）",
+   "status": "FAIL",
+   "device": "api23",
+   "message": "tvProvider：实测 True，报告 False",
+   "evidence": [
+    "api23/P01-handlers.json"
+   ],
+   "data": {
+    "appwidgetBindHandler": {
+     "measured": false,
+     "report": false
+    },
+    "requestChannelBrowsableHandlers": {
+     "measured": [],
+     "report": []
+    },
+    "tvProvider": {
+     "measured": true,
+     "report": false
+    },
+    "leanback": {
+     "measured": true,
+     "report": true
+    },
+    "gtv": {
+     "measured": false,
+     "report": false
+    }
+   },
+   "seconds": 7.9
+  },
+  {
+   "id": "P02",
+   "title": "设备事实：第三方应用持 READ_TV_LISTINGS 能读到其他应用的哪些行",
+   "status": "SKIP",
+   "device": "api23",
+   "message": "API < 26",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  },
+  {
+   "id": "P03",
+   "title": "设备事实：appwidget grantbind 后第三方宿主能直接绑定",
+   "status": "FAIL",
+   "device": "api23",
+   "message": "grantbindWorks：实测 True，报告 False",
+   "evidence": [],
+   "data": {
+    "before": {
+     "seq": 2,
+     "ts": 1793672814801,
+     "event": "bind_widget",
+     "provider": "com.github.mytv.mlfixture.sky/com.github.mytv.mlfixture.WeatherWidget",
+     "appWidgetId": 2,
+     "ok": false
+    },
+    "after": {
+     "seq": 3,
+     "ts": 1793672817807,
+     "event": "bind_widget",
+     "provider": "com.github.mytv.mlfixture.sky/com.github.mytv.mlfixture.WeatherWidget",
+     "appWidgetId": 3,
+     "ok": true,
+     "label": "天气",
+     "configure": null,
+     "minWidth": 333,
+     "minHeight": 146
+    },
+    "grantbindWorks": {
+     "measured": true,
+     "report": false
+    }
+   },
+   "seconds": 9.8
+  },
+  {
+   "id": "P04",
+   "title": "设备事实：CHANNEL_BROWSABLE_REQUESTED 是否送达第三方接收器",
+   "status": "SKIP",
+   "device": "api23",
+   "message": "API < 26",
+   "evidence": [],
+   "data": {},
+   "seconds": 0.0
+  }
+ ]
+}

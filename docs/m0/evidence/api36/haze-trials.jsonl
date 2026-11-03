@@ -1,0 +1,3 @@
+{"frames":39,"p50":166.67,"p90":366.67,"p99":483.33,"avg":214.53,"mode":"t1","sdk":36,"device":"AOSP TV on x86","fingerprint":"google\/sdk_google_atv_x86\/emulator_x86_arm:16\/BT2A.251018.001.A1\/14340881:user\/dev-keys"}
+{"frames":45,"p50":166.67,"p90":233.33,"p99":300,"avg":178.89,"mode":"t1","sdk":36,"device":"AOSP TV on x86","fingerprint":"google\/sdk_google_atv_x86\/emulator_x86_arm:16\/BT2A.251018.001.A1\/14340881:user\/dev-keys"}
+{"frames":86,"p50":83.33,"p90":133.33,"p99":200,"avg":93.22,"mode":"t1","sdk":36,"device":"AOSP TV on x86","fingerprint":"google\/sdk_google_atv_x86\/emulator_x86_arm:16\/BT2A.251018.001.A1\/14340881:user\/dev-keys"}

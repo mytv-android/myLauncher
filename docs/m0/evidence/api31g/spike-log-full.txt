@@ -1,0 +1,6 @@
+--------- beginning of main
+I/M0Spike ( 7132): main_created sdk=31 device=AOSP TV on x86 fingerprint=google/sdk_google_atv_amati_x86/generic_x86_arm:12/STT9.221129.002/9351024:user/dev-keys
+I/M0Spike ( 7172): haze {"frames":136,"p50":50,"p90":66.67,"p99":100,"avg":58.82,"mode":"t1","sdk":31,"device":"AOSP TV on x86","fingerprint":"google\/sdk_google_atv_amati_x86\/generic_x86_arm:12\/STT9.221129.002\/9351024:user\/dev-keys"}
+I/M0Spike ( 7172): frozen {"generateMs":432.47,"swapMs":53.4,"width":1280,"height":720,"alignmentOffsetPx":0,"sdk":31,"device":"AOSP TV on x86"}
+I/M0Spike ( 7172): pixelcopy surface={"result":0,"ok":true,"elapsedMs":213,"meanLuma":141.54,"blackRatio":0.0417}
+I/M0Spike ( 7172): pixelcopy {"surface":{"result":0,"ok":true,"elapsedMs":213,"meanLuma":141.54,"blackRatio":0.0417},"window":{"result":0,"ok":true,"elapsedMs":105,"meanLuma":0,"blackRatio":1},"drm":"not_tested","sdk":31,"device":"AOSP TV on x86"}

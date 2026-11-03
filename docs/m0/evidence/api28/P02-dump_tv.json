@@ -1,0 +1,283 @@
+{
+ "dumps": [
+  {
+   "seq": 4,
+   "ts": 1793672112541,
+   "event": "dump_tv",
+   "table": "channels",
+   "total": 4,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 2,
+       "name": "TV Live",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 36,
+       "name": "海豚精选",
+       "ipid": "dolphin.featured",
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 37,
+       "name": "星火影院 · 本周热映",
+       "ipid": "spark.weekly",
+       "type": "TYPE_PREVIEW",
+       "browsable": 1
+      },
+      {
+       "id": 38,
+       "name": "星火影院 · 稍后再看",
+       "ipid": "spark.later",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "seq": 5,
+   "ts": 1793672112547,
+   "event": "dump_tv",
+   "table": "preview_programs",
+   "total": 10,
+   "byPackage": {
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 213,
+       "ch": 36,
+       "title": "深海之歌",
+       "ipid": "dolphin.ocean",
+       "type": 1,
+       "w": 100,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.dolphin.art/ocean_16x9.jpg"
+      },
+      {
+       "id": 214,
+       "ch": 36,
+       "title": "林间四季",
+       "ipid": "dolphin.forest",
+       "type": 1,
+       "w": 90,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.dolphin.art/forest_16x9.jpg"
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 8,
+     "rows": [
+      {
+       "id": 215,
+       "ch": 37,
+       "title": "赤色行星",
+       "ipid": "spark.mars",
+       "type": 0,
+       "w": 70,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/mars_2x3.jpg"
+      },
+      {
+       "id": 216,
+       "ch": 37,
+       "title": "水母之夜",
+       "ipid": "spark.jelly",
+       "type": 0,
+       "w": 69,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/jelly_2x3.jpg"
+      },
+      {
+       "id": 217,
+       "ch": 37,
+       "title": "霓虹回响",
+       "ipid": "spark.neon2",
+       "type": 0,
+       "w": 68,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/neon2_2x3.jpg"
+      },
+      {
+       "id": 218,
+       "ch": 37,
+       "title": "秋日来信",
+       "ipid": "spark.autumn",
+       "type": 0,
+       "w": 67,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/autumn_2x3.jpg"
+      },
+      {
+       "id": 219,
+       "ch": 37,
+       "title": "初雪",
+       "ipid": "spark.snow",
+       "type": 0,
+       "w": 66,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/snow_2x3.jpg"
+      },
+      {
+       "id": 220,
+       "ch": 37,
+       "title": "莲池",
+       "ipid": "spark.lotus",
+       "type": 0,
+       "w": 65,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/lotus_2x3.jpg"
+      },
+      {
+       "id": 221,
+       "ch": 37,
+       "title": "沙丘回声",
+       "ipid": "spark.dunes",
+       "type": 0,
+       "w": 64,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/dunes_2x3.jpg"
+      },
+      {
+       "id": 222,
+       "ch": 38,
+       "title": "霓虹夜行",
+       "ipid": "spark.later.city",
+       "type": 1,
+       "w": 50,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/city_2x3.jpg"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "seq": 6,
+   "ts": 1793672112554,
+   "event": "dump_tv",
+   "table": "watch_next_programs",
+   "total": 4,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 280,
+       "title": "V1",
+       "ipid": "-1297555129",
+       "type": 0,
+       "wn": 0,
+       "t": 1792663918719,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 306,
+       "title": "火山岛纪行",
+       "ipid": "dolphin.volcano",
+       "type": 3,
+       "wn": 0,
+       "t": 1793671509801,
+       "pos": 1785600,
+       "dur": 2880000,
+       "browsable": 1
+      },
+      {
+       "id": 307,
+       "title": "沙漠星空",
+       "ipid": "dolphin.starry",
+       "type": 0,
+       "wn": 0,
+       "t": 1793669709801,
+       "pos": 424800,
+       "dur": 3540000,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 308,
+       "title": "樱花街 7 号",
+       "ipid": "spark.sakura",
+       "type": 3,
+       "wn": 0,
+       "t": 1793670310147,
+       "pos": 2639400,
+       "dur": 3180000,
+       "browsable": 1
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "selection": [
+  {
+   "seq": 7,
+   "ts": 1793672112558,
+   "event": "dump_tv_selection",
+   "uri": "content://android.media.tv/channel",
+   "selection": "type=?",
+   "securityException": true,
+   "message": "Selection not allowed for content://android.media.tv/channel"
+  },
+  {
+   "seq": 8,
+   "ts": 1793672112561,
+   "event": "dump_tv_selection",
+   "uri": "content://android.media.tv/preview_program",
+   "selection": "weight>=?",
+   "securityException": true,
+   "message": "Selection not allowed for content://android.media.tv/preview_program"
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+  "method": "spikes/app PixelCopyActivity: SurfaceView draws moving color bars; PixelCopy.request(SurfaceView) then PixelCopy.request(Window); elapsed ms, mean luma and near-black ratio sampled on a 16px grid",
+  "limitation": "API 23 has no PixelCopy (introduced in API 24) and the matrix has no API 24/26 AVD; measured on API 28/31/34/36. DRM content is not available on these emulator images, so the protected-content path is not tested (stated as not_tested).",
+  "devices": {
+    "api23": {"skipped": "api<24"},
+    "api28": {"surface": {"ok": true, "elapsedMs": 61, "meanLuma": 140.65, "blackRatio": 0.0625}, "window": {"ok": true, "elapsedMs": 25, "meanLuma": 0.0, "blackRatio": 1.0}, "drm": "not_tested"},
+    "api31g": {"surface": {"ok": true, "elapsedMs": 112, "meanLuma": 141.54, "blackRatio": 0.0417}, "window": {"ok": true, "elapsedMs": 144, "meanLuma": 0.0, "blackRatio": 1.0}, "drm": "not_tested"},
+    "api34g": {"surface": {"ok": true, "elapsedMs": 492, "meanLuma": 141.54, "blackRatio": 0.0417}, "window": {"ok": true, "elapsedMs": 161, "meanLuma": 0.0, "blackRatio": 1.0}, "drm": "not_tested"},
+    "api36": {"surface": {"ok": true, "elapsedMs": 240, "meanLuma": 141.54, "blackRatio": 0.0417}, "window": {"ok": true, "elapsedMs": 91, "meanLuma": 0.0, "blackRatio": 1.0}, "drm": "not_tested"}
+  },
+  "evidence": [
+    "docs/m0/evidence/api28/pixelcopy.json",
+    "docs/m0/evidence/api31g/pixelcopy.json",
+    "docs/m0/evidence/api34g/pixelcopy.json",
+    "docs/m0/evidence/api36/pixelcopy.json",
+    "docs/m0/evidence/api31g/spike-log-full.txt",
+    "docs/m0/evidence/api23/pixelcopy-skip.json"
+  ]
+}

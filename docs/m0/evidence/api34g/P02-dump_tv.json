@@ -1,0 +1,583 @@
+{
+ "dumps": [
+  {
+   "seq": 4,
+   "ts": 1793673262567,
+   "event": "dump_tv",
+   "table": "channels",
+   "total": 7,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 1,
+       "name": "TV Live",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    },
+    "com.google.android.youtube.tv": {
+     "count": 3,
+     "rows": [
+      {
+       "id": 2,
+       "name": "Recommended for you",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      },
+      {
+       "id": 3,
+       "name": "Trending",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      },
+      {
+       "id": 5,
+       "name": "Free movies from YouTube",
+       "ipid": null,
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 6,
+       "name": "海豚精选",
+       "ipid": "dolphin.featured",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 7,
+       "name": "星火影院 · 本周热映",
+       "ipid": "spark.weekly",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      },
+      {
+       "id": 8,
+       "name": "星火影院 · 稍后再看",
+       "ipid": "spark.later",
+       "type": "TYPE_PREVIEW",
+       "browsable": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "seq": 5,
+   "ts": 1793673262582,
+   "event": "dump_tv",
+   "table": "preview_programs",
+   "total": 32,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 8,
+     "rows": [
+      {
+       "id": 6935,
+       "ch": 1,
+       "title": "CCTV1",
+       "ipid": "-2070977475",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": null
+      },
+      {
+       "id": 6936,
+       "ch": 1,
+       "title": "江苏教育",
+       "ipid": "951458866",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://live.fanmingming.com/tv/江苏教育.png"
+      },
+      {
+       "id": 6937,
+       "ch": 1,
+       "title": "CCTV-1",
+       "ipid": "-1093493067",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://raw.githubusercontent.com/fanmingming/live/main/tv/CCTV1.png"
+      },
+      {
+       "id": 6938,
+       "ch": 1,
+       "title": "CCTV-2",
+       "ipid": "182997601",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://raw.githubusercontent.com/fanmingming/live/main/tv/CCTV2.png"
+      },
+      {
+       "id": 6939,
+       "ch": 1,
+       "title": "CCTV-3",
+       "ipid": "949642101",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://raw.githubusercontent.com/fanmingming/live/main/tv/CCTV3.png"
+      },
+      {
+       "id": 6940,
+       "ch": 1,
+       "title": "浙江卫视",
+       "ipid": "-1458341672",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://gitee.com/mytv-android/myTVlogo/raw/main/img/浙江卫视.png"
+      },
+      {
+       "id": 6941,
+       "ch": 1,
+       "title": "CCTV6",
+       "ipid": "-1892900970",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://raw.githubusercontent.com/mytv-android/myTVlogo/refs/heads/main/img/CCTV6.png"
+      },
+      {
+       "id": 6942,
+       "ch": 1,
+       "title": "CCTV-1 综合",
+       "ipid": "-463302485",
+       "type": 6,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://live.fanmingming.com/tv/CCTV1.png"
+      }
+     ]
+    },
+    "com.google.android.youtube.tv": {
+     "count": 14,
+     "rows": [
+      {
+       "id": 6985,
+       "ch": 3,
+       "title": "10,000 Player Minecraft War: Nether VS Overworld",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/bHxLy6Qza3M/sddefault.jpg"
+      },
+      {
+       "id": 6986,
+       "ch": 3,
+       "title": "EL GALLO MAS GRANDE",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/LIs8CEefTpE/sddefault.jpg"
+      },
+      {
+       "id": 6987,
+       "ch": 3,
+       "title": "Cuando Yo Me Muera",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/joF_Y7qo9HY/sddefault.jpg"
+      },
+      {
+       "id": 6988,
+       "ch": 3,
+       "title": "Percy Jackson & the Olympians Season 3 | Trailer | Disney+",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/nD45l6hCyN8/sddefault.jpg"
+      },
+      {
+       "id": 6989,
+       "ch": 3,
+       "title": "SURVIVE 7 Days In DESERT With Moody! (Roblox)",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/ZQLrzgLJH0A/sddefault.jpg"
+      },
+      {
+       "id": 6990,
+       "ch": 3,
+       "title": "Gus's Origin Story! (Brawl Stars Animation)",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/t6ySEQzL1yE/sddefault.jpg"
+      },
+      {
+       "id": 6991,
+       "ch": 3,
+       "title": "LITE (remix)",
+       "ipid": null,
+       "type": 4,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://i.ytimg.com/vi/ozVQUe6f4k0/sddefault.jpg"
+      },
+      {
+       "id": 6992,
+       "ch": 5,
+       "title": "Billy Madison",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/9z5M1_Tsyxh79llOJH0TaCMs9gsbiltH4GHONfIaYWHm4L_lyQtUOQvG2p4uZnVoMPqrc5Viwo5U"
+      },
+      {
+       "id": 6993,
+       "ch": 5,
+       "title": "Dead Sea",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/OW7A2RSID8qavp94a64yIAtuCMfuQB9up96XZND8dLFnJCu4BWBpbkkxxHkov2WfyaBWRaFRNPoy"
+      },
+      {
+       "id": 6994,
+       "ch": 5,
+       "title": "Gabriel Iglesias: I’m Not Fat I’m Fluffy",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/IiNU1222Ceg-lo5mlUF6XBOkxTcYroVbZbYdVBGNtWISKfJv-w5CVDPUoXQwZsNaHZLGpGRRBC0l"
+      },
+      {
+       "id": 6995,
+       "ch": 5,
+       "title": "The Gospel of John",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/c2QHTSulx01fx9FcrkPFgHaOExYDNc9w77tyPtpV1GBL3htYG-2xvlhfRB_acdiJZxihRgmWdJg"
+      },
+      {
+       "id": 6996,
+       "ch": 5,
+       "title": "The Misunderstood Saga of the P-38 Lightning",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/DR3--q5lEXPz_EIpKL_-gGp9c5_BR_F4iBHQiXHoTuf5twRJYWXGcvPnalgMjC1hhxEcyjR8BWlF"
+      },
+      {
+       "id": 6997,
+       "ch": 5,
+       "title": "The Tenth Man",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/44wge6bZ6AeF7v1XXGyESEXpHKSveV-PGNbTZpl1onD8riqhy9cx1jeaX_gVskvfTVme4fD5XBN_"
+      },
+      {
+       "id": 6998,
+       "ch": 5,
+       "title": "Passengers",
+       "ipid": null,
+       "type": 0,
+       "w": null,
+       "ar": null,
+       "live": 0,
+       "browsable": 1,
+       "poster": "https://lh3.googleusercontent.com/hkSyBj1DbEh0zyxMSAmDmlxF6tQkLrXDMJC7ZdMP5a6Yo133noXCPpdP3YbtY6s1_i4j40RSexA"
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 6999,
+       "ch": 6,
+       "title": "深海之歌",
+       "ipid": "dolphin.ocean",
+       "type": 1,
+       "w": 100,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.dolphin.art/ocean_16x9.jpg"
+      },
+      {
+       "id": 7000,
+       "ch": 6,
+       "title": "林间四季",
+       "ipid": "dolphin.forest",
+       "type": 1,
+       "w": 90,
+       "ar": 0,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.dolphin.art/forest_16x9.jpg"
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 8,
+     "rows": [
+      {
+       "id": 7001,
+       "ch": 7,
+       "title": "赤色行星",
+       "ipid": "spark.mars",
+       "type": 0,
+       "w": 70,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/mars_2x3.jpg"
+      },
+      {
+       "id": 7002,
+       "ch": 7,
+       "title": "水母之夜",
+       "ipid": "spark.jelly",
+       "type": 0,
+       "w": 69,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/jelly_2x3.jpg"
+      },
+      {
+       "id": 7003,
+       "ch": 7,
+       "title": "霓虹回响",
+       "ipid": "spark.neon2",
+       "type": 0,
+       "w": 68,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/neon2_2x3.jpg"
+      },
+      {
+       "id": 7004,
+       "ch": 7,
+       "title": "秋日来信",
+       "ipid": "spark.autumn",
+       "type": 0,
+       "w": 67,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/autumn_2x3.jpg"
+      },
+      {
+       "id": 7005,
+       "ch": 7,
+       "title": "初雪",
+       "ipid": "spark.snow",
+       "type": 0,
+       "w": 66,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/snow_2x3.jpg"
+      },
+      {
+       "id": 7006,
+       "ch": 7,
+       "title": "莲池",
+       "ipid": "spark.lotus",
+       "type": 0,
+       "w": 65,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/lotus_2x3.jpg"
+      },
+      {
+       "id": 7007,
+       "ch": 7,
+       "title": "沙丘回声",
+       "ipid": "spark.dunes",
+       "type": 0,
+       "w": 64,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/dunes_2x3.jpg"
+      },
+      {
+       "id": 7008,
+       "ch": 8,
+       "title": "霓虹夜行",
+       "ipid": "spark.later.city",
+       "type": 1,
+       "w": 50,
+       "ar": 4,
+       "live": 0,
+       "browsable": 1,
+       "poster": "content://com.github.mytv.mlfixture.spark.art/city_2x3.jpg"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "seq": 6,
+   "ts": 1793673262604,
+   "event": "dump_tv",
+   "table": "watch_next_programs",
+   "total": 4,
+   "byPackage": {
+    "com.github.mytv.android": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 861,
+       "title": "4K超高清电影 4K",
+       "ipid": "1932832475",
+       "type": 0,
+       "wn": 0,
+       "t": 1786253287939,
+       "pos": null,
+       "dur": null,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.dolphin": {
+     "count": 2,
+     "rows": [
+      {
+       "id": 862,
+       "title": "火山岛纪行",
+       "ipid": "dolphin.volcano",
+       "type": 3,
+       "wn": 0,
+       "t": 1793672656903,
+       "pos": 1785600,
+       "dur": 2880000,
+       "browsable": 1
+      },
+      {
+       "id": 863,
+       "title": "沙漠星空",
+       "ipid": "dolphin.starry",
+       "type": 0,
+       "wn": 0,
+       "t": 1793670856903,
+       "pos": 424800,
+       "dur": 3540000,
+       "browsable": 1
+      }
+     ]
+    },
+    "com.github.mytv.mlfixture.spark": {
+     "count": 1,
+     "rows": [
+      {
+       "id": 864,
+       "title": "樱花街 7 号",
+       "ipid": "spark.sakura",
+       "type": 3,
+       "wn": 0,
+       "t": 1793671458724,
+       "pos": 2639400,
+       "dur": 3180000,
+       "browsable": 1
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "selection": [
+  {
+   "seq": 7,
+   "ts": 1793673262610,
+   "event": "dump_tv_selection",
+   "uri": "content://android.media.tv/channel",
+   "selection": "type=?",
+   "securityException": true,
+   "message": "Selection not allowed for content://android.media.tv/channel"
+  },
+  {
+   "seq": 8,
+   "ts": 1793673262615,
+   "event": "dump_tv_selection",
+   "uri": "content://android.media.tv/preview_program",
+   "selection": "weight>=?",
+   "securityException": true,
+   "message": "Selection not allowed for content://android.media.tv/preview_program"
+  }
+ ]
+}

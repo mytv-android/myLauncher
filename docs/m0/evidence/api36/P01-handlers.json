@@ -1,0 +1,34 @@
+{
+ "seq": 1,
+ "ts": 1793673725024,
+ "event": "handlers",
+ "api": 36,
+ "fingerprint": "google/sdk_google_atv_x86/emulator_x86_arm:16/BT2A.251018.001.A1/14340881:user/dev-keys",
+ "requestChannelBrowsable": [
+  "com.google.android.tvrecommendations/.AddChannelActivity"
+ ],
+ "requestChannelBrowsableDefault": "com.google.android.tvrecommendations/.AddChannelActivity",
+ "appwidgetBind": [],
+ "home": [
+  "com.google.android.tvlauncher/.MainActivity",
+  "com.android.tv.settings/.system.FallbackHome"
+ ],
+ "homeDefault": "com.google.android.tvlauncher/.MainActivity",
+ "initializePrograms": [
+  "com.google.android.youtube.tv/com.google.android.libraries.youtube.tv.recommendations.RecommendationsScheduler$Receiver"
+ ],
+ "channelBrowsableRequested": [
+  "com.google.android.tvrecommendations/.AddChannelBroadcastReceiver",
+  "com.github.mytv.mlfixture.probe/com.github.mytv.mlfixture.BrowsableRequestedReceiver"
+ ],
+ "bridgeProviders": [],
+ "features": {
+  "android.software.leanback": true,
+  "android.software.leanback_only": true,
+  "android.software.app_widgets": false,
+  "android.software.live_tv": true,
+  "com.google.android.feature.AMATI_EXPERIENCE": false
+ },
+ "tvProvider": "com.android.providers.tv",
+ "appWidgetService": true
+}
