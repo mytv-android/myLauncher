@@ -49,6 +49,15 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:tvfocus"))
+    implementation(project(":core:glass"))
+    implementation(project(":data:apps"))
+    implementation(project(":data:channels"))
+    implementation(project(":feature:home"))
+    implementation(project(":feature:apps"))
+    implementation(project(":feature:settings"))
+
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.compose.ui)
@@ -56,6 +65,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.kotlinx.coroutines.android)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 

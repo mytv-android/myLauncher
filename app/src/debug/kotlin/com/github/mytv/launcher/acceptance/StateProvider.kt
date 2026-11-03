@@ -2,12 +2,12 @@ package com.github.mytv.launcher.acceptance
 
 import android.content.ContentProvider
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Bundle
-import org.json.JSONArray
-import org.json.JSONObject
+import com.github.mytv.launcher.StateHub
 
 class StateProvider : ContentProvider() {
     override fun onCreate(): Boolean = true
@@ -20,7 +20,7 @@ class StateProvider : ContentProvider() {
         sortOrder: String?,
     ): Cursor {
         val cursor = MatrixCursor(arrayOf("json"))
-        cursor.addRow(arrayOf(stateJson()))
+        cursor.addRow(arrayOf(StateHub.json()))
         return cursor
     }
 
@@ -37,89 +37,46 @@ class StateProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
     ): Int = 0
 
-    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? = null
+    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        when (method) {
+            "reset_counters" -> StateHub.resetCounters()
+            "set_pref" -> {
+                val raw = arg ?: return null
+                val split = raw.indexOf('=')
+                if (split <= 0) return null
+                val key = raw.substring(0, split)
+                val value = raw.substring(split + 1)
+                if (key in ALLOWED_PREFS) {
+                    val prefs = context?.getSharedPreferences("launcher_debug", Context.MODE_PRIVATE)
+                    prefs?.edit()?.putString(key, value)?.apply()
+                }
+            }
+            "set_backdrop", "net_check" -> Unit
+            else -> return null
+        }
+        return null
+    }
 
-    private fun stateJson(): String {
-        val root = JSONObject()
-        root.put("contract", 1)
-        root.put("page", "home")
-        root.put("overlay", JSONObject.NULL)
-        root.put("mode", "browse")
-        root.put("focus", JSONObject.NULL)
-        root.put(
-            "hero",
-            JSONObject()
-                .put("visible", false)
-                .put("index", JSONObject.NULL)
-                .put("key", JSONObject.NULL),
+    private companion object {
+        val ALLOWED_PREFS = setOf(
+            "ambient_idle_s",
+            "saver_idle_s",
+            "glass_tier",
+            "color_source",
+            "scheme_style",
+            "contrast",
+            "device_tier",
+            "onboarding_done",
+            "high_contrast_focus",
+            "restricted_mode",
+            "restricted_allowed",
+            "kids_quota_s",
+            "pin",
+            "boot_target",
+            "weather_city",
+            "weather_base_url",
+            "bing_base_url",
+            "update_url",
         )
-        root.put("rows", JSONArray())
-        root.put("theme", JSONObject.NULL)
-        root.put("glass", JSONObject().put("tier", "T3").put("blurRegions", 0))
-        root.put("deviceTier", "mid")
-        root.put("approvals", JSONArray())
-        root.put("widgets", JSONArray())
-        root.put("watchlist", JSONArray())
-        root.put("hiddenApps", JSONArray())
-        root.put("series", JSONArray())
-        root.put("organizer", JSONObject().put("running", false))
-        root.put(
-            "storage",
-            JSONObject()
-                .put("allFiles", JSONObject.NULL)
-                .put("legacy", JSONObject.NULL)
-                .put("writePermission", JSONObject.NULL)
-                .put("roots", JSONArray()),
-        )
-        root.put("install", JSONObject().put("state", "idle"))
-        root.put("viewer", JSONObject.NULL)
-        root.put("player", JSONObject.NULL)
-        root.put("folders", JSONArray())
-        root.put("ambient", JSONObject.NULL)
-        root.put(
-            "restricted",
-            JSONObject()
-                .put("mode", "off")
-                .put("paused", false)
-                .put("locked", false)
-                .put("remainingS", JSONObject.NULL)
-                .put("hasPin", false)
-                .put("pinLockedUntil", 0)
-                .put("unlockedUntil", 0),
-        )
-        root.put("clock", JSONObject().put("is24h", true))
-        root.put("weather", JSONObject().put("visible", false))
-        root.put("defaultHome", JSONObject.NULL)
-        root.put(
-            "memory",
-            JSONObject()
-                .put("imageCacheBytes", 0)
-                .put("frozenBlurBytes", 0),
-        )
-        root.put(
-            "update",
-            JSONObject()
-                .put("state", "idle")
-                .put("available", JSONObject.NULL)
-                .put("lastError", JSONObject.NULL),
-        )
-        root.put(
-            "counters",
-            JSONObject()
-                .put("rowRecompositionsDuringThemeTransition", 0)
-                .put("themeTransitions", 0)
-                .put("widgetReloads", JSONObject())
-                .put(
-                    "soundEffects",
-                    JSONObject()
-                        .put("nav", 0)
-                        .put("click", 0)
-                        .put("back", 0)
-                        .put("invalid", 0),
-                )
-                .put("weatherRequests", 0)
-                .put("updateChecks", 0),
-        )
-        return root.toString()
     }
 }

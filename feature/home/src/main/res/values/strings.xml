@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_next_episode">第 %1$d 集</string>
+    <string name="watch_next_season">S%1$d E%2$d</string>
+    <string name="watch_next_remaining">剩 %1$d 分钟</string>
+</resources>

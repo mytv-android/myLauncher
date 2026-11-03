@@ -1,27 +1,36 @@
 package com.github.mytv.launcher
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialExpressiveTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.github.mytv.core.designsystem.MyLauncherTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var model: LauncherModel
+    private var createdAt = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createdAt = SystemClock.elapsedRealtime()
+        model = LauncherModel(this)
         setContent {
-            MaterialExpressiveTheme(colorScheme = darkColorScheme()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black),
-                )
+            MyLauncherTheme {
+                LauncherRoot(model)
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (SystemClock.elapsedRealtime() - createdAt < 2000) return
+        model.onHomeRequested()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        model.refresh()
     }
 }
