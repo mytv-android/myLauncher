@@ -1,6 +1,6 @@
 # ADR-001：电视模拟器上的默认桌面设置
 
-- 状态：提议
+- 状态：接受（2026-11-03，用户选择方案 A）
 - 日期：2026-11-03
 - 影响：M0 结论、M1 验收前置、HOME 兼容
 
@@ -42,9 +42,15 @@ M0 在矩阵内五台电视模拟器上测量了 `cmd package set-home-activity`
 - 大量检查通过 HOME 键回到桌面、D102/D110/D114 等直接依赖默认桌面；改动范围大，且不再验证真实用户路径。
 - 不推荐。
 
-## 建议
+## 决定
 
-采用 A：由用户在验收工具包里停用/恢复系统桌面，重新冻结后用于 M1+。在产品侧，`standard` 变体继续按设计稿声明 HOME、COMMON_HOME、HOME.CC 与 TCL meta-data；不加入 priority 之类的未写行为。默认桌面页（M5）仍需在真机上验证国产固件能否替换。
+采用方案 A。验收工具在 `prepare()` 里记录原系统桌面包名，执行 `pm disable-user --user 0 <origPkg>`，再调用 `set_home()`；`teardown()` 里重新 `pm enable` 原系统桌面、移除本桌面在 HOME 角色里的持有者，再恢复原默认桌面。改动文件为 `acceptance/run.py`，已重新冻结工具包。
+
+- 产品侧不变：`standard` 变体继续按设计稿声明 HOME、COMMON_HOME、HOME.CC 与 TCL meta-data；不加入 priority 之类的未写行为。
+- 已在 api36 上用空壳跑 `accept M1 --devices api36 --only D101 --no-build --force-devices` 验证：D101 通过，teardown 后原系统桌面 `com.google.android.tvlauncher` 已恢复、重新启用，HOME 角色只剩它。
+- 新工具包根哈希：`988b6b447cedda7c0e00b64a4cd43bf2b2e6f9e3db03a6137ae911540ef157b0`；压缩包 `C:\PythonProject\myLauncher-acceptance.zip`，SHA-256 `1cb8470859f9b2639cc7bd2a1e19fb42c15722b038c8ea14778c26111db3e5b6`。
+- M0 的正式验收使用旧工具包完成（根哈希 `59057c3a…`）；新工具包从 M1 起使用。M0 报告仍有效，因为 M0 的 P01–P04 不依赖默认桌面。
+- 默认桌面页（M5）仍需在真机上验证国产固件能否替换。
 
 ## 影响的检查
 

@@ -34,4 +34,8 @@ adb -s <serial> shell dumpsys activity activities | grep -m1 mResumedActivity
 
 ### 状态
 
-等用户裁决。M0 的 P01–P04 不依赖默认桌面，因此 M0 可继续正式验收；M1 前必须解决。相关提案见 `docs/adr/ADR-001-home-default-on-tv-emulators.md`。
+已由用户裁决：采用 ADR-001 方案 A，并授权实现方修改工具包。`acceptance/run.py` 已修改为在 `prepare()` 停用原系统桌面、在 `teardown()` 恢复并移除本桌面的 HOME 角色；工具包已重新冻结。
+
+- 新根哈希：`988b6b447cedda7c0e00b64a4cd43bf2b2e6f9e3db03a6137ae911540ef157b0`
+- 新压缩包：`C:\PythonProject\myLauncher-acceptance.zip`，SHA-256 `1cb8470859f9b2639cc7bd2a1e19fb42c15722b038c8ea14778c26111db3e5b6`
+- 已在 api36 上验证 D101 通过，teardown 后原系统桌面已恢复。M1 起使用新工具包。

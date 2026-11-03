@@ -93,23 +93,36 @@ def prepare(dev: Device, rep: Report, dbg: Path, ms: str) -> tuple[Ctx, str]:
     if not ok:
         raise RuntimeError(f"安装桌面失败：{msg}")
     comp = home_activity(dbg)
-    if dev.api >= 24 and not dev.set_home(comp):
-        raise RuntimeError(f"无法设为默认桌面（当前 {dev.home_component()}）")
-    ctx = Ctx(dev, rep, comp, ms)
-    ctx.flags["launcherCert"] = apk_cert(dbg)
-    ctx.flags["originalHome"] = orig
-    ctx.L.start()
-    ctx.L.pref("onboarding_done", "true")
-    ctx.L.pref("ambient_idle_s", "0")
-    ctx.L.stop()
-    ctx.L.start()
-    if ms >= "M3":
-        ctx.F.install("probe")
-        ctx.F.cmd("probe", "probe_handlers")
-        h = ctx.F.wait("probe", lambda e: e.get("event") == "handlers", 15) or {}
-        ctx.flags["bindHandler"] = bool(h.get("appwidgetBind"))
-        ctx.F.uninstall("probe")
-    return ctx, orig
+    disabled = ""
+    if dev.api >= 24:
+        orig_pkg = orig.split("/")[0] if "/" in orig else ""
+        if orig_pkg and orig_pkg != PKG:
+            dev.sh(f"pm disable-user --user 0 {orig_pkg}")
+            disabled = orig_pkg
+            dev.disabled_home = disabled
+    try:
+        if dev.api >= 24 and not dev.set_home(comp):
+            raise RuntimeError(f"无法设为默认桌面（当前 {dev.home_component()}）")
+        ctx = Ctx(dev, rep, comp, ms)
+        ctx.flags["launcherCert"] = apk_cert(dbg)
+        ctx.flags["originalHome"] = orig
+        ctx.L.start()
+        ctx.L.pref("onboarding_done", "true")
+        ctx.L.pref("ambient_idle_s", "0")
+        ctx.L.stop()
+        ctx.L.start()
+        if ms >= "M3":
+            ctx.F.install("probe")
+            ctx.F.cmd("probe", "probe_handlers")
+            h = ctx.F.wait("probe", lambda e: e.get("event") == "handlers", 15) or {}
+            ctx.flags["bindHandler"] = bool(h.get("appwidgetBind"))
+            ctx.F.uninstall("probe")
+        return ctx, orig
+    except Exception:
+        if disabled:
+            dev.sh(f"pm enable {disabled}")
+            dev.disabled_home = ""
+        raise
 
 
 def teardown(dev: Device, orig: str):
@@ -118,6 +131,12 @@ def teardown(dev: Device, orig: str):
         dev.uninstall(PKG)
         for cmd in ("cmd connectivity airplane-mode disable", "svc wifi enable", "svc data enable"):
             dev.sh(cmd)
+        disabled = getattr(dev, "disabled_home", "")
+        if disabled:
+            dev.sh(f"pm enable {disabled}")
+            dev.disabled_home = ""
+        if dev.api >= 29:
+            dev.sh(f"cmd role remove-role-holder --user 0 android.app.role.HOME {PKG}")
         if orig and not orig.startswith(PKG) and dev.api >= 24:
             dev.set_home(orig)
     except Exception as e:
