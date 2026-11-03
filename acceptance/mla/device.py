@@ -253,9 +253,11 @@ class Device:
         return [l.split(":", 1)[1].strip() for l in self.sh(f"pm list packages {prefix}").splitlines() if l.startswith("package:")]
 
     def pid(self, pkg):
-        out = self.sh(f"pidof {pkg}").strip()
-        if out:
-            return out.split()[0]
+        # Android 6 的 pidof 会忽略进程名、输出全部 PID（A-002），API < 26 直接用 ps。
+        if self.api >= 26:
+            out = self.sh(f"pidof {pkg}").strip()
+            if out:
+                return out.split()[0]
         for l in self.sh("ps -A" if self.api >= 26 else "ps").splitlines():
             if l.strip().endswith(" " + pkg):
                 return l.split()[1]

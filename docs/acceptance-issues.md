@@ -72,7 +72,11 @@ adb -s emulator-5564 shell ps | grep -E 'mytv|backuptest'
 
 ### 状态
 
-待用户裁决。未修改工具包；D114 之外的 api23 检查不受影响。
+已由用户裁决（2026-11-03）：授权修改工具包。
+
+- 修改 `acceptance/mla/device.py` 的 `Device.pid()`：API < 26 直接解析 `ps`（`ps -A` 仅用于 API ≥ 26），不再使用 `pidof`。
+- 重新冻结：根哈希 `fa89122330b63740bc69f48dca8c135c3dbf35963ac85124673599d8b7f66832`；压缩包 `C:\PythonProject\myLauncher-acceptance.zip`，SHA-256 `bd63bdbfc254088f38851bcc8bafda9eaf60382417bc3424d34a1f899fecb5fb`。
+- 验证：api23 上 D114 PASS（`acceptance/out/20261103-171038-M1-dev/`）。
 
 ## A-003：D199 的禁用词扫描把应用名也当成桌面文案
 
@@ -108,4 +112,8 @@ adb -s emulator-5564 shell dumpsys package com.android.backuptester | grep -E 'f
 
 ### 状态
 
-待用户裁决。未修改工具包；该问题只在应用页展示了系统测试应用名称时触发。
+已由用户裁决（2026-11-03）：授权修改工具包。
+
+- 修改 `acceptance/mla/launcher.py` 的 `copy_violations()`：先判断节点的豁免标签子树（`exemptTagPrefixes`、小组件宿主），豁免子树同时跳过禁用词与白名单；其余文字仍按原规则检查。
+- 与 A-002 同一次重新冻结：根哈希 `fa89122330b63740bc69f48dca8c135c3dbf35963ac85124673599d8b7f66832`；压缩包 SHA-256 `bd63bdbfc254088f38851bcc8bafda9eaf60382417bc3424d34a1f899fecb5fb`。
+- 验证：api23 上 D105/D110 的无障碍树汇总后 D199 PASS（`acceptance/out/20261103-171038-M1-dev/`），系统应用名 `BACKUP TEST` 不再误报。

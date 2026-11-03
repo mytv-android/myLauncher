@@ -222,7 +222,7 @@ def content_strings() -> set[str]:
 
 
 def copy_violations(dumps, extra_ok=()) -> list[str]:
-    """界面文字：禁用词对全部文字生效（夹具内容除外）；白名单对非豁免文字生效。"""
+    """界面文字：禁用词与白名单都只约束桌面自身文案；豁免子树（应用名、内容等）整体跳过。"""
     cp = spec("ui_copy")
     exact = set(cp["exact"]) | set(extra_ok)
     pats = [re.compile(p) for p in cp["patterns"]]
@@ -233,6 +233,11 @@ def copy_violations(dumps, extra_ok=()) -> list[str]:
         for n in tree.nodes:
             if n.pkg != PKG:
                 continue
+            chain = [n] + list(n.ancestors())
+            if any(x.rid.startswith(tuple(cp["exemptTagPrefixes"])) for x in chain):
+                continue
+            if cp.get("exemptWidgetHostSubtree") and any(re.fullmatch(r"widget:\d+", x.rid or "") for x in chain):
+                continue
             for t in (n.text, n.desc):
                 t = (t or "").strip()
                 if not t or t in content:
@@ -240,11 +245,6 @@ def copy_violations(dumps, extra_ok=()) -> list[str]:
                 for b in banned:
                     if b.search(t):
                         bad[t] = f"禁用词 /{b.pattern}/ @ {name}"
-                chain = [n] + list(n.ancestors())
-                if any(x.rid.startswith(tuple(cp["exemptTagPrefixes"])) for x in chain):
-                    continue
-                if cp.get("exemptWidgetHostSubtree") and any(re.fullmatch(r"widget:\d+", x.rid or "") for x in chain):
-                    continue
                 if t in exact or any(p.search(t) for p in pats):
                     continue
                 bad.setdefault(t, f"不在 ui_copy 白名单 @ {name}")
