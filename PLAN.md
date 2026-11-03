@@ -1,6 +1,6 @@
 # myLauncher 实现计划
 
-设计依据是 `tv-launcher-design-v3.html`（v3.3），文中"§n"指它的第 n 节。可测性要求见 `acceptance/CONTRACT.md`，属于需求的一部分。硬规则见 `AGENTS.md`。
+设计依据是 `tv-launcher-design-v3.html`（v3.4），文中"§n"指它的第 n 节。可测性要求见 `acceptance/CONTRACT.md`，属于需求的一部分。硬规则见 `AGENTS.md`。
 
 冲突时按以下顺序取舍：用户的明确指示 > `AGENTS.md` > `CONTRACT.md` > 本文件 > 设计稿。设计稿与本文件都没写到的，按 Google TV 的行为实现，并在里程碑说明里列出。
 
@@ -41,7 +41,7 @@
 - **Expressive 实验 API**（`@ExperimentalMaterial3ExpressiveApi`）只在 `core:designsystem` 里调用，其他模块通过它的封装使用。
 - **测试钩子**：状态接口 Provider 和调试命令放在 `app/src/debug/`。debug 的系列应用信任名单额外加入夹具证书，也只放在 debug 源集（CONTRACT §7）。
 - **测试**：单元测试与 Compose UI 测试随功能编写，放在各模块的 `src/test`、`src/androidTest`。
-  - 模拟器上无法从外部观测的规则（取色对比度、天气退避、农历、上传限额、PIN、更新校验等）列在 `acceptance/spec/required_tests.json`（T01–T17），类名与模块必须一致，`assert` 一栏是测试必须覆盖的断言，用户会抽查测试代码。
+  - 模拟器上无法从外部观测的规则（取色对比度、天气退避、农历、上传限额、PIN、更新校验、路径校验、断点续传、分包选择、配对等）列在 `acceptance/spec/required_tests.json`（T01–T21），类名与模块必须一致，`assert` 一栏是测试必须覆盖的断言，用户会抽查测试代码。
   - 验收工具在 M1 起运行 `gradlew test --continue`，任何失败的单元测试都会让 S17 不通过。
   - 里程碑说明里附 `gradlew test` 的结果。
 - **验收前置**：儿童模式等检查需要的 appops（悬浮窗、使用情况访问）由验收工具用 adb 授予，实现方不需要也不得在代码里绕开授权。
@@ -79,7 +79,13 @@
 
 **目标**：先测设备事实，再承诺界面。
 
-**内容**：§20 的 11 个验证项（①–⑧ 同 v3.2；⑨ 儿童模式的执行手段；⑩ HOME 兼容；⑪ IP 推测服务的使用条款）。
+**内容**：§20 的 12 个验证项（①–⑧ 同 v3.2；⑨ 儿童模式的执行手段；⑩ HOME 兼容；⑪ IP 推测服务的使用条款；⑫ 文件与安装的系统入口）。
+
+⑫ 在 api23 / api28 / api31g / api34g / api36 上分别记录：
+- 「所有文件访问」设置页（`ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION` 带包名、`ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION`）与「安装未知应用」设置页（`ACTION_MANAGE_UNKNOWN_APP_SOURCES`）是否有处理者；
+- DocumentsUI 是否存在，`ACTION_OPEN_DOCUMENT_TREE` 能否用遥控器完成授权；
+- 挂载一个 U 盘镜像后，在未授权、存储权限、所有文件访问、目录授权四种状态下能否列出与写入；
+- PackageInstaller 确认界面能否用遥控器完成安装与取消，`STATUS_PENDING_USER_ACTION` 的确认界面能否从前台拉起。
 
 - 验证代码放在 `spikes/` 下的独立 Gradle 工程，不进入主工程 `settings.gradle.kts`。
 - 同时搭好主工程空壳：`:app`（standard / oem），一个带 HOME 与 LEANBACK_LAUNCHER 的空 Compose Activity。空壳要满足的条件：
@@ -97,7 +103,8 @@
     "8": {"title": "系列应用直连联调", "conclusion": "…", "data": {}, "evidence": ["…"]},
     "9": {"title": "儿童模式的执行手段", "conclusion": "…", "data": {}, "evidence": ["…"]},
     "10": {"title": "HOME 兼容", "conclusion": "…", "data": {}, "evidence": ["…"]},
-    "11": {"title": "IP 推测服务的使用条款", "conclusion": "…", "data": {}, "evidence": ["…"]}
+    "11": {"title": "IP 推测服务的使用条款", "conclusion": "…", "data": {}, "evidence": ["…"]},
+    "12": {"title": "文件与安装的系统入口", "conclusion": "…", "data": {}, "evidence": ["…"]}
   },
   "devices": {
     "api23": {
@@ -242,7 +249,7 @@ M0 的结论如果推翻了设计稿的某个前提（例如某设备没有 AppW
 - **可选模块** `opt:shizuku`。
 - **时钟、天气与农历**（`data:weather`，§12）：
   - 顶栏时钟与时钟小组件按 `TIME_12_24` 决定 12 / 24 小时制，只有值为 "12" 时才用 12 小时制；
-  - 天气用 Open-Meteo，城市在手机整理页设置，否则每天最多一次 IP 推测；最多每小时请求一次，只带两位小数的经纬度；
+  - 天气用 Open-Meteo，城市在「手机与电脑」网页设置，否则每天最多一次 IP 推测；最多每小时请求一次，只带两位小数的经纬度；
   - 农历自行计算，不引入第三方库；
   - 不申请任何定位权限（S09）。
 
@@ -273,10 +280,16 @@ M0 的结论如果推翻了设计稿的某个前提（例如某设备没有 AppW
   - 信号源；
   - 亮度：只在 oem 变体中提供。
 - **HDMI 信号源**以圆形图标进入应用行（`input:<id>`）。
-- **手机整理**：NanoHTTPD + 二维码（ZXing）；服务只在页面打开时运行；需要令牌（CONTRACT §8）。
+- **手机与电脑**（§14，CONTRACT §8）：
+  - 入口：快速设置「传文件」与桌面设置；NanoHTTPD + 二维码（ZXing）；服务只在页面打开时接受连接；
+  - 电视页：二维码、地址、6 位配对码、设备、传输列表、保存位置、存储授权；离开时有进行中的传输则询问「后台继续 / 全部停止」；
+  - 连接：二维码一次性令牌或配对码换会话，电视在连接时确认一次，之后该会话可做全部读写；Host 校验；
+  - 网页（`assets/web/`）：手机与电脑两种布局，栏目「文件 / 推送 / 桌面 / 更多」，文字同样受白名单与禁用词约束（S11）；
+  - 文件（`data:files`）：浏览、上传（断点续传）、下载（票据、Range、zip 流）、新建、重命名、移动、删除；存储按 §14 的授权分级；
+  - 推送：安装包（`core:install`，含 .apks / .apkm / .xapk 分包与 OBB，始终经系统确认）、图片（查看页）、视频与音乐（播放页，`feature:viewer`）。
 - **片源**：`data:media/src/main/assets/ambient/playlist.json`，每条带 `url`、`title`、`license`、`source`（S13）。
 - **环境模式的来源**（§13）：航拍、自己的视频、照片、必应每日一图（署名常显）、HDMI 实时画面、壁纸。
-  - 自己的视频经手机整理页流式上传：电视上确认、按 Content-Length 预检限额、没有视频轨拒绝（CONTRACT §8）；
+  - 自己的视频经「手机与电脑」网页流式上传：按 Content-Length 预检限额、没有视频轨拒绝（CONTRACT §8）；
   - 解码器交接：其他应用来到前台时释放播放器；
   - 系统屏保未选本应用时，空闲后进入桌面内屏保；快速设置「屏保」可立即启动。
 - **信号源键**：`KEYCODE_TV_INPUT` 打开信号源页。
@@ -286,13 +299,12 @@ M0 的结论如果推翻了设计稿的某个前提（例如某设备没有 AppW
   - 长辈模式：大磁贴每排 4 个、名称常显、强制高对比焦点框；
   - PIN 加盐哈希保存，连续输错 5 次锁定 60 秒，可用 ADB（`.config.ConfigReceiver`）清除。
 - **设备档案与诊断基础**（`core:diag`，§16）：`devices.json` 预置结论、ADB 覆盖。
-- **手机整理**改为一次性令牌换会话（CONTRACT §8），改名等写操作需电视确认。
 
-**新增模块**：`data:media`、`feature:phone-organizer`、`data:restricted`、`core:diag`。
+**新增模块**：`data:media`、`feature:phone-organizer`、`data:restricted`、`core:diag`、`data:files`、`core:install`、`feature:viewer`。
 
-**新增依赖**：media3-exoplayer、nanohttpd、zxing core。清单中声明 DreamService。
+**新增依赖**：media3-exoplayer、nanohttpd、zxing core。清单中声明 DreamService，以及 REQUEST_INSTALL_PACKAGES、MANAGE_EXTERNAL_STORAGE、WRITE_EXTERNAL_STORAGE（`maxSdkVersion="29"`）与 `requestLegacyExternalStorage="true"`（S09）。
 
-**门禁**：D1xx–D3xx、D401–D413、D199。单元测试 T01–T14。设备矩阵增加 api34g。
+**门禁**：D1xx–D3xx、D401–D413、D199。单元测试 T01–T14、T18–T21。设备矩阵增加 api34g。
 
 ### M5 加固
 
@@ -307,7 +319,7 @@ M0 的结论如果推翻了设计稿的某个前提（例如某设备没有 AppW
 - **release 构建**：R8 后能正常运行；包含 Baseline Profile（profileinstaller）。
 - **oem 变体**的内容。
 - **应用内更新**（`core:update`，§16）：版本文件格式见 CONTRACT §9；包名、签名、versionCode、SHA-256、大小任一不符即拒绝并删除，不弹安装器。
-- **诊断导出**（§14）：经手机整理页下载，含帧时间 P50 / P90 / P99 与固件指纹，IP、MAC、序列号、令牌、应用列表均脱敏。
+- **诊断导出**（§14）：经「手机与电脑」网页下载，含帧时间 P50 / P90 / P99 与固件指纹，IP、MAC、序列号、令牌、应用列表均脱敏。
 - **默认桌面页**：显示是否为默认桌面；被替换时显示当前默认桌面的名称，并给出设置入口。
 - **内存回收**：`onTrimMemory` 在 UI_HIDDEN 时保留缓存，在 BACKGROUND / RUNNING_LOW 时清空图片缓存与冻结模糊位图。
 - **刷新率**（§17）：API 31+ 选 ≤120Hz 的最高无缝刷新率。
@@ -317,7 +329,7 @@ M0 的结论如果推翻了设计稿的某个前提（例如某设备没有 AppW
 
 **新增依赖**：profileinstaller。
 
-**门禁**：全部检查（D101–D121、D201–D215、D301–D328、D401–D413、D501–D511、D199，S01–S17，单元测试 T01–T17），5 台设备。
+**门禁**：全部检查（D101–D121、D201–D215、D301–D328、D401–D413、D501–D511、D199，S01–S17，单元测试 T01–T21），5 台设备。
 
 ## 4.1 只能在真机上确认的项
 
@@ -328,7 +340,8 @@ M0 的结论如果推翻了设计稿的某个前提（例如某设备没有 AppW
 - HDMI-CEC 的开关机与信号源切换；
 - 国产固件对第三方 HOME 的限制（HOME.CC、TCL meta-data 是否生效）；
 - 杜比视界等 HDR 片源的播放与降级；
-- Google TV 系统设置中屏保列表是否出现本应用的 DreamService。
+- Google TV 系统设置中屏保列表是否出现本应用的 DreamService；
+- 「手机与电脑」在真实 Wi-Fi 下的吞吐（目标见 §14）、U 盘与 SD 卡在各授权状态下的写入，以及国产固件上 PackageInstaller 确认界面与「安装未知应用」入口。
 
 ## 5. 变更与问题
 

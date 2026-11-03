@@ -34,6 +34,14 @@
   {"id": "T16", "milestone": "M5", "module": ":core:update", "class": "UpdateCheckerTest", "minTests": 6,
    "assert": "启动及每 3 小时检查；失败按 30 秒 / 2 分钟 / 10 分钟 / 30 分钟退避；包名不符、签名不符、versionCode 不升、SHA-256 不符均拒绝并删除；更新说明按版本倒序合并（§16）"},
   {"id": "T17", "milestone": "M5", "module": ":app", "class": "RefreshRateTest", "minTests": 3,
-   "assert": "API 31+ 从 getAlternativeRefreshRates() 选 ≤ 120Hz 的最高值；不选需要重新同步的模式；API ≤ 30 不改（§17）"}
+   "assert": "API 31+ 从 getAlternativeRefreshRates() 选 ≤ 120Hz 的最高值；不选需要重新同步的模式；API ≤ 30 不改（§17）"},
+  {"id": "T18", "milestone": "M4", "module": ":data:files", "class": "PathGuardTest", "minTests": 6,
+   "assert": "拒绝空段、.、..、NUL、反斜杠与以 / 开头的路径；只做一次 URL 解码（%2e%2e 拒绝，%252e%252e 不被二次解码）；规范路径必须在根内，符号链接跳出返回 404；Android/data、Android/obb 与桌面私有目录不可见；文件名 NFC 规范化且 UTF-8 不超过 255 字节；FAT / exFAT 卷把 \\ : * ? \" < > | 与控制字符替换为 _（§14）"},
+  {"id": "T19", "milestone": "M4", "module": ":data:files", "class": "ResumableUploadTest", "minTests": 6,
+   "assert": "Upload-Offset 不符返回 409 与实际偏移；中断后按 HEAD 取回的偏移续传，结果与原文件逐字节相同；完成时同卷原子改名并设置修改时间；预检：内部存储至少保留 1 GiB、U 盘 64 MB、FAT32 单文件不超过 4 GiB − 1；写入中空间不足删除临时文件；超过 24 小时的 .mlpart 被清理（§14）"},
+  {"id": "T20", "milestone": "M4", "module": ":core:install", "class": "SplitSelectorTest", "minTests": 8,
+   "assert": "base 与功能分包必装；ABI 按 SUPPORTED_ABIS 顺序选第一个可用；密度选不低于本机的最接近值，没有时选最高；语言按系统语言列表选，无匹配不装；.xapk 的 manifest.json 与 OBB 路径解析；分包之间包名 / versionCode / 签名不一致判为无法读取；预检分别给出签名不同、版本更低、minSdk 过高、没有可用 ABI（§14）"},
+  {"id": "T21", "milestone": "M4", "module": ":feature:phone-organizer", "class": "PairingTest", "minTests": 5,
+   "assert": "令牌与配对码在允许或拒绝后作废并刷新；配对码连错 5 次立即刷新，该来源地址 30 秒内返回 429；会话 10 分钟无请求失效，进行中的传输算作活动；同时最多 4 个会话；Host 头不符返回 421（§14）"}
  ]
 }

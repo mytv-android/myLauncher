@@ -89,7 +89,7 @@ def ring_sides(ctx, img, node) -> int:
     return sum(1 for l in lines if len(l) and scan(l))
 
 
-# ---------------------------------------------------------------- 手机整理会话
+# ---------------------------------------------------------------- 手机与电脑会话
 class Organizer:
     def __init__(self, ctx):
         self.ctx = ctx
@@ -100,9 +100,10 @@ class Organizer:
         time.sleep(1.5)
         img, tree, st = ctx.snap("organizer")
         o = st.get("organizer") or {}
-        need(o.get("running") and o.get("port") and o.get("token"), f"状态接口 organizer={o}（CONTRACT §8）")
-        need(tree.find("organizer:qr"), "手机整理页没有二维码（organizer:qr）")
+        need(o.get("running") and o.get("address") and o.get("port") and o.get("token"), f"状态接口 organizer={o}（CONTRACT §8）")
+        need(tree.find("organizer:qr"), "「手机与电脑」页没有二维码（organizer:qr）")
         self.token = o["token"]
+        self.host = f"{o['address']}:{int(o['port'])}"
         with socket.socket() as so:
             so.bind(("127.0.0.1", 0))
             self.local = so.getsockname()[1]
@@ -116,6 +117,7 @@ class Organizer:
     def req(self, method, path, body=None, headers=None, timeout=20):
         c = http.client.HTTPConnection("127.0.0.1", self.local, timeout=timeout)
         h = dict(headers or {})
+        h.setdefault("Host", self.host)
         if self.session and "X-Session" not in h:
             h["X-Session"] = self.session
         try:
@@ -127,9 +129,18 @@ class Organizer:
         finally:
             c.close()
 
+    def refresh(self):
+        """重新读取状态接口里的当前令牌（允许或拒绝一次连接后令牌会刷新）。"""
+        time.sleep(0.8)
+        o = self.ctx.L.state().get("organizer") or {}
+        need(o.get("token"), f"状态接口 organizer={o}")
+        self.token = o["token"]
+        return self.token
+
     def login(self):
-        code, body = self.req("POST", "/api/session", headers={"X-Token": self.token})
-        need(code == 200, f"POST /api/session 返回 {code}")
+        """用当前令牌请求会话，电视上弹出 confirm_phone 时允许。"""
+        code, body = self.confirmed("POST", "/api/session", headers={"X-Token": self.token}, allow=True, timeout=70)
+        need(code == 200, f"POST /api/session（电视允许）返回 {code}")
         self.session = json.loads(body)["session"]
         return self.session
 
@@ -370,26 +381,34 @@ def d407(ctx):
     need(not st.get("overlay"), f"BACK 后 overlay={st.get('overlay')}")
 
 
-@check("D406", "手机整理：一次性令牌换会话、无会话 401、改名经电视确认后生效、离开即停止", "M4")
+@check("D406", "手机与电脑：Host 校验、连接经电视确认（拒绝 403 / 允许 200）、令牌一次性、无会话 401、改名生效、离开即停止", "M4")
 def d406(ctx):
     ctx.F.install(*PROTO_APPS)
     comp = f"{P('dolphin')}/{ACT}"
     with Organizer(ctx) as o:
+        code, _ = o.req("GET", "/", headers={"Host": "attacker.example"})
+        need(code == 421, f"Host 不符时 GET / 返回 {code}")
         code, _ = o.req("GET", "/api/apps")
         need(code == 401, f"没有会话时 GET /api/apps 返回 {code}")
+        first = o.token
+        code, _ = o.confirmed("POST", "/api/session", headers={"X-Token": first}, allow=False, timeout=70)
+        need(code == 403, f"电视上拒绝连接后返回 {code}")
+        need(o.refresh() != first, "拒绝之后令牌没有刷新")
+        code, _ = o.req("POST", "/api/session", headers={"X-Token": first})
+        need(code == 401, f"已作废的令牌再次使用返回 {code}")
+        used = o.token
         o.login()
-        code, _ = o.req("POST", "/api/session", headers={"X-Token": o.token})
+        need(o.refresh() != used, "允许之后令牌没有刷新")
+        code, _ = o.req("POST", "/api/session", headers={"X-Token": used})
         need(code == 401, f"一次性令牌第二次使用返回 {code}")
         code, body = o.req("GET", "/api/apps")
         need(code == 200, f"带会话 GET /api/apps 返回 {code}")
         apps = json.loads(body)
         need(any(a.get("component") == comp for a in apps), f"应用列表里没有 {comp}")
-        code, _ = o.confirmed("POST", "/api/apps/label", json.dumps({"component": comp, "label": "改名测试"}).encode(),
-                              {"Content-Type": "application/json"}, allow=False)
-        need(code == 403, f"电视上拒绝后返回 {code}")
-        code, _ = o.confirmed("POST", "/api/apps/label", json.dumps({"component": comp, "label": "改名测试"}).encode(),
-                              {"Content-Type": "application/json"}, allow=True)
-        need(code == 200, f"电视上允许后返回 {code}")
+        code, _ = o.req("POST", "/api/apps/label", json.dumps({"component": comp, "label": "改名测试"}).encode(),
+                        {"Content-Type": "application/json"})
+        need(code == 200, f"会话内改名返回 {code}")
+        need(ctx.L.state().get("overlay") != "confirm_phone", "会话已确认，改名时不应再弹出确认")
         ctx.dev.key("BACK", wait=1)
         ctx.dev.key("BACK", wait=1)
         st = ctx.home()
@@ -403,20 +422,20 @@ def d406(ctx):
     need(n and any("改名测试" in t for t in n.texts()), f"改名后主页仍显示 {n.texts() if n else None}")
 
 
-@check("D408", "自己的视频：流式上传、电视确认、非视频拒绝、按 Content-Length 预检超限", "M4")
+@check("D408", "自己的视频：流式上传、非视频拒绝、按 Content-Length 预检超限", "M4")
 def d408(ctx):
     with Organizer(ctx) as o:
         o.login()
-        code, body = o.confirmed("POST", "/api/clips", (MEDIA / "garbage.mp4").read_bytes(),
-                                 {"X-Filename": "garbage.mp4", "Content-Type": "video/mp4"})
+        code, body = o.req("POST", "/api/clips", (MEDIA / "garbage.mp4").read_bytes(),
+                           {"X-Filename": "garbage.mp4", "Content-Type": "video/mp4"}, timeout=40)
         need(code == 415 and "无法播放这个视频" in body.decode("utf-8", "replace"), f"非视频文件：{code} {body[:120]!r}")
-        code, body = o.confirmed("POST", "/api/clips", (MEDIA / "sample.mp4").read_bytes(),
-                                 {"X-Filename": "sample.mp4", "Content-Type": "video/mp4"})
+        code, body = o.req("POST", "/api/clips", (MEDIA / "sample.mp4").read_bytes(),
+                           {"X-Filename": "sample.mp4", "Content-Type": "video/mp4"}, timeout=40)
         need(code == 200 and json.loads(body).get("id"), f"H.264 视频：{code} {body[:120]!r}")
         # 只发请求头，不发正文：桌面必须按 Content-Length 预检，直接返回 413
-        head = (f"POST /api/clips HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Session: {o.session}\r\n"
+        head = (f"POST /api/clips HTTP/1.1\r\nHost: {o.host}\r\nX-Session: {o.session}\r\n"
                 f"X-Filename: huge.mp4\r\nContent-Type: video/mp4\r\nContent-Length: {3 << 30}\r\n\r\n")
-        buf, confirmed = b"", False
+        buf = b""
         try:
             with socket.create_connection(("127.0.0.1", o.local), timeout=0.5) as s:
                 s.sendall(head.encode("ascii"))
@@ -428,10 +447,7 @@ def d408(ctx):
                             break
                         buf += d
                     except (socket.timeout, TimeoutError):
-                        if not confirmed and ctx.L.state().get("overlay") == "confirm_phone":
-                            need(ctx.L.seek("confirm_phone:allow", ("LEFT", "RIGHT"), 4), "确认框里找不到允许")
-                            ctx.L.press("OK")
-                            confirmed = True
+                        pass
         except OSError as e:
             buf = buf or str(e).encode()
         m = re.match(rb"HTTP/1\.[01] (\d{3})", buf)

@@ -4,7 +4,7 @@
 
 | 文件 | 内容 | 能否修改 |
 |---|---|---|
-| `tv-launcher-design-v3.html` | 产品与技术设计（v3.3），唯一的设计依据 | 不能 |
+| `tv-launcher-design-v3.html` | 产品与技术设计（v3.4），唯一的设计依据 | 不能 |
 | `PLAN.md` | 里程碑、范围、交付物、验收门禁 | 不能 |
 | `AGENTS.md`、`CLAUDE.md` | 本文件 | 不能 |
 | `acceptance/` | 冻结的验收工具包：可测性契约 `CONTRACT.md`、规格 `spec/`、夹具应用 `fixtures/`、验收程序 `run.py` 与 `mla/` | 不能 |

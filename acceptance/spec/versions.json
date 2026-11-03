@@ -72,7 +72,10 @@
    ":data:media",
    ":feature:phone-organizer",
    ":data:restricted",
-   ":core:diag"
+   ":core:diag",
+   ":data:files",
+   ":core:install",
+   ":feature:viewer"
   ],
   "M5": [
    ":feature:onboarding",

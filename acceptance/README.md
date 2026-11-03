@@ -82,7 +82,7 @@ python acceptance\run.py accept M1
 - M5 中临时打开飞行模式，结束后还原；
 - M3 起临时修改 `time_12_24`（D327），结束后还原；
 - M4 中给桌面授予悬浮窗与使用情况访问的 appops（儿童模式）；D411 会重启一次模拟器；
-- 用 `adb reverse` / `adb forward` 把本机上的模拟服务器（天气、更新）和手机整理接口接到模拟器，结束后移除；
+- 用 `adb reverse` / `adb forward` 把本机上的模拟服务器（天气、更新）和「手机与电脑」接口接到模拟器，结束后移除；
 - 启动时带 `-no-snapshot-save`，不覆盖你的快速启动快照。
 
 不会 wipe 数据，不碰 emulator-5554。不是电视的设备（没有 `android.software.leanback`），工具会拒绝操作。

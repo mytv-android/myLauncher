@@ -113,6 +113,10 @@ code.i{font-size:.86em;background:var(--sunk);color:var(--fg);padding:1.5px 6px;
 .seg input:checked+span{background:var(--accent);color:var(--on-accent);font-weight:650;border-radius:8px}
 .seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
 .insp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.xfsim{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.xfsim button{font:inherit;font-size:11.5px;font-weight:600;line-height:1.25;border:0;border-radius:10px;padding:7px 4px;background:var(--sunk);color:var(--fg-2);cursor:pointer;transition:background-color .2s,border-radius .25s}
+.xfsim button:hover{background:var(--accent-soft);color:var(--on-accent-soft);border-radius:6px}
+.xfsim button.on{background:var(--accent);color:var(--on-accent)}
 .btn{font:inherit;font-size:13px;font-weight:650;border:0;border-radius:999px;padding:9px 14px;cursor:pointer;background:var(--accent-soft);color:var(--on-accent-soft);transition:border-radius .25s,background-color .2s}
 .btn:hover{border-radius:12px}
 .btn.primary{background:var(--accent);color:var(--on-accent)}
@@ -461,11 +465,148 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
 .tv[data-pk="open"] .tv-toast{left:calc(50% - 199px);max-width:calc(100% - 440px)}
 .morph{width:30px;height:30px;background:var(--primary);flex:none;animation:morph 2.4s linear infinite;clip-path:var(--m0)}
 @keyframes morph{0%{clip-path:var(--m0);transform:rotate(0)}25%{clip-path:var(--m1)}50%{clip-path:var(--m2)}75%{clip-path:var(--m3)}100%{clip-path:var(--m0);transform:rotate(360deg)}}
+/* 手机与电脑：传文件页、浮层、查看页、播放页 */
+.tile.wide{grid-column:1/-1}
+.pg-xfer,.tv-view{margin:0}
+.tv-cc{gap:10px}
+.tile{height:46px;border-radius:23px}
+.tv[data-page="xfer"] .tv-top{opacity:0;pointer-events:none}
+.pg-xfer{top:0}
+.tv[data-page="xfer"] .pg-xfer{opacity:1;pointer-events:auto}
+.xf-title{position:absolute;left:48px;top:30px;font-size:22px;font-weight:780}
+.xf-card{position:absolute;left:48px;top:84px;width:296px;height:412px;border-radius:28px;padding:24px 22px 20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.xf-qr{width:196px;height:196px;border-radius:22px;background:#fff;padding:12px;flex:none;transition:opacity .4s var(--ease-fx)}
+.xf-qr svg{display:block;width:100%;height:100%}
+.xf-qr.swap{opacity:0}
+.xf-addr{font-family:var(--font-mono);font-size:15px;font-weight:500;letter-spacing:.01em;color:var(--on-surface)}
+.xf-code{display:flex;flex-direction:column;align-items:center;gap:0}
+.xf-code span{font-size:11.5px;font-weight:650;letter-spacing:.06em;color:var(--on-surface-var)}
+.xf-code b{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.08em;line-height:1.2;transition:opacity .4s var(--ease-fx)}
+.xf-code b.swap{opacity:0}
+.xf-net{margin-top:auto;display:flex;align-items:center;gap:7px;height:30px;padding:0 13px;border-radius:15px;font-size:12px;font-weight:650;color:var(--on-surface-var);background:color-mix(in srgb,var(--on-surface) 9%,transparent)}
+.xf-net svg,.xf-off svg,.xf-ic svg,.xf-dev svg,.xf-dir svg,.xf-set svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.xf-net svg{width:16px;height:16px}
+.xf-off{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:15px;font-weight:650;color:var(--on-surface-var)}
+.xf-off svg{width:54px;height:54px;stroke-width:1.6}
+.xf-side{position:absolute;left:368px;right:48px;top:84px;bottom:44px;display:flex;flex-direction:column;gap:14px}
+.xf-sec{display:flex;flex-direction:column;gap:6px;min-height:0}
+.xf-sec.grow{flex:1}
+.xf-l{font-size:11.5px;font-weight:650;color:var(--on-surface-var);letter-spacing:.06em}
+.xf-devs{display:flex;gap:8px;flex-wrap:nowrap}
+.xf-dev{height:44px;border-radius:22px;padding:0 16px 0 12px;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:650;white-space:nowrap;background:color-mix(in srgb,var(--sc-highest) 72%,transparent)}
+.xf-dev svg{width:18px;height:18px}
+.xf-dev small{font-size:11px;font-weight:550;opacity:.7}
+.xf-dev.busy small{color:var(--primary);opacity:1}
+.xf-dev.is-focused{background:var(--on-surface);color:var(--surface);border-radius:14px;transform:scale(1.05)}
+.xf-dev.is-focused small{color:inherit}
+.xf-vp{flex:1;min-height:0;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 14px),transparent)}
+.xf-list{display:flex;flex-direction:column;gap:6px;padding:4px 6px;transition:transform var(--d-def) var(--spr-def)}
+.xf-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;height:58px;padding:0 14px 0 7px;border-radius:18px;background:color-mix(in srgb,var(--sc-highest) 62%,transparent)}
+.xf-row.is-focused{background:var(--on-surface);color:var(--surface);border-radius:12px;transform:scale(1.025)}
+.xf-ic{width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--on-surface) 10%,transparent) center/cover no-repeat;display:grid;place-items:center;position:relative;color:var(--on-surface-var)}
+.xf-ic.round{border-radius:50%}
+.xf-ic svg{width:22px;height:22px}
+.xf-ic i{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center}
+.xf-ic i svg{width:9px;height:9px;fill:currentColor;stroke:none}
+.xf-mid{min-width:0}
+.xf-mid b{display:block;font-size:13.5px;font-weight:680;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xf-mid span{display:flex;align-items:center;gap:5px;font-size:11.5px;opacity:.72;white-space:nowrap;font-variant-numeric:tabular-nums}
+.xf-dir svg{width:12px;height:12px;display:block}
+.xf-st{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+.xf-st .spd{min-width:62px;text-align:right;opacity:.8}
+.xf-st .bad{color:#ffb4ab}
+.xf-row.is-focused .xf-st .bad{color:#ba1a1a}
+.xf-act{height:28px;padding:0 13px;border-radius:14px;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--primary);color:var(--on-primary)}
+.xf-act.soft{background:color-mix(in srgb,var(--on-surface) 14%,transparent);color:inherit}
+.xf-empty{height:100%;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--on-surface-var)}
+.xf-empty svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.xf-sets{display:flex;flex-direction:column;gap:6px}
+.xf-set{height:44px;border-radius:22px;padding:0 18px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:650;background:color-mix(in srgb,var(--sc-highest) 62%,transparent)}
+.xf-set em{margin-left:auto;font-style:normal;font-weight:550;font-size:12.5px;opacity:.75}
+.xf-set em.warn{color:#ffb4ab;opacity:1}
+.xf-set svg{width:16px;height:16px;opacity:.7}
+.xf-set.is-focused{background:var(--on-surface);color:var(--surface);border-radius:14px;transform:scale(1.02)}
+.xf-set.is-focused em.warn{color:#ba1a1a}
+
+/* 浮层：连接请求 / 安装卡 / 离开确认 */
+.tv[data-dlg="on"] .tv-dim,.tv[data-fc="open"] .tv-dim{opacity:1}
+.tv-dlg{position:absolute;left:50%;top:50%;width:440px;border-radius:30px;padding:26px 26px 22px;z-index:46;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.94);transition:opacity .3s var(--ease-fx),transform var(--d-def) var(--spr-def);--blur:34px;overflow:hidden}
+.tv[data-dlg="on"] .tv-dlg{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.dlg-ic{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--primary-container);color:var(--on-primary-container)}
+.dlg-ic svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dlg-ic.app{border-radius:50%;background:center/cover no-repeat}
+.dlg-t{font-size:21px;font-weight:760;line-height:1.3}
+.dlg-s{font-size:13px;color:var(--on-surface-var);font-variant-numeric:tabular-nums}
+.dlg-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dlg-chips span{height:26px;padding:0 11px;border-radius:13px;display:grid;place-items:center;font-size:11.5px;font-weight:650;background:color-mix(in srgb,var(--on-surface) 11%,transparent);color:var(--on-surface)}
+.dlg-chips span.acc{background:var(--secondary-container);color:var(--on-secondary-container)}
+.dlg-err{font-size:13.5px;font-weight:650;color:#ffb4ab}
+.dlg-code{font-family:var(--font-mono);font-size:11px;line-height:1.5;background:rgba(0,0,0,.38);color:#e6e6ea;border-radius:12px;padding:9px 11px;word-break:break-all;text-align:left;width:100%}
+.dlg-busy{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:650;height:46px}
+.dlg-btns{display:flex;gap:8px;justify-content:center;margin-top:8px;min-height:46px}
+.dlg-btns .tvbtn.is-focused{padding:0 30px}
+.dlg-tick{position:absolute;left:0;bottom:0;height:3px;background:var(--primary);width:100%;transform-origin:0 50%}
+/* 系统安装确认（PackageInstaller 的界面，不属于桌面） */
+.sysdlg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:520px;background:#fff;color:#1f1f1f;border-radius:8px;padding:26px 28px 18px;z-index:47;box-shadow:0 24px 60px rgba(0,0,0,.5);font-family:Roboto,"Noto Sans SC",system-ui,sans-serif;display:none}
+.tv[data-sys="on"] .sysdlg{display:block}
+.sysdlg .hd{display:flex;align-items:center;gap:14px;font-size:20px;font-weight:500}
+.sysdlg .hd i{width:40px;height:40px;border-radius:50%;background:center/cover no-repeat;flex:none}
+.sysdlg p{margin:18px 0 22px;font-size:15px;color:#444}
+.sysdlg .bt{display:flex;justify-content:flex-end;gap:6px}
+.sysdlg .bt span{padding:9px 16px;border-radius:4px;font-size:14px;font-weight:500;color:#1a73e8;letter-spacing:.02em}
+.sysdlg .bt span.is-focused{background:#1a73e8;color:#fff}
+
+/* 文件夹选择抽屉 */
+.tv-fc{position:absolute;top:14px;right:14px;bottom:14px;width:384px;border-radius:30px;padding:20px 18px;z-index:40;transform:translateX(420px);transition:transform var(--d-slow) var(--spr-def);display:flex;flex-direction:column;gap:12px;--blur:34px}
+.tv[data-fc="open"] .tv-fc{transform:none}
+.fc-path{font-size:12.5px;color:var(--on-surface-var);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.fc-row{display:flex;align-items:center;gap:12px;height:44px;flex:none;padding:0 16px 0 12px;border-radius:18px;font-size:13.5px;font-weight:650;background:color-mix(in srgb,var(--sc-highest) 72%,transparent)}
+.fc-row svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.8;flex:none}
+.fc-row small{margin-left:auto;font-size:11.5px;font-weight:550;opacity:.7}
+.fc-row.pick{margin-top:auto;justify-content:center;background:var(--primary);color:var(--on-primary)}
+.fc-row.is-focused{background:var(--on-surface);color:var(--surface);border-radius:12px;transform:scale(1.03)}
+
+/* 菜单 */
+.tv-menu{position:absolute;z-index:48;min-width:200px;border-radius:22px;padding:8px;display:none;flex-direction:column;gap:4px;--blur:34px}
+.tv[data-menu="open"] .tv-menu{display:flex}
+.mn-i{height:42px;border-radius:14px;padding:0 16px;display:flex;align-items:center;font-size:13.5px;font-weight:650}
+.mn-i.is-focused{background:var(--on-surface);color:var(--surface);border-radius:10px}
+
+/* 查看页 */
+.tv-view{position:absolute;inset:0;z-index:44;background:#000;opacity:0;pointer-events:none;transition:opacity .35s var(--ease-fx)}
+.tv[data-view="viewer"] .vw,.tv[data-view="player"] .pl{opacity:1;pointer-events:auto}
+.vw-img{position:absolute;inset:0;background:center/contain no-repeat;transition:opacity .3s var(--ease-fx)}
+.vw-info{position:absolute;left:32px;top:26px;padding:12px 18px;border-radius:20px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--on-surface-var);font-variant-numeric:tabular-nums;transition:opacity .5s var(--ease-fx);--blur:24px}
+.vw-info b{font-size:15px;color:var(--on-surface);font-weight:700}
+.vw-info.off{opacity:0}
+.vw-fail{position:absolute;inset:0;display:none;place-items:center;font-size:16px;font-weight:650;color:#c5c6d0}
+/* 播放页 */
+.pl-video{position:absolute;inset:0;background:center/cover no-repeat}
+.tv[data-play="on"] .pl-video{animation:kb 26s linear infinite alternate}
+.pl-music{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding-bottom:70px}
+.pl.music .pl-music{display:flex}
+.pl.music .pl-video{filter:blur(46px) saturate(140%) brightness(.55);transform:scale(1.3)}
+.pl-cover{width:220px;height:220px;border-radius:32px;background:center/cover no-repeat;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+.pl-music b{font-size:24px;font-weight:780;margin-top:14px}
+.pl-music span{font-size:13.5px;color:var(--on-surface-var)}
+.pl-ctl{position:absolute;left:0;right:0;bottom:0;padding:70px 48px 30px;background:linear-gradient(transparent,rgba(0,0,0,.72));display:flex;flex-direction:column;gap:12px;transition:opacity .5s var(--ease-fx)}
+.pl.music .pl-ctl{background:none}
+.pl-ctl.off{opacity:0}
+.pl-tt{font-size:18px;font-weight:720;color:#fff}
+.pl.music .pl-tt{display:none}
+.pl-bar{display:flex;align-items:center;gap:16px;color:#e2e2e8;font-size:12.5px;font-variant-numeric:tabular-nums}
+.pl-bar .wave{flex:none}
+.pl-bt{display:flex;gap:10px;justify-content:center}
+.pl-bt .tvbtn.icon{background:rgba(255,255,255,.14);color:#fff}
+.pl-bt .tvbtn.icon.is-focused{background:#fff;color:#111;width:60px}
+.pl.music .pl-bar{justify-content:center}
+.dlg-busy svg{width:22px;height:22px;fill:none;stroke:var(--primary);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 </style>
 
 <div class="wrap">
   <header class="mast">
-    <div class="eyebrow"><b>设计方案 v3.2</b><span>2026-11-02</span><span>Android TV · Google TV 设备 · 盒子 / 投影</span><span>minSdk 23 · targetSdk 36</span></div>
+    <div class="eyebrow"><b>设计方案 v3.4</b><span>2026-11-02</span><span>Android TV · Google TV 设备 · 盒子 / 投影</span><span>minSdk 23 · targetSdk 36</span></div>
     <h1>TV Launcher 设计方案</h1>
     <p class="thesis"><strong>内容即环境，焦点即主题。</strong>桌面沿用 Google TV 的浏览结构：顶部导航、精选大图、内容行、应用行。界面语言按 Material 3 Expressive 落到十英尺：弹簧动效、形状变形、强调字重。背景显示焦点内容的画面，前景控件是 Haze 玻璃；整套配色从焦点海报、应用图标或壁纸实时取色生成。系统频道、Watch Next 和桌面小组件都纳入同一套主题。</p>
     <div class="chips">
@@ -527,6 +668,29 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
 
           <section class="tv-page pg-apps" id="pgApps"><div class="pg-h">应用</div><div class="grid" id="appsGrid"></div></section>
           <section class="tv-page pg-widgets" id="pgWidgets"><div class="pg-h">小组件</div><div class="grid-vp"><div class="grid" id="wdgGrid"></div></div></section>
+          <section class="tv-page pg-xfer" id="pgXfer" aria-label="手机与电脑">
+            <div class="xf-title">手机与电脑</div>
+            <div class="xf-card glass" id="xfCard"></div>
+            <div class="xf-side" id="xfSide"></div>
+          </section>
+          <section class="tv-view vw" id="tvViewer" aria-label="查看">
+            <div class="vw-img" id="vwImg"></div>
+            <div class="vw-fail" id="vwFail">无法显示这张图片</div>
+            <div class="vw-info glass" id="vwInfo"><b id="vwName"></b><span id="vwMeta"></span></div>
+          </section>
+          <section class="tv-view pl" id="tvPlayer" aria-label="播放">
+            <div class="pl-video" id="plVideo"></div>
+            <div class="pl-music"><div class="pl-cover" id="plCover"></div><b id="plMt"></b><span id="plMa"></span></div>
+            <div class="pl-ctl" id="plCtl">
+              <div class="pl-tt" id="plTt"></div>
+              <div class="pl-bar"><span id="plPos">0:00</span><span id="plWave"></span><span id="plDur">0:00</span></div>
+              <div class="pl-bt">
+                <div class="tvbtn icon fx" data-id="player:back10" aria-label="后退 10 秒"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg></div>
+                <div class="tvbtn icon fx" data-id="player:toggle" aria-label="播放"><svg viewBox="0 0 24 24"><path id="plTgl" d="M8 5.5v13l10.5-6.5z"/></svg></div>
+                <div class="tvbtn icon fx" data-id="player:fwd10" aria-label="前进 10 秒"><svg viewBox="0 0 24 24"><path d="M12 5V2l5 4-5 4V7a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/></svg></div>
+              </div>
+            </div>
+          </section>
 
           <div class="tv-amb" aria-hidden="true">
             <div class="amb-loc" id="ambLoc"><b>北境极光</b>航拍 · 冰岛北岸 · 4K HDR</div>
@@ -541,6 +705,7 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
               <div class="tile fx" data-f="cc" data-id="t-bt"><svg viewBox="0 0 24 24"><path d="m7 7 10 10-5 4V3l5 4L7 17"/></svg>蓝牙</div>
               <div class="tile fx" data-f="cc" data-id="t-dnd"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/></svg>勿扰</div>
               <div class="tile fx" data-f="cc" data-id="t-amb"><svg viewBox="0 0 24 24"><path d="M3 18l5-7 4 5 3-3 6 5"/><circle cx="16" cy="7" r="2"/></svg>环境模式</div>
+              <div class="tile fx wide" data-f="cc" data-id="t-xfer"><svg viewBox="0 0 24 24"><path d="M7 4v13M3 13l4 4 4-4M17 20V7M13 11l4-4 4 4"/></svg>传文件</div>
             </div>
             <div data-ccrow="1"><div class="cc-l">音量</div><div class="slider fx" data-f="cc" data-id="s-vol"><div class="act" id="volAct" style="width:56%"></div><div class="hd"></div><div class="rest"></div><span class="val" id="volVal">14</span></div></div>
             <div data-ccrow="2"><div class="cc-l">取色来源</div><div class="cg fx" data-f="cc" data-id="g-source" data-opts="content,icon,wallpaper,fixed"><span>焦点内容</span><span>应用图标</span><span>壁纸</span><span>固定</span></div></div>
@@ -551,6 +716,14 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
             <div class="pk-h"><b>添加小组件</b></div>
             <div class="pk-body" id="pkBody"></div>
           </aside>
+          <aside class="tv-fc glass" id="tvFC" aria-label="保存位置">
+            <div class="pk-h"><b>保存位置</b></div>
+            <div class="fc-path" id="fcPath"></div>
+            <div class="fc-body" id="fcBody"></div>
+          </aside>
+          <div class="tv-dlg glass" id="tvDlg" role="dialog"></div>
+          <div class="sysdlg" id="sysDlg" role="dialog"></div>
+          <div class="tv-menu glass" id="tvMenu" role="menu"></div>
 
           <div class="tv-toast glass" id="tvToast" role="status"><div class="morph"></div><div><span id="toastMain">正在打开…</span></div></div>
         </div>
@@ -589,6 +762,13 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
           <label><input type="radio" name="motion" id="mo-st" value="standard"><span>Standard</span></label>
           <label><input type="radio" name="motion" id="mo-rd" value="reduced"><span>减弱</span></label>
         </div></div>
+      <div class="ctl"><div class="ctl-label">传文件模拟（扮演手机与电脑）</div>
+        <div class="xfsim" id="xfSim">
+          <button type="button" data-xf="phone">手机连接</button><button type="button" data-xf="pc">电脑连接</button><button type="button" data-xf="upload">上传到电视</button>
+          <button type="button" data-xf="download">从电视下载</button><button type="button" data-xf="apk">推送 APK</button><button type="button" data-xf="apks">推送分包</button>
+          <button type="button" data-xf="apksig">签名不同的 APK</button><button type="button" data-xf="image">推送 3 张图片</button><button type="button" data-xf="video">推送视频</button>
+          <button type="button" data-xf="audio">推送音乐</button><button type="button" data-xf="full">写满存储</button><button type="button" data-xf="offline">断开局域网</button>
+        </div></div>
       <div class="insp-foot">
         <div class="dpad" aria-label="屏幕方向键">
           <span></span><button type="button" data-k="ArrowUp" aria-label="上">▲</button><span></span>
@@ -622,7 +802,7 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
   <a href="#s11"><span>11</span>Android TV Channel</a>
   <a href="#s12"><span>12</span>桌面小组件</a>
   <a href="#s13"><span>13</span>环境模式与视频取色</a>
-  <a href="#s14"><span>14</span>快速设置 · HDMI · 手机整理</a>
+  <a href="#s14"><span>14</span>快速设置 · HDMI · 手机与电脑</a>
   <p>工程落地</p>
   <a href="#s15"><span>15</span>技术栈与版本锁定</a>
   <a href="#s16"><span>16</span>架构、模块与数据</a>
@@ -649,6 +829,7 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
     <div class="decision"><b>Channel</b><div>API 26+ 运行时申请 <code class="i">android.permission.READ_TV_LISTINGS</code>，能读到所有 App 的 <code class="i">searchable=1</code>（默认值）频道、预览节目和 Watch Next；查询不能带 selection，过滤在本地做。频道审批状态由桌面自己维护。API 23–25 可选用 NotificationListener 读取旧版推荐通知。OEM 版使用 <code class="i">ACCESS_ALL_EPG_DATA</code>。Google TV 设备上新的"继续观看"走 Engage SDK，第三方读不到，界面必须能接受这一行为空。</div></div>
     <div class="decision"><b>小组件</b><div><strong>第三方应用的小组件是核心功能</strong>：小组件页是网格画布，主页有一行速览；支持添加、移动、调整大小、重新配置，也可以用方向键进入小组件内部操作按钮。难点在绑定：绑定需要 <code class="i">BIND_APPWIDGET</code> 或用户授权，而 AOSP TvSettings 没有授权确认界面。方案按顺序尝试五条路径：已获授权 → 系统确认界面（设备有就用）→ Shizuku 一键授权 → 一次性 ADB 命令 → oem 变体直接持有权限。同时接收 App 发起的"添加到主屏幕"请求（API 26+）。API 31+ 用 <code class="i">setColorResources()</code> 让小组件跟随桌面配色，只在主题稳定后调用。内置 Compose 小组件作为补充。详见 §12。</div></div>
     <div class="decision"><b>系列应用</b><div>myBV、mydv、mytv-android 继续按标准 TvProvider 发布频道与 Watch Next，桌面原样读取，它们在其他桌面上的行为不变。第三方桌面做不到的上屏审批、移除回传、初始化，以及没有 TvProvider 的设备，用双向证书校验的系列直连补上（§11）。</div></div>
+    <div class="decision"><b>手机与电脑</b><div>电视页显示二维码、地址与 6 位配对码，手机和电脑用浏览器连接；电视在连接时确认一次。网页可以双向管理电视上的文件（浏览、上传、下载、新建、重命名、移动、删除，断点续传），也可以推送：安装包交给系统安装确认，图片全屏显示，视频与音乐直接播放。推送安装始终要求用户确认，不做静默安装（§14、ADR-011）。</div></div>
     <div class="decision"><b>环境模式</b><div>沿用 aerial-tv 的做法：主页空闲 10 秒后，航拍视频在磁贴后方播放。视频放在 SurfaceView 里，以保留 4K、HDR 和 DRM 能力。Haze 无法模糊 SurfaceView，所以按键返回时先用 PixelCopy 抓当前帧作为静态背景，再让玻璃效果生效；环境模式期间，配色跟随关键帧取色。</div></div>
   </div>
 
@@ -669,7 +850,7 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
       <tr><td>小组件</td><td>M3 描边外框；未处理绑定授权</td><td>第三方小组件为核心功能：选择器、五级绑定授权、网格画布、方向键内部交互、配色映射</td><td>AOSP AppWidgetServiceImpl、TvSettings 源码</td></tr>
     </tbody>
   </table></div>
-  <div class="note"><b>保留</b><p>以下 v2 内容在 v3 中保留并精简：先过技术闸门再承诺界面、本地缓存优先、包可见性、Widget 生命周期、手机整理的安全基线、媒体版权闸门。</p></div>
+  <div class="note"><b>保留</b><p>以下 v2 内容在 v3 中保留并精简：先过技术闸门再承诺界面、本地缓存优先、包可见性、Widget 生命周期、手机整理（v3.4 起为「手机与电脑」）的安全基线、媒体版权闸门。</p></div>
 </section>
 
 <!-- ============ 02 ============ -->
@@ -766,13 +947,13 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
       <tr><td>解码器交接</td><td>主页暂停后，影片最多再占用解码器 2.5 秒以取得静态帧；Mi TV 4 离开 HDMI 输入后立即打开解码器会整机重启，改为等待（<code class="i">LiveWallpaper.kt</code>、<code class="i">FilmAfterInput.kt</code>）</td><td>§13"解码器交接"</td></tr>
       <tr><td>屏保：航拍、照片、时钟、自己的视频四种，在固件屏保之前启动</td><td>自带屏保与 DreamService；系统屏保两次黑屏超过 2 秒即视为失效（<code class="i">Screensaver.kt</code>、<code class="i">AerialDream.kt</code>、<code class="i">SystemScreensaver.kt</code>）</td><td>§13"屏保兜底"；快速设置"立即启动"（§14）</td></tr>
       <tr><td>壁纸来源：必应每日一图（保留最近 8 张）、14 张内置图、手机上传的照片（可每天轮换）、自动（取焦点应用的画面）、航拍、自己的视频、信号源画面</td><td>14 张内置图在电视上程序绘制，不是图片素材（<code class="i">Wallpapers.kt</code>、<code class="i">Gradients.kt</code>）</td><td>§07 来源表；必应见 §13"必应每日一图"与 §20 风险；内置壁纸由本方案自绘</td></tr>
-      <tr><td>自己的视频：从手机页上传，作壁纸或屏保</td><td>请求体直接流式写入；单个 ≤ 2 GB，总量 ≤（已存 + 可用）的一半并留出 1 GiB，最多 64 段（<code class="i">ScreensaverVideos.kt</code>、<code class="i">VideoWallpaper.kt</code>、<code class="i">PhoneServer.kt</code>）</td><td>§13"自己的视频"、§14"手机整理页"</td></tr>
+      <tr><td>自己的视频：从手机页上传，作壁纸或屏保</td><td>请求体直接流式写入；单个 ≤ 2 GB，总量 ≤（已存 + 可用）的一半并留出 1 GiB，最多 64 段（<code class="i">ScreensaverVideos.kt</code>、<code class="i">VideoWallpaper.kt</code>、<code class="i">PhoneServer.kt</code>）</td><td>§13"自己的视频"、§14"手机与电脑"</td></tr>
       <tr><td>信号源画面作壁纸</td><td>TvView 播放系统列出的输入，不出声；附加后 0.8 秒调台，弱信号时在 3 / 5 / 10 / 15 / 20 / 30 秒重试（<code class="i">SourceWallpaper.kt</code>）</td><td>§14"HDMI 实时画面作壁纸"、§06 背景状态</td></tr>
       <tr><td>整理：移动、文件夹、隐藏、卸载</td><td>文件夹磁贴为 3×3 缩略图，电视上用预设名称，手机上可改名，清空后消失（<code class="i">FolderView.kt</code>、<code class="i">LayoutStore.kt</code>）</td><td>P0 保留；§06"文件夹"</td></tr>
       <tr><td>开机 / 唤醒时打开指定的输入或应用</td><td>每次开机、每次唤醒各一次，亮屏期间不重复（<code class="i">BootOpen.kt</code>）</td><td>§14"信号源补充"</td></tr>
       <tr><td>HDMI 固定到主屏，可选设备图标（游戏机、机顶盒等），可改名</td><td><code class="i">SourceLooks.kt</code></td><td>P0；信号源作为圆形图标进入应用行，使用按设备类型预设的种子色（§14）</td></tr>
       <tr><td>信号源列表与信号源键</td><td>TvInputManager；海信、康佳、XGIMI（MStar）走各自的固件接口；TV_INPUT 键打开输入列表，固件自带面板的机型让给固件（<code class="i">HomeScreen.kt</code>、<code class="i">HisenseSources.kt</code>、<code class="i">KonkaSources.kt</code>、<code class="i">XgimiMstarSources.kt</code>）</td><td>§10 按键表、§14"信号源补充"；固件私有接口只放进 oem，机型差异放进 devices.json（§16）</td></tr>
-      <tr><td>手机扫码整理：改名、自定义图标、照片与视频上传、天气城市、诊断</td><td>NanoHTTPD + ZXing；固定端口 8790，持久的 8 位令牌，应用运行期间一直监听；局域网地址跳过 VPN 与 198.18.0.0/15（<code class="i">PhoneServer.kt</code>、<code class="i">AppNames.kt</code>、<code class="i">CustomIcons.kt</code>）</td><td>§14"手机整理页"；本方案仍用随机端口、一次性令牌与 10 分钟会话（自己的选择）</td></tr>
+      <tr><td>手机扫码整理：改名、自定义图标、照片与视频上传、天气城市、诊断</td><td>NanoHTTPD + ZXing；固定端口 8790，持久的 8 位令牌，应用运行期间一直监听；局域网地址跳过 VPN 与 198.18.0.0/15（<code class="i">PhoneServer.kt</code>、<code class="i">AppNames.kt</code>、<code class="i">CustomIcons.kt</code>）</td><td>§14"手机与电脑"：扩展为双向文件管理与推送；随机端口、一次性令牌 / 配对码、连接时确认、10 分钟无活动失效（自己的选择）</td></tr>
       <tr><td>控制中心：信号源、网络、设置、音量、亮度、个性化</td><td>亮度写 <code class="i">Settings.Global</code> 或厂商的设置项，需要 WRITE_SECURE_SETTINGS（<code class="i">ControlCenter.kt</code>、<code class="i">Brightness.kt</code>、<code class="i">MitvPanel.kt</code>）</td><td>§14 右侧玻璃快速设置面板；亮度只在 oem</td></tr>
       <tr><td>儿童模式、长辈模式与家长 PIN</td><td>PIN 为 4 位数字或 4 个方向键，SHA-256，解锁 10 分钟；长辈模式每排 4 个；无障碍服务开启时由它拦截，否则用 UsageStats 每 2 秒轮询，提醒退化为 Toast（<code class="i">KidsMode.kt</code>、<code class="i">KidsWatch.kt</code>、<code class="i">Restricted.kt</code>、<code class="i">PinPad.kt</code>、<code class="i">UsageFront.kt</code>）</td><td>§14"儿童模式、长辈模式与家长 PIN"；standard 不用无障碍服务</td></tr>
       <tr><td>天气</td><td>Open-Meteo 预报与地名检索；内置中国城市表（GeoNames，CC BY 4.0）；未设城市时用 ipinfo.io 推测；3 小时过期，最多每小时刷新（<code class="i">Weather.kt</code>、<code class="i">Cities.kt</code>）</td><td>§12"内置时钟与天气"</td></tr>
@@ -799,7 +980,7 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
     <li><strong>版本基线</strong>：由 74b135d 更新到 6182cf2。</li>
     <li><strong>guard</strong>：v3.2 把无障碍服务和通知监听写成 guard 变体独有。实际上 guard flavor 只去掉 HOME 过滤器，这些组件都在主清单里。</li>
     <li><strong>Lite</strong>：是独立模块，不是 productFlavor。</li>
-    <li><strong>手机整理</strong>：aerial-tv 用固定端口 8790 和持久令牌，应用运行期间一直监听。v3.2 §14 的"随机端口、一次性令牌、10 分钟会话"是本方案自己的选择，不是参考做法，现已分开写。</li>
+    <li><strong>手机与电脑</strong>：aerial-tv 用固定端口 8790 和持久令牌，应用运行期间一直监听。v3.2 §14 的"随机端口、一次性令牌、10 分钟会话"是本方案自己的选择，不是参考做法，现已分开写。</li>
     <li><strong>4K 界面画布</strong>：UhdCanvas 默认关闭，v3.2 把它列为实现要点；本方案不采用。</li>
     <li><strong>内置壁纸</strong>：14 张是程序绘制的，不是图片素材。</li>
     <li><strong>首页排序</strong>：aerial-tv 没有启动次数统计，首页按用户排列。</li>
@@ -902,7 +1083,7 @@ pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc
   <h3>文件夹</h3>
   <ul>
     <li><strong>磁贴</strong>：文件夹在"你的应用"行和应用页中各占一个位置。磁贴内按 3×3 排列前 9 个应用的缩略图标，下方显示文件夹名；焦点规则与应用图标相同（§09）。</li>
-    <li><strong>新建与命名</strong>：整理模式下对应用选"移到文件夹" → "新建文件夹"。电视上从预设名称中选："影音""游戏""工具""学习""其他"；任意名称在手机整理页修改（§14）。</li>
+    <li><strong>新建与命名</strong>：整理模式下对应用选"移到文件夹" → "新建文件夹"。电视上从预设名称中选："影音""游戏""工具""学习""其他"；任意名称在「手机与电脑」网页里修改（§14）。</li>
     <li><strong>打开</strong>：OK 打开文件夹浮层，主页在后面模糊变暗，应用按主页磁贴尺寸排列；BACK 关闭，焦点回到文件夹磁贴。</li>
     <li><strong>清空即删除</strong>：最后一个应用移出后，文件夹自动消失。</li>
   </ul>
@@ -1366,7 +1547,7 @@ CompositionLocalProvider(LocalBringIntoViewSpec provides KeylineSpec) {
       <tr><td>1</td><td>直接绑定成功</td><td>已在授权名单，或 oem 变体持有 <code class="i">BIND_APPWIDGET</code></td><td>无</td></tr>
       <tr><td>2</td><td>系统确认界面 <code class="i">ACTION_APPWIDGET_BIND</code></td><td><code class="i">resolveActivity()</code> 不为空（部分厂商系统有）</td><td>确认一次，可勾选"始终允许"</td></tr>
       <tr><td>3</td><td>Shizuku 一键授权</td><td>设备装有 Shizuku 并已启动，用户允许本应用使用</td><td>点"授权"；桌面以 shell 身份调用 <code class="i">setBindAppWidgetPermission(自身包名, user, true)</code></td></tr>
-      <tr><td>4</td><td>ADB 命令</td><td>开发者选项中打开网络调试</td><td>在电脑上执行一次 <code class="i">adb shell appwidget grantbind --package &lt;桌面包名&gt; --user current</code>；手机整理页（§14）也显示这条命令，方便复制</td></tr>
+      <tr><td>4</td><td>ADB 命令</td><td>开发者选项中打开网络调试</td><td>在电脑上执行一次 <code class="i">adb shell appwidget grantbind --package &lt;桌面包名&gt; --user current</code>；「手机与电脑」网页的「更多」栏（§14）也显示这条命令，方便复制</td></tr>
       <tr><td>5</td><td>oem 变体</td><td>系统签名或预置 priv-app</td><td>无</td></tr>
     </tbody>
   </table></div>
@@ -1465,7 +1646,7 @@ CompositionLocalProvider(LocalBringIntoViewSpec provides KeylineSpec) {
       <tr><td>12 / 24 小时制</td><td>默认 24 小时制；只有系统明确设为 12 小时制（<code class="i">Settings.System.TIME_12_24</code> 为 "12"）时才用 12 小时制。不直接用 <code class="i">DateFormat.is24HourFormat()</code>：该设置为空时它按区域默认值判断，zh_CN 会得到 12 小时制。</td></tr>
       <tr><td>日期与农历</td><td>公历月日、星期，后接农历月日（形如"九月十二"）。农历用内置的 1901–2100 年数据表计算，各 API 级别结果一致（<code class="i">android.icu.util.ChineseCalendar</code> 从 API 24 才有，只用于测试比对）。系统语言为中文时默认显示农历，其他语言默认不显示，设置中可开关。</td></tr>
       <tr><td>天气数据</td><td>Open-Meteo 预报接口，无需密钥。显示当前温度、天气图标和当日最高 / 最低温。最多每小时刷新一次，结果缓存 3 小时；超过 3 小时没有新数据时隐藏天气，只留时钟。请求失败按 1 / 5 / 15 分钟退避，不提示。</td></tr>
-      <tr><td>城市</td><td>优先用手机整理页设置的城市（中文名先查内置城市表，再用 Open-Meteo 地名检索）。没有设置时按 IP 推测城市，最多每天一次；推测结果显示在桌面设置的天气项（"当前城市：{城市}（按网络位置）"），可以改。不申请定位权限。</td></tr>
+      <tr><td>城市</td><td>优先用「手机与电脑」网页设置的城市（中文名先查内置城市表，再用 Open-Meteo 地名检索）。没有设置时按 IP 推测城市，最多每天一次；推测结果显示在桌面设置的天气项（"当前城市：{城市}（按网络位置）"），可以改。不申请定位权限。</td></tr>
       <tr><td>请求内容</td><td>只带经纬度（两位小数）与语言，不带设备标识。</td></tr>
       <tr><td>许可</td><td>Open-Meteo 免费接口限非商业使用，数据按 CC BY 4.0 署名；关于页列出 Open-Meteo 与城市表来源 GeoNames。standard 按非商业发行使用免费接口；oem 或任何商业发行改用付费计划或其他供应商（§20）。IP 推测所用服务的条款在 M0 核对。</td></tr>
     </tbody>
@@ -1521,7 +1702,7 @@ themeController.settled.debounce(<span class="n">3_000</span>).collect { scheme 
     <thead><tr><th>片源</th><th>说明</th></tr></thead>
     <tbody>
       <tr><td>航拍片单</td><td>自有或已授权的影片（<code class="i">AmbientClip</code>），每段带许可信息、预置关键帧图和 keyColor</td></tr>
-      <tr><td>自己的视频</td><td>从手机整理页上传（§14），存在应用私有目录；不出声、铺满画面；全部轮播或单段循环</td></tr>
+      <tr><td>自己的视频</td><td>从「手机与电脑」网页上传（§14），存在应用私有目录；不出声、铺满画面；全部轮播或单段循环</td></tr>
       <tr><td>信号源画面</td><td>固定的 HDMI 输入的实时画面（§14"HDMI 实时画面作壁纸"）</td></tr>
       <tr><td>静态壁纸</td><td>内置程序绘制图、必应每日一图、手机上传的照片（可每天轮换）</td></tr>
     </tbody>
@@ -1594,7 +1775,7 @@ themeController.settled.debounce(<span class="n">3_000</span>).collect { scheme 
 
 <!-- ============ 14 ============ -->
 <section id="s14">
-  <div class="sh"><div class="num">14</div><div><h2>快速设置 · HDMI · 手机整理</h2>
+  <div class="sh"><div class="num">14</div><div><h2>快速设置 · HDMI · 手机与电脑</h2>
   <p class="lead">普通应用权限能直接完成的才在面板里直接执行，其他操作跳转到系统设置；oem 变体可以直接执行。</p></div></div>
   <div class="tbl"><table>
     <thead><tr><th>项</th><th>standard 变体</th><th>oem 变体</th></tr></thead>
@@ -1611,7 +1792,7 @@ themeController.settled.debounce(<span class="n">3_000</span>).collect { scheme 
   </table></div>
   <ul>
     <li><strong>HDMI 固定</strong>：信号源可以固定到"你的应用"行，显示为圆形图标，图标和种子色按设备类型预设（游戏机、机顶盒、回音壁、电脑）。</li>
-    <li><strong>手机整理</strong>：只在用户打开时启动局域网服务。技术选型参考 aerial-tv（NanoHTTPD + ZXing 二维码；它用固定端口 8790 和持久令牌，应用运行期间一直监听）。本方案用随机端口，二维码里带一次性令牌，会话 10 分钟后失效；只监听局域网地址；上传类型与限额见下文"手机整理页"；所有写操作在电视上弹确认。手机页面同时显示小组件授权用的 <code class="i">appwidget grantbind</code> 命令，便于复制到电脑执行（§12）。</li>
+    <li><strong>手机与电脑</strong>：只在用户打开页面时启动局域网服务。技术选型参考 aerial-tv（NanoHTTPD + ZXing 二维码；它用固定端口 8790 和持久令牌，应用运行期间一直监听）。本方案用随机端口，二维码带一次性令牌，电脑用一次性配对码，电视在连接时确认，会话 10 分钟无活动后失效；只监听局域网地址。功能、协议与限额见下文"手机与电脑"。</li>
   </ul>
 
   <h3>信号源补充</h3>
@@ -1674,28 +1855,626 @@ themeController.settled.debounce(<span class="n">3_000</span>).collect { scheme 
     <li><strong>失效检测</strong>：桌面每次回到前台检查一次是否仍是默认桌面；不是时只在桌面设置的"默认桌面"项显示状态，不弹窗。</li>
   </ul>
 
-  <h3>手机整理页</h3>
+  <h3 id="s14-xfer">手机与电脑</h3>
+  <p>在手机或电脑的浏览器里管理电视上的文件：浏览目录，上传，下载，新建文件夹，重命名，移动，删除；也可以「推送」，文件传完后电视立即安装、显示或播放。原来的「手机整理」功能（改名、自定义图标、壁纸照片、屏保视频、天气城市、诊断）并入同一个网页的「桌面」与「更多」两栏。技术选型不变：NanoHTTPD 提供服务，ZXing 生成二维码；网页随 APK 发布，不依赖任何外部地址。</p>
   <div class="tbl"><table>
-    <thead><tr><th>功能</th><th>说明</th></tr></thead>
+    <thead><tr><th>入口</th><th>说明</th></tr></thead>
     <tbody>
-      <tr><td>改名</td><td>应用、信号源、文件夹的显示名称；只影响桌面显示</td></tr>
-      <tr><td>自定义图标</td><td>为应用上传一张图片，裁成 16:9 用于应用页网格，按包名保存；删除时只删用户上传的文件</td></tr>
-      <tr><td>壁纸照片</td><td>JPEG / PNG / WebP，单张 ≤ 20 MB</td></tr>
-      <tr><td>自己的视频</td><td>流式上传；类型检查与限额见 §13"自己的视频"</td></tr>
-      <tr><td>天气城市</td><td>输入城市名检索并选定；设置后不再用 IP 推测（§12）</td></tr>
-      <tr><td>诊断</td><td>下载诊断报告（见下文）</td></tr>
-      <tr><td>小组件授权</td><td>显示 <code class="i">appwidget grantbind</code> 命令（§12）</td></tr>
+      <tr><td>快速设置「传文件」</td><td>第一组磁贴里的整宽磁贴，打开「手机与电脑」页（原型：快速设置 → 传文件，检查器里有「传文件模拟」按钮）</td></tr>
+      <tr><td>桌面设置「手机与电脑」</td><td>同一页</td></tr>
+      <tr><td>网页</td><td>手机扫二维码进入；电脑在浏览器输入页面上显示的地址，再输入 6 位配对码</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>电视页</h4>
+  <ul>
+    <li><strong>连接卡</strong>（左）：二维码（<code class="i">http://&lt;地址&gt;:&lt;端口&gt;/#t=&lt;令牌&gt;</code>，令牌放在 URL 片段里，不进入服务器日志和 Referer）、地址（不带 <code class="i">http://</code>，电脑浏览器可直接输入）、「配对码」6 位数字、网络类型（Wi-Fi / 以太网）。没有局域网地址时只显示「未连接局域网」，服务不启动。</li>
+    <li><strong>设备</strong>（右上）：已连接的会话，每个显示设备名（由 User-Agent 推断，例如「iPhone · Safari」「Windows 电脑 · Edge」）与「空闲 / 传输中」。OK → 「断开」。</li>
+    <li><strong>传输</strong>（右侧主体）：上传、下载、推送统一列表，按时间倒序。进行中显示 Wavy 进度条与速度；完成后显示结果；推送完成的项显示动作胶囊「安装」「查看」「播放」，页面不在前台时完成的推送标「待处理」并排在顶部。空列表显示「暂无传输」。OK 或菜单键打开菜单：进行中 →「取消传输」；已接收 → 按类型「安装」/「查看」/「播放」，以及「删除」（删除文件与记录）；发出、失败、已取消、已安装 →「移除」（只移除记录）。</li>
+    <li><strong>设置行</strong>（右下）：「保存位置」（网页上传时的默认目录，初始为内部存储的 Download；推送项选了「同时保存一份」时也存到这里），OK 从右侧滑出抽屉：先列出存储根（带剩余空间），进入后列出子文件夹，首行「上一级」，末行「选择此文件夹」；API 30+ 的「所有文件访问」或 API 23–29 的「存储权限」，显示「已授予 / 未授予」，OK 跳到系统设置页，没有设置页时显示 ADB 命令。</li>
+    <li><strong>离开</strong>：没有进行中的传输时 BACK 直接返回，服务在 5 秒内停止。有进行中的传输时弹出「有 n 个传输正在进行」：「后台继续」= 不再接受新连接和新请求，进行中的传输完成后停止服务；「全部停止」= 立即中断并删除未完成的临时文件。</li>
+    <li><strong>不打扰</strong>：页面、查看页、播放页打开期间不进入环境模式和屏保。</li>
+  </ul>
+
+  <h4>网页</h4>
+  <p>网页按宽度分两种布局：手机（&lt; 720 px）是顶部应用栏加底部导航；电脑（≥ 900 px）是左侧栏加文件表格，支持拖放、多选、右键菜单；中间宽度用手机布局加宽。顶部显示电视名称（<code class="i">Settings.Global.DEVICE_NAME</code>，没有时用型号）。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>栏目</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td>文件</td><td>根选择（带剩余空间）、路径、列表 / 表格、上传、上传文件夹（电脑）、新建文件夹、排序、显示隐藏文件；每项菜单「下载」「在电视上打开」「重命名」「移动到…」「删除」；多选条；上传队列面板</td></tr>
+      <tr><td>推送</td><td>选择文件（电脑可拖入推送区），开关「同时保存一份」，「最近推送」及每项状态（上传中 → 等待安装 / 正在显示 / 正在播放 → 已安装 / 已取消 / 失败）</td></tr>
+      <tr><td>桌面</td><td>应用、信号源、文件夹的显示名称（只影响桌面）；自定义图标（裁成 16:9 用于应用页，按包名保存）；壁纸照片（JPEG / PNG / WebP，单张 ≤ 20 MB）；屏保视频（§13"自己的视频"，限额不变）；天气城市（§12）</td></tr>
+      <tr><td>更多</td><td>诊断报告下载（见下文）；小组件授权命令 <code class="i">appwidget grantbind</code> 与「复制」（§12）；「断开连接」</td></tr>
+    </tbody>
+  </table></div>
+  <p>网页同样不出现操作提示：拖放区只有图标和「推送」两个字，空目录只有图标和「空文件夹」，提示条只报告状态（「空间不足」「连接已断开」「已复制」）。</p>
+
+<figure class="xf-web" style="margin:18px 0">
+<style>
+/* 「手机与电脑」网页样机：配色由电视当前的 DynamicScheme 注入，这里用默认种子的浅色 / 深色两套 */
+.wx{--wp:#415f91;--wop:#fff;--wpc:#d6e3ff;--wopc:#001b3e;--wsc:#dae2f9;--wosc:#131c2b;--wtc:#fdd7fa;--wotc:#2a1229;
+  --ws:#f9f9ff;--ws1:#f3f3fa;--ws2:#ededf4;--ws3:#e7e8ee;--ws4:#e2e2e9;--wos:#191c20;--wosv:#44474e;--wol:#74777f;--wolv:#c4c6d0;
+  --wer:#ba1a1a;--werc:#ffdad6;--woerc:#410002;--wip:#aac7ff;--wok:#1b7a4c;--wsh:rgba(0,0,0,.32);--wfr:#1b1c20;
+  font-family:"Roboto Flex","Noto Sans SC","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;line-height:1.4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wx{--wp:#aac7ff;--wop:#0a305f;--wpc:#284777;--wopc:#d6e3ff;--wsc:#3e4759;--wosc:#dae2f9;--wtc:#583e5b;--wotc:#fdd7fa;
+  --ws:#111318;--ws1:#191c20;--ws2:#1d2024;--ws3:#282a2f;--ws4:#33353a;--wos:#e2e2e9;--wosv:#c4c6d0;--wol:#8e9099;--wolv:#44474e;--wer:#ffb4ab;--werc:#93000a;--woerc:#ffdad6;--wip:#415f91;--wok:#86d8a8;--wsh:rgba(0,0,0,.55);--wfr:#2a2b30}}
+:root[data-theme="dark"] .wx{--wp:#aac7ff;--wop:#0a305f;--wpc:#284777;--wopc:#d6e3ff;--wsc:#3e4759;--wosc:#dae2f9;--wtc:#583e5b;--wotc:#fdd7fa;
+  --ws:#111318;--ws1:#191c20;--ws2:#1d2024;--ws3:#282a2f;--ws4:#33353a;--wos:#e2e2e9;--wosv:#c4c6d0;--wol:#8e9099;--wolv:#44474e;--wer:#ffb4ab;--werc:#93000a;--woerc:#ffdad6;--wip:#415f91;--wok:#86d8a8;--wsh:rgba(0,0,0,.55);--wfr:#2a2b30}
+.wx *{box-sizing:border-box}
+.wx-ctl{display:flex;flex-wrap:wrap;gap:3px;background:var(--sunk);border-radius:14px;padding:3px;width:max-content;max-width:100%}
+.wx-ctl button{font:inherit;font-size:12.5px;font-weight:600;border:0;background:transparent;color:var(--fg-2);padding:7px 12px;border-radius:11px;cursor:pointer;transition:background-color .2s,border-radius .3s}
+.wx-ctl button[aria-selected="true"]{background:var(--accent);color:var(--on-accent);border-radius:8px}
+.wx-stage{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:24px;align-items:start;margin-top:14px}
+.wx-cap{font-size:12.5px;color:var(--fg-2);margin-top:10px;text-align:center;font-family:var(--font-mono)}
+.wx-box{position:relative;width:100%;overflow:hidden;background:var(--ws)}
+.wx-box.ph{aspect-ratio:360/740;max-width:290px;margin:8px auto 0;border-radius:34px;box-shadow:0 0 0 7px var(--wfr),0 0 0 8px color-mix(in srgb,var(--fg) 25%,transparent),0 24px 40px -24px rgba(0,0,0,.5)}
+.wx-box.pc{aspect-ratio:1000/660;border-radius:12px;box-shadow:0 0 0 1px var(--line),0 24px 40px -26px rgba(0,0,0,.45)}
+.wx-in{position:absolute;left:0;top:0;transform-origin:0 0;background:var(--ws);color:var(--wos);overflow:hidden;font-size:14px}
+.ph .wx-in{width:360px;height:740px}
+.pc .wx-in{width:1000px;height:660px}
+@media (max-width:820px){.wx-stage{grid-template-columns:1fr}}
+/* 通用 */
+.wx .wi{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wx .w-sb{height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:650}
+.wx .w-url{margin:2px 12px 0;height:34px;border-radius:17px;background:var(--ws3);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--wosv)}
+.wx .w-url .wi{width:14px;height:14px}
+.wx .w-pg{position:absolute;left:0;right:0;top:66px;bottom:0;overflow:hidden}
+.wx .w-ab{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:20px;font-weight:600}
+.wx .w-dot{width:8px;height:8px;border-radius:50%;background:var(--wok);flex:none}
+.wx .w-sp{flex:1}
+.wx .w-bn{position:absolute;left:0;right:0;bottom:0;height:72px;background:var(--ws2);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:8px}
+.wx .w-bn div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--wosv)}
+.wx .w-bn i{width:56px;height:30px;border-radius:15px;display:grid;place-items:center}
+.wx .w-bn .on{color:var(--wos)}
+.wx .w-bn .on i{background:var(--wsc);color:var(--wosc)}
+.wx .w-chips{display:flex;gap:8px;padding:2px 16px 8px;overflow:hidden}
+.wx .w-chip{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--wolv);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap;color:var(--wosv)}
+.wx .w-chip.on{background:var(--wsc);border-color:transparent;color:var(--wosc)}
+.wx .w-chip small{font-weight:500;opacity:.78;font-size:12px}
+.wx .w-chip .wi{width:16px;height:16px}
+.wx .w-crumb{padding:4px 16px;font-size:13px;color:var(--wosv);display:flex;gap:4px;align-items:center;white-space:nowrap}
+.wx .w-crumb b{color:var(--wos);font-weight:650}
+.wx .w-crumb .wi{width:14px;height:14px}
+.wx .w-tb{display:flex;gap:8px;padding:6px 16px 8px;align-items:center}
+.wx .w-btn{height:36px;padding:0 16px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13.5px;font-weight:650;background:var(--wp);color:var(--wop);white-space:nowrap;flex:none}
+.wx .w-btn .wi{width:18px;height:18px}
+.wx .w-btn.t{background:transparent;color:var(--wp);padding:0 12px}
+.wx .w-btn.o{background:transparent;box-shadow:inset 0 0 0 1px var(--wol);color:var(--wp)}
+.wx .w-btn.s{background:var(--wsc);color:var(--wosc)}
+.wx .w-btn.d{background:var(--wer);color:var(--ws)}
+.wx .w-btn.do{background:transparent;box-shadow:inset 0 0 0 1px var(--wer);color:var(--wer)}
+.wx .w-btn.big{height:56px;border-radius:18px;font-size:16px;padding:0 24px}
+.wx .w-ib{width:36px;height:36px;border-radius:18px;display:grid;place-items:center;color:var(--wosv);flex:none}
+.wx .w-li{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 8px 8px 16px;min-height:62px}
+.wx .w-th{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--ws3);color:var(--wosv);position:relative;flex:none}
+.wx .w-th.dir{background:var(--wpc);color:var(--wopc)}
+.wx .w-th.app{border-radius:50%}
+.wx .w-th b{position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:var(--wp);color:var(--wop);display:grid;place-items:center}
+.wx .w-th b .wi{width:8px;height:8px;fill:currentColor;stroke:none}
+.wx .w-nm{min-width:0}
+.wx .w-nm b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx .w-nm span{display:block;font-size:12px;color:var(--wosv);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx .w-nm span.bad{color:var(--wer);font-weight:600}
+.wx .w-scrim{position:absolute;inset:0;background:var(--wsh)}
+.wx .w-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--ws1);border-radius:28px 28px 0 0;padding:8px 0 22px}
+.wx .w-hd{width:32px;height:4px;border-radius:2px;background:var(--wol);opacity:.5;margin:6px auto 10px}
+.wx .w-mi{height:52px;display:flex;align-items:center;gap:16px;padding:0 24px;font-size:15px}
+.wx .w-mi.d{color:var(--wer)}
+.wx .w-dlg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:312px;background:var(--ws3);border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.wx .w-dlg .tt{font-size:22px;line-height:1.3}
+.wx .w-dlg .x{font-size:14px;color:var(--wosv);display:flex;flex-direction:column;gap:4px}
+.wx .w-dlg .bt{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.wx .w-dlg .bt.col{flex-direction:column;align-items:stretch}
+.wx .w-snack{position:absolute;left:16px;right:16px;bottom:86px;background:var(--wos);color:var(--ws);border-radius:8px;padding:14px 16px;font-size:14px;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.wx .w-sec{font-size:13px;font-weight:650;color:var(--wp);padding:14px 16px 4px;letter-spacing:.02em}
+.wx .w-card{margin:6px 16px;background:var(--ws1);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.wx .w-card .r{display:flex;align-items:center;gap:12px}
+.wx .w-card .r b{font-size:15px;font-weight:600}
+.wx .w-code{font-family:"Roboto Mono",Consolas,monospace;font-size:12px;line-height:1.5;background:var(--ws3);border-radius:12px;padding:10px 12px;overflow-wrap:anywhere;color:var(--wos)}
+.wx .w-fld{height:56px;border-radius:6px 6px 0 0;background:var(--ws3);border-bottom:2px solid var(--wp);padding:8px 14px 0;display:flex;flex-direction:column;justify-content:center}
+.wx .w-fld small{font-size:12px;color:var(--wp);font-weight:600}
+.wx .w-fld span{font-size:16px}
+.wx .w-fld.o{background:transparent;border:1px solid var(--wol);border-radius:6px;padding:0 14px}
+.wx .w-sw{width:52px;height:32px;border-radius:16px;background:var(--wp);position:relative;flex:none}
+.wx .w-sw::after{content:"";position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:var(--wop)}
+.wx .w-sw.off{background:var(--ws4);box-shadow:inset 0 0 0 2px var(--wol)}
+.wx .w-sw.off::after{left:8px;right:auto;top:8px;width:16px;height:16px;background:var(--wol)}
+.wx .w-st{font-size:12.5px;font-weight:650;white-space:nowrap;color:var(--wosv);display:flex;align-items:center;gap:6px}
+.wx .w-st.ok{color:var(--wok)}
+.wx .w-st.on{color:var(--wp)}
+.wx .w-st.bad{color:var(--wer)}
+.wx .w-wave{display:block}
+.wx .w-ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
+.wx .w-tv{width:96px;height:96px;border-radius:32px;background:var(--wpc);color:var(--wopc);display:grid;place-items:center}
+.wx .w-tv .wi{width:48px;height:48px;stroke-width:1.6}
+.wx .w-ctr b{font-size:22px;font-weight:600}
+.wx .w-ctr>span:not(.w-btn){font-size:14px;color:var(--wosv)}
+.wx .w-load{width:44px;height:44px;background:var(--wp);clip-path:polygon(50% 0,61% 20%,82% 13%,79% 36%,100% 50%,79% 64%,82% 87%,61% 80%,50% 100%,39% 80%,18% 87%,21% 64%,0 50%,21% 36%,18% 13%,39% 20%);animation:wxspin 2.4s linear infinite}
+@keyframes wxspin{to{transform:rotate(360deg)}}
+.wx .w-otp{display:flex;gap:6px}
+.wx .w-otp i{width:44px;height:56px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--wol);display:grid;place-items:center;font-style:normal;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.wx .w-otp i.cur{box-shadow:inset 0 0 0 2px var(--wp)}
+.wx .w-drop{border:2px dashed var(--wol);border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--wosv);font-size:18px;font-weight:650}
+.wx .w-drop .wi{width:44px;height:44px;stroke-width:1.5}
+.wx .w-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 16px}
+.wx .w-grid3 div{aspect-ratio:16/9;border-radius:12px}
+.wx .w-grid3 .add{display:grid;place-items:center;box-shadow:inset 0 0 0 1px var(--wol);color:var(--wosv)}
+/* 电脑 */
+.wx .w-chrome{height:42px;background:var(--ws3);display:flex;align-items:center;gap:14px;padding:0 14px}
+.wx .w-chrome i{width:11px;height:11px;border-radius:50%;background:var(--wolv);display:inline-block;margin-right:5px}
+.wx .w-chrome .w-url{flex:1;max-width:520px;margin:0;height:28px;background:var(--ws);justify-content:flex-start;padding:0 12px}
+.wx .w-desk{position:absolute;left:0;right:0;top:42px;bottom:0;display:grid;grid-template-columns:236px minmax(0,1fr)}
+.wx .w-side{background:var(--ws1);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.wx .w-side .ttl{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:600;padding:4px 12px 14px}
+.wx .w-nav{height:44px;border-radius:22px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:14px;font-weight:600;color:var(--wosv)}
+.wx .w-nav.on{background:var(--wsc);color:var(--wosc)}
+.wx .w-nav.tgt{box-shadow:inset 0 0 0 2px var(--wp)}
+.wx .w-root{padding:8px 14px;border-radius:14px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600}
+.wx .w-root.on{background:var(--ws3)}
+.wx .w-root .r{display:flex;align-items:center;gap:10px}
+.wx .w-root small{font-size:11.5px;color:var(--wosv);font-weight:500}
+.wx .w-cap{height:4px;border-radius:2px;background:var(--ws4);overflow:hidden}
+.wx .w-cap i{display:block;height:100%;background:var(--wp)}
+.wx .w-main{position:relative;display:flex;flex-direction:column;min-width:0;padding:10px 20px 0}
+.wx .w-hrow{display:flex;align-items:center;gap:8px;height:52px}
+.wx .w-hrow .w-crumb{padding:0;font-size:15px}
+.wx .w-sel{display:flex;align-items:center;gap:8px;height:48px;border-radius:24px;background:var(--wsc);color:var(--wosc);padding:0 8px 0 18px;font-size:14px;font-weight:650;margin:2px 0 6px}
+.wx .w-sel .w-btn.t{color:var(--wosc)}
+.wx .w-tr{display:grid;grid-template-columns:36px minmax(0,1fr) 110px 150px 40px;align-items:center;min-height:50px;padding:0 6px;border-bottom:1px solid var(--wolv);font-size:13.5px;gap:4px}
+.wx .w-tr.h{min-height:36px;font-size:12px;font-weight:650;color:var(--wosv)}
+.wx .w-tr.sel{background:color-mix(in srgb,var(--wp) 10%,transparent)}
+.wx .w-tr .n{display:flex;align-items:center;gap:12px;min-width:0;font-weight:550}
+.wx .w-tr .n span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx .w-tr .n .w-th{width:32px;height:32px;border-radius:8px}
+.wx .w-tr .n .w-th .wi{width:17px;height:17px}
+.wx .w-tr .m{color:var(--wosv);font-variant-numeric:tabular-nums}
+.wx .w-cb{width:18px;height:18px;border-radius:3px;box-shadow:inset 0 0 0 2px var(--wosv);display:grid;place-items:center}
+.wx .w-cb.on{background:var(--wp);box-shadow:none;color:var(--wop)}
+.wx .w-cb .wi{width:14px;height:14px;stroke-width:3}
+.wx .w-ctx{position:absolute;width:212px;background:var(--ws2);border-radius:8px;padding:6px 0;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.wx .w-ctx div{height:40px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:14px}
+.wx .w-ctx div.hl{background:var(--ws4)}
+.wx .w-ctx div.d{color:var(--wer)}
+.wx .w-ctx hr{border:0;border-top:1px solid var(--wolv);margin:6px 0}
+.wx .w-float{position:absolute;right:20px;bottom:20px;width:384px;background:var(--ws1);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.24);padding:10px 0 6px}
+.wx .w-float .h{display:flex;align-items:center;gap:8px;padding:2px 10px 6px 18px;font-size:15px;font-weight:650}
+.wx .w-hot{position:absolute;inset:0;border:2px dashed var(--wp);border-radius:16px;background:color-mix(in srgb,var(--wp) 8%,transparent);pointer-events:none}
+.wx .w-2c{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;align-items:start}
+.wx .w-2c .w-card{margin:6px 0}
+.wx .g1{background:linear-gradient(160deg,#7ad6df,#1d8db0 45%,#03213f)}
+.wx .g2{background:linear-gradient(160deg,#ff6a7a,#3d1265 60%,#12082e)}
+.wx .g3{background:linear-gradient(160deg,#4a2f86,#1d1a55 60%,#070a26)}
+.wx .g4{background:linear-gradient(160deg,#fff0f4,#ffc9d8 50%,#ff7aa5)}
+.wx .g5{background:linear-gradient(160deg,#e7f6ee,#a9dcc4 50%,#3f8f7b)}
+.wx .g6{background:linear-gradient(160deg,#ffd08f,#d9622c 60%,#5e1f14)}
+.wx .a1{background:linear-gradient(135deg,#9b5cff,#e8439a);color:#fff}
+.wx .a2{background:linear-gradient(135deg,#ff8a65,#c2185b);color:#fff}
+.wx .a3{background:linear-gradient(135deg,#18c3b4,#0b6f93);color:#fff}
+.wx .a4{background:linear-gradient(135deg,#ff7a45,#d1214f);color:#fff}
+.wx .a5{background:linear-gradient(135deg,#3ccf74,#0e8a6b);color:#fff}
+.wx .a6{background:linear-gradient(135deg,#59b8ff,#2e64d8);color:#fff}
+.wx .a7{background:linear-gradient(135deg,#2c3540,#1a2028);color:#fff}
+/* 补充 */
+.wx .w-sb .wi{width:14px;height:14px;stroke-width:2.2}
+.wx .w-sbi{display:flex;gap:5px;align-items:center}
+.wx .w-th.on{background:var(--wp);color:var(--wop);border-radius:50%}
+.wx .w-li.sel{background:color-mix(in srgb,var(--wp) 10%,transparent)}
+.wx .w-div{height:1px;background:var(--wolv);margin:4px 0 6px}
+.wx .w-bn.act{grid-template-columns:repeat(3,1fr);background:var(--ws2)}
+.wx .w-bn .d{color:var(--wer)}
+.wx .w-up{position:absolute;left:8px;right:8px;bottom:80px;background:var(--ws2);border-radius:24px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:6px 0}
+.wx .w-up .h,.wx .w-float .h{display:flex;align-items:center;gap:4px;padding:2px 8px 2px 18px;font-size:15px;font-weight:650}
+.wx .w-up .w-li,.wx .w-float .w-li{min-height:54px;padding-top:4px;padding-bottom:4px}
+.wx .w-nm span.w-pr{display:flex;align-items:center;gap:8px;overflow:visible}
+.wx .w-pr em{font-style:normal;font-variant-numeric:tabular-nums}
+.wx .w-li>.w-st{padding-right:8px}
+.wx .w-pct{font-size:12.5px;font-weight:650;color:var(--wp);font-variant-numeric:tabular-nums;padding-right:8px}
+.wx .w-pushc{margin:4px 16px 4px;height:128px;border-radius:28px;background:var(--wpc);color:var(--wopc);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.wx .w-pushc>.wi{width:34px;height:34px;stroke-width:1.6}
+.wx .w-set{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;padding:0 20px 0 18px;font-size:15px}
+.wx .w-set b{font-weight:550}
+.wx .w-snack{display:flex;align-items:center;gap:10px}
+.wx .w-snack span{flex:1}
+.wx .w-snack em{font-style:normal;font-weight:650;color:var(--wip);white-space:nowrap}
+.wx .w-snack.pc{left:256px;right:auto;bottom:20px;width:360px}
+.wx .w-msg{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:18px;background:var(--werc);color:var(--woerc);font-size:13.5px;font-weight:600}
+.wx .w-msg.n{background:var(--ws3);color:var(--wosv)}
+.wx .w-msg .wi{width:18px;height:18px}
+.wx .w-lbl{font-size:12.5px;font-weight:650;color:var(--wosv);letter-spacing:.06em;margin-top:8px}
+.wx .w-btn.dis{background:color-mix(in srgb,var(--wos) 12%,transparent);color:color-mix(in srgb,var(--wos) 38%,transparent)}
+.wx .w-sdiv{height:1px;background:var(--wolv);margin:10px 12px}
+.wx .w-cb.mid{background:var(--wp);box-shadow:none;color:var(--wop)}
+.wx .w-tr.hov{background:var(--ws2)}
+.wx .w-tr .w-ib{width:32px;height:32px}
+.wx .w-dlg.wide{width:420px}
+.wx .w-fr{display:flex;align-items:center;gap:14px;height:44px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:550}
+.wx .w-fr .wi{color:var(--wosv)}
+.wx .w-fr.dim{opacity:.38}
+.wx .w-fr.hl{background:var(--ws4)}
+.wx .w-drop.hot{border-color:var(--wp);background:color-mix(in srgb,var(--wp) 8%,transparent);color:var(--wp)}
+.wx .w-tr.p{grid-template-columns:minmax(0,1fr) 100px 230px 130px}
+.wx .w-tr .stc{display:flex;align-items:center;gap:10px}
+.wx .w-ban{aspect-ratio:16/9;border-radius:16px;display:flex;flex-direction:column;justify-content:space-between;padding:16px 18px;font-size:19px;font-weight:700}
+.wx .w-ban .wi{width:34px;height:34px;stroke-width:1.8}
+.wx .w-fld.o{position:relative;height:56px;justify-content:center}
+.wx .w-fld.o small{position:absolute;top:-9px;left:10px;padding:0 4px;background:var(--ws3);font-size:12px}
+.wx .w-card .h{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650}
+.wx .w-card .w-li{padding-left:0;padding-right:0;min-height:56px}
+.wx .w-main .w-sec{padding-left:6px}
+</style>
+<div class="wx" id="wx">
+  <div class="wx-ctl" role="tablist" id="wxTabs">
+    <button role="tab" data-s="connect" aria-selected="false">连接</button>
+    <button role="tab" data-s="lost">未连接</button>
+    <button role="tab" data-s="files" aria-selected="true">文件</button>
+    <button role="tab" data-s="select">多选</button>
+    <button role="tab" data-s="upload">上传</button>
+    <button role="tab" data-s="conflict">同名</button>
+    <button role="tab" data-s="push">推送</button>
+    <button role="tab" data-s="desk">桌面</button>
+    <button role="tab" data-s="more">更多</button>
+  </div>
+  <div class="wx-stage">
+    <div><div class="wx-box ph"><div class="wx-in" id="wxPh"></div></div><div class="wx-cap">手机 · 360 × 740</div></div>
+    <div><div class="wx-box pc"><div class="wx-in" id="wxPc"></div></div><div class="wx-cap">电脑 · 1000 × 660</div></div>
+  </div>
+</div>
+<script>
+/* 「手机与电脑」网页样机：手机 360 × 740、电脑 1000 × 660，按容器宽度缩放 */
+(() => {
+  const root = document.getElementById('wx'); if (!root) return;
+  const ph = root.querySelector('#wxPh'), pc = root.querySelector('#wxPc');
+  const sv = (d, st) => `<svg class="wi" viewBox="0 0 24 24"${st ? ` style="${st}"` : ''}>${d}</svg>`;
+  const P = d => `<path d="${d}"/>`;
+  const DIR = 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z';
+  const I = {
+    tv: sv('<rect x="2.5" y="4" width="19" height="13" rx="2.5"/>' + P('M8 20.5h8')),
+    folder: sv(P(DIR)),
+    file: sv(P('M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z') + P('M14 3v5h5')),
+    doc: sv(P('M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z') + P('M14 3v5h5M8.5 13h7M8.5 16.5h5')),
+    up: sv(P('M12 15V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3')),
+    down: sv(P('M12 4v11M7 10l5 5 5-5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3')),
+    upDir: sv(P(DIR) + P('M12 17v-6M9.5 13.5 12 11l2.5 2.5')),
+    newDir: sv(P(DIR) + P('M12 10.5v6M9 13.5h6')),
+    move: sv(P(DIR) + P('M9 13.5h6.5M13 11l2.5 2.5L13 16')),
+    sort: sv(P('M4 7h16M7 12h10M10 17h4')),
+    more: sv(P('M12 5.5h.01M12 12h.01M12 18.5h.01'), 'stroke-width:3.2'),
+    dots: sv(P('M5.5 12h.01M12 12h.01M18.5 12h.01'), 'stroke-width:3.2'),
+    close: sv(P('M6 6l12 12M18 6 6 18')),
+    check: sv(P('M5 12.5l4.5 4.5L19 7.5')),
+    dash: sv(P('M7 12h10')),
+    push: sv(P('M4 12 20 4l-6 16-3-7zM11 13l9-9')),
+    grid: sv('<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>'),
+    edit: sv(P('M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4')),
+    trash: sv(P('M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3')),
+    openTv: sv('<rect x="2.5" y="4" width="19" height="13" rx="2.5"/>' + P('M8 20.5h8M10.5 8v5l4-2.5z')),
+    rename: sv(P('M4 7V5h10v2M9 5v14M7 19h4M14 13h6M17 13v6')),
+    copy: sv('<rect x="8" y="8" width="12" height="12" rx="2.5"/>' + P('M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2')),
+    unlink: sv(P('M10.5 6.5l1.8-1.8a4 4 0 0 1 5.7 5.7l-1.8 1.8M13.5 17.5l-1.8 1.8a4 4 0 0 1-5.7-5.7l1.8-1.8M4 4l16 16')),
+    eye: sv(P('M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z') + '<circle cx="12" cy="12" r="3"/>'),
+    usb: sv('<rect x="7" y="9" width="10" height="12" rx="2"/>' + P('M9 9V3h6v6M10.5 5.5v1M13.5 5.5v1')),
+    disk: sv('<rect x="3" y="6" width="18" height="12" rx="2.5"/>' + P('M7 14h.01M11 14h6')),
+    chev: sv(P('M9 6l6 6-6 6')),
+    chevDown: sv(P('M6 9l6 6 6-6')),
+    back: sv(P('M19 12H5M11 6l-6 6 6 6')),
+    info: sv('<circle cx="12" cy="12" r="9"/>' + P('M12 11v5M12 7.5h.01')),
+    err: sv('<circle cx="12" cy="12" r="9"/>' + P('M12 7.5v5M12 16h.01')),
+    retry: sv(P('M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6')),
+    image: sv('<rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/>' + P('M21 16l-5-5-9 9')),
+    plus: sv(P('M12 5v14M5 12h14')),
+    widget: sv('<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>' + P('M16.5 4v7M13 7.5h7')),
+    selAll: sv('<rect x="4" y="4" width="16" height="16" rx="3"/>' + P('M8 12.5l3 3 5-6')),
+    wifi: sv(P('M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M9 16a4.5 4.5 0 0 1 6 0M12 19h.01')),
+    batt: sv('<rect x="2.5" y="7" width="17" height="10" rx="2.5"/>' + P('M22 10.5v3M5.5 10v4h9v-4z')),
+    city: sv(P('M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z') + '<circle cx="12" cy="9.5" r="2.5"/>')
+  };
+  const PLAY = '<svg class="wi" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+  const G = {
+    wave: sv(P('M3 12h3l2.5-6 4 12 3-8 2 3h3.5')), book: sv(P('M5 4.5h11a3 3 0 0 1 3 3v12H8a3 3 0 0 1-3-3zM5 16.5a3 3 0 0 1 3-3h11')),
+    play: sv(P('M9 7v10l8-5z')), spark: sv(P('M12 3l2 6.5 6.5 2.5-6.5 2.5L12 21l-2-6.5L3.5 12 10 9.5z')),
+    photo: sv('<rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9.5" cy="10" r="1.6"/>' + P('M20 16l-4.5-4.5L8 19')),
+    sun: sv('<circle cx="12" cy="12" r="4"/>' + P('M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4')),
+    hdmi: sv(P('M4 9h16v4l-3 3H7l-3-3zM8 12h8'))
+  };
+  const ADDR = '192.168.1.23:38517', TVN = '客厅电视';
+  const F = [
+    { n: '家庭', dir: 1, s: '12 项', t: '2026-10-12 20:41' },
+    { n: '纪录片', dir: 1, s: '4 项', t: '2026-09-30 21:07' },
+    { n: '海边日落.mp4', th: 'g1', v: 1, s: '860 MB', t: '2026-10-28 19:22' },
+    { n: '家庭聚会 2026.mp4', th: 'g6', v: 1, s: '1.24 GB', t: '2026-10-30 22:15' },
+    { n: '极光阅读_3.1.0.apks', app: 'a2', g: 'book', s: '112 MB', t: '2026-11-01 09:48' },
+    { n: '演唱会花絮.mkv', th: 'g2', v: 1, s: '2.4 GB', t: '2026-09-14 23:02' },
+    { n: '演唱会花絮.srt', s: '42 KB', t: '2026-09-14 23:02' },
+    { n: '封面.jpg', th: 'g4', s: '3.9 MB', t: '2026-10-28 19:30' }
+  ];
+  const day = t => { const [, m, d] = t.split(' ')[0].split('-'); return `${+m}月${+d}日`; };
+  const th = f => f.dir ? `<div class="w-th dir">${I.folder}</div>`
+    : f.app ? `<div class="w-th app ${f.app}">${G[f.g]}</div>`
+    : f.th ? `<div class="w-th ${f.th}">${f.v ? `<b>${PLAY}</b>` : ''}</div>`
+    : `<div class="w-th">${f.ic ? I[f.ic] : I.file}</div>`;
+  const sub = f => f.dir ? f.s : `${f.s} · ${day(f.t)}`;
+  const li = (f, o = {}) => `<div class="w-li${o.sel ? ' sel' : ''}">${o.sel ? `<div class="w-th on">${I.check}</div>` : th(f)}<div class="w-nm"><b>${f.n}</b>${o.sub !== undefined ? o.sub : `<span>${sub(f)}</span>`}</div>${o.trail !== undefined ? o.trail : `<span class="w-ib">${I.more}</span>`}</div>`;
+  function wave(w, p) {
+    const x = Math.max(4, (w - 4) * p), cy = 5; let d = 'M2 5';
+    for (let i = 2.5; i <= x; i += 0.5) d += `L${i.toFixed(1)} ${(cy + 2.2 * Math.sin((i - 2) / 10 * 2 * Math.PI)).toFixed(2)}`;
+    return `<svg class="w-wave" width="${w}" height="10" viewBox="0 0 ${w} 10"><path d="${d}" fill="none" stroke="var(--wp)" stroke-width="3" stroke-linecap="round"/>` +
+      `<path d="M${(x + 6).toFixed(1)} 5H${w - 2}" stroke="var(--wsc)" stroke-width="3" stroke-linecap="round"/><circle cx="${w - 2}" cy="5" r="1.6" fill="var(--wp)"/></svg>`;
+  }
+  const prog = (p, spd, w = 132) => `<span class="w-pr">${wave(w, p)}<em>${spd}</em></span>`;
+  const st = (cls, t) => `<span class="w-st ${cls}">${t}</span>`;
+
+  /* ---------------- 手机 ---------------- */
+  const phone = body => `<div class="w-sb"><span>20:41</span><span class="w-sbi">${I.wifi}${I.batt}</span></div><div class="w-url">${I.info}${ADDR}</div><div class="w-pg">${body}</div>`;
+  const ab = (t = `<span class="w-dot"></span>${TVN}`) => `<div class="w-ab">${t}</div>`;
+  const nav = on => `<div class="w-bn">${[['files', '文件', I.folder], ['push', '推送', I.push], ['desk', '桌面', I.grid], ['more', '更多', I.dots]]
+    .map(([k, l, ic]) => `<div class="${k === on ? 'on' : ''}"><i>${ic}</i>${l}</div>`).join('')}</div>`;
+  const roots = `<div class="w-chips"><div class="w-chip on">${I.disk}内部存储<small>23.4 GB 可用</small></div><div class="w-chip">${I.usb}SanDisk U 盘<small>57.1 GB 可用</small></div></div>`;
+  const crumb = `<div class="w-crumb">内部存储${I.chev}<b>Movies</b></div>`;
+  const tb = `<div class="w-tb"><span class="w-btn">${I.up}上传</span><span class="w-btn o">${I.newDir}新建文件夹</span><span class="w-sp"></span><span class="w-ib">${I.eye}</span><span class="w-ib">${I.sort}</span></div>`;
+  const filesPh = (list = F) => ab() + roots + crumb + tb + list.map(f => li(f)).join('');
+  const mi = (ic, t, c = '') => `<div class="w-mi ${c}">${ic}${t}</div>`;
+  const ctr = inner => `<div class="w-ctr">${inner}</div>`;
+  const otp = (ds, cur) => `<div class="w-otp">${[0, 1, 2, 3, 4, 5].map(i => `<i${i === cur ? ' class="cur"' : ''}>${ds[i] || ''}</i>`).join('')}</div>`;
+  const SEL = [1, 3, 5];
+  const PH = {
+    connect: () => phone(ctr(`<div class="w-tv">${I.tv}</div><b>${TVN}</b><div class="w-load"></div><span>等待电视确认</span><span class="w-btn t">取消</span>`)),
+    lost: () => phone(ctr(`<div class="w-tv">${I.tv}</div><b>${TVN}</b><div class="w-msg">${I.err}电视拒绝了连接</div><div class="w-lbl">配对码</div>${otp('', 0)}<span class="w-btn big dis" style="width:296px">连接</span>`)),
+    files: () => phone(filesPh() + nav('files') +
+      `<div class="w-scrim"></div><div class="w-sheet"><div class="w-hd"></div>${li(F[2], { trail: '' })}<div class="w-div"></div>` +
+      mi(I.down, '下载') + mi(I.openTv, '在电视上打开') + mi(I.rename, '重命名') + mi(I.move, '移动到…') + mi(I.trash, '删除', 'd') + '</div>'),
+    select: () => phone(ab(`<span class="w-ib">${I.close}</span>已选 3 项<span class="w-sp"></span><span class="w-ib">${I.selAll}</span>`) + roots + crumb +
+      `<div style="height:8px"></div>` + F.map((f, i) => li(f, { sel: SEL.includes(i), trail: '' })).join('') +
+      `<div class="w-bn act"><div><i>${I.down}</i>下载</div><div><i>${I.move}</i>移动到…</div><div class="d"><i>${I.trash}</i>删除</div></div>` +
+      `<div class="w-scrim"></div><div class="w-dlg"><div class="tt">删除 3 项？</div><div class="x">${SEL.map(i => `<span>${F[i].n}</span>`).join('')}</div>` +
+      `<div class="bt"><span class="w-btn t">取消</span><span class="w-btn d">删除</span></div></div>`),
+    upload: () => phone(filesPh() + nav('files') +
+      `<div class="w-up"><div class="h">上传 · 2 / 5<span class="w-sp"></span><span class="w-ib">${I.chevDown}</span></div>` +
+      li(F[3], { sub: prog(0.62, '11.8 MB/s'), trail: '<span class="w-pct">62%</span>' }) +
+      li(F[5], { sub: '<span>2.4 GB</span>', trail: st('', '等待中') }) +
+      li({ n: 'IMG_2050.jpg', th: 'g5', s: '3.1 MB' }, { sub: '<span>3.1 MB</span>', trail: st('ok', I.check + '已完成') }) +
+      li({ n: '电影合集.mkv', th: 'g3', v: 1 }, { sub: '<span class="bad">失败：空间不足</span>', trail: `<span class="w-ib">${I.retry}</span>` }) + '</div>'),
+    conflict: () => phone(filesPh() + nav('files') +
+      `<div class="w-scrim"></div><div class="w-dlg"><div class="tt">已有 2 个同名文件</div><div class="x"><span>海边日落.mp4</span><span>封面.jpg</span></div>` +
+      `<div class="bt col"><span class="w-btn">保留两者</span><span class="w-btn s">覆盖</span><span class="w-btn t">跳过</span></div></div>`),
+    push: () => phone(ab() + `<div class="w-pushc">${I.push}<span class="w-btn">${I.file}选择文件</span></div>` +
+      `<div class="w-set"><b>同时保存一份</b><span class="w-sw off"></span></div><div class="w-sec">最近推送</div>` +
+      li({ n: 'pulse-music-2.4.1.apk', app: 'a1', g: 'wave' }, { sub: '<span>48.2 MB · 律动音乐 2.4.1</span>', trail: st('on', '等待安装') }) +
+      li({ n: '海边日落.mp4', th: 'g1', v: 1 }, { sub: prog(0.62, '11.2 MB/s', 120), trail: '<span class="w-pct">62%</span>' }) +
+      li({ n: 'IMG_2041.jpg 等 3 张', th: 'g4' }, { sub: '<span>10.9 MB</span>', trail: st('on', '正在显示') }) +
+      li({ n: '极光阅读_3.1.0.apks', app: 'a2', g: 'book' }, { sub: '<span>112 MB · 极光阅读 3.1.0</span>', trail: st('ok', '已安装') }) +
+      li({ n: 'dolphin-5.0.1.apk', app: 'a3', g: 'play' }, { sub: '<span class="bad">签名与已安装的版本不同</span>', trail: st('bad', '失败') }) +
+      nav('push') + `<div class="w-snack"><span>电视无法打开这类文件</span><em>保存到 Download</em></div>`),
+    desk: () => phone(ab() + `<div class="w-sec">应用</div>` +
+      li({ n: '星火影院', app: 'a4', g: 'spark' }, { sub: '<span>com.example.spark</span>', trail: `<span class="w-ib">${I.edit}</span>` }) +
+      li({ n: '律动音乐', app: 'a1', g: 'wave' }, { sub: '<span>com.example.pulse</span>', trail: `<span class="w-ib">${I.edit}</span>` }) +
+      li({ n: '游戏机', app: 'a7', g: 'hdmi' }, { sub: '<span>HDMI 1</span>', trail: `<span class="w-ib">${I.edit}</span>` }) +
+      `<div class="w-sec">壁纸照片</div><div class="w-grid3"><div class="g4"></div><div class="g5"></div><div class="g6"></div><div class="g1"></div><div class="g2"></div><div class="add">${I.plus}</div></div>` +
+      `<div class="w-sec">屏保视频</div>` + li(F[3]) + nav('desk')),
+    more: () => phone(ab() +
+      `<div class="w-card"><div class="r"><div class="w-th dir">${I.tv}</div><div class="w-nm"><b>${TVN}</b><span>${ADDR}</span></div></div></div>` +
+      `<div class="w-card"><div class="r"><div class="w-th">${I.doc}</div><b>诊断报告</b><span class="w-sp"></span><span class="w-btn s">${I.down}下载</span></div></div>` +
+      `<div class="w-card"><div class="h">${I.widget}小组件授权</div><div class="w-code">adb shell appwidget grantbind --package com.github.mytv.launcher --user current</div>` +
+      `<div class="r"><span class="w-sp"></span><span class="w-btn s">${I.copy}复制</span></div></div>` +
+      `<div style="padding:10px 16px"><span class="w-btn do" style="width:100%">${I.unlink}断开连接</span></div>` +
+      nav('more') + `<div class="w-snack"><span>已复制</span></div>`)
+  };
+
+  /* ---------------- 电脑 ---------------- */
+  const chrome = `<div class="w-chrome"><span><i></i><i></i><i></i></span><div class="w-url">${I.info}${ADDR}</div></div>`;
+  const side = on => `<div class="w-side"><div class="ttl"><span class="w-dot"></span>${TVN}</div>` +
+    [['files', '文件', I.folder], ['push', '推送', I.push], ['desk', '桌面', I.grid], ['more', '更多', I.dots]]
+      .map(([k, l, ic]) => `<div class="w-nav${k === on ? ' on' : ''}">${ic}${l}</div>`).join('') +
+    `<div class="w-sdiv"></div>` +
+    `<div class="w-root${on === 'files' ? ' on' : ''}"><div class="r">${I.disk}内部存储</div><div class="w-cap"><i style="width:27%"></i></div><small>23.4 GB 可用 · 共 32 GB</small></div>` +
+    `<div class="w-root"><div class="r">${I.usb}SanDisk U 盘</div><div class="w-cap"><i style="width:11%"></i></div><small>57.1 GB 可用 · 共 64 GB · exFAT</small></div></div>`;
+  const desk = (on, main, over = '') => chrome + `<div class="w-desk">${side(on)}<div class="w-main">${main}</div></div>` + over;
+  const head = `<div class="w-hrow"><div class="w-crumb">内部存储${I.chev}<b>Movies</b></div><span class="w-sp"></span><span class="w-ib">${I.eye}</span><span class="w-ib">${I.sort}</span>` +
+    `<span class="w-btn o">${I.newDir}新建文件夹</span><span class="w-btn o">${I.upDir}上传文件夹</span><span class="w-btn">${I.up}上传</span></div>`;
+  const table = (sel = [], hl = -1) => `<div class="w-tr h"><span class="w-cb${sel.length ? ' mid' : ''}">${sel.length ? I.dash : ''}</span><span>名称</span><span>大小</span><span>修改时间</span><span></span></div>` +
+    F.map((f, i) => { const on = sel.includes(i);
+      return `<div class="w-tr${on ? ' sel' : ''}${i === hl ? ' hov' : ''}"><span class="w-cb${on ? ' on' : ''}">${on ? I.check : ''}</span><span class="n">${th(f)}<span>${f.n}</span></span><span class="m">${f.s}</span><span class="m">${f.t}</span><span class="w-ib">${I.more}</span></div>`; }).join('');
+  const fl = (f, sub, trail) => li(f, { sub, trail });
+  const scrim = '<div class="w-scrim"></div>';
+  const PC = {
+    connect: () => chrome + `<div class="w-pg" style="top:42px">${ctr(`<div class="w-tv">${I.tv}</div><b>${TVN}</b><div class="w-lbl">配对码</div>${otp('482917', -1)}<span class="w-btn big" style="width:328px">连接</span>`)}</div>`,
+    lost: () => chrome + `<div class="w-pg" style="top:42px">${ctr(`<div class="w-tv">${I.tv}</div><b>${TVN}</b><div class="w-msg n">${I.unlink}连接已断开</div><div class="w-lbl">配对码</div>${otp('', 0)}<span class="w-btn big dis" style="width:328px">连接</span>`)}</div>`,
+    files: () => desk('files', head + table([], 2),
+      `<div class="w-ctx" style="left:560px;top:268px"><div class="hl">${I.down}下载</div><div>${I.openTv}在电视上打开</div><div>${I.rename}重命名</div><div>${I.move}移动到…</div><hr><div class="d">${I.trash}删除</div></div>`),
+    select: () => desk('files', `<div class="w-sel">已选 3 项<span class="w-sp"></span><span class="w-btn t">${I.down}下载</span><span class="w-btn t">${I.move}移动到…</span><span class="w-btn t">${I.trash}删除</span><span class="w-ib" style="color:inherit">${I.close}</span></div>` + table(SEL),
+      scrim + `<div class="w-dlg wide"><div class="tt">移动到</div><div class="w-crumb" style="padding:0"><b>内部存储</b></div><div>` +
+      [['Download'], ['Movies', 'dim'], ['Pictures', 'hl'], ['Music'], ['Documents'], ['Podcasts']].map(([n, c = '']) => `<div class="w-fr ${c}">${I.folder}${n}<span class="w-sp"></span>${I.chev}</div>`).join('') +
+      `</div><div class="bt"><span class="w-btn t" style="margin-right:auto">${I.newDir}新建文件夹</span><span class="w-btn t">取消</span><span class="w-btn">移动到这里</span></div></div>`),
+    upload: () => desk('files', head + table() + '<div class="w-hot" style="inset:62px 14px 14px 14px"></div>',
+      `<div class="w-float"><div class="h">上传 · 2 / 5<span class="w-sp"></span><span class="w-ib">${I.chevDown}</span><span class="w-ib">${I.close}</span></div>` +
+      fl(F[3], prog(0.62, '11.8 MB/s', 150), '<span class="w-pct">62%</span>') +
+      fl(F[5], '<span>2.4 GB</span>', st('', '等待中')) +
+      fl({ n: 'IMG_2050.jpg', th: 'g5' }, '<span>3.1 MB</span>', st('ok', I.check + '已完成')) +
+      fl({ n: '电影合集.mkv', th: 'g3', v: 1 }, '<span class="bad">失败：空间不足</span>', `<span class="w-btn t">${I.retry}重试</span>`) + '</div>'),
+    conflict: () => desk('files', head + table(),
+      scrim + `<div class="w-dlg wide"><div class="tt">已有 2 个同名文件</div><div class="x"><span>海边日落.mp4</span><span>封面.jpg</span></div>` +
+      `<div class="bt"><span class="w-btn t">跳过</span><span class="w-btn s">覆盖</span><span class="w-btn">保留两者</span></div></div>`),
+    push: () => desk('push', `<div class="w-drop hot" style="height:176px;margin-top:10px">${I.push}推送</div>` +
+      `<div class="w-tb" style="padding:12px 0 2px"><span class="w-btn">${I.file}选择文件</span><span class="w-sp"></span><div class="w-set" style="padding:0;min-height:0"><b>同时保存一份</b><span class="w-sw off"></span></div></div>` +
+      `<div class="w-sec">最近推送</div>` +
+      [[{ n: 'pulse-music-2.4.1.apk', app: 'a1', g: 'wave' }, '48.2 MB', st('on', '等待安装'), '20:41'],
+       [{ n: '海边日落.mp4', th: 'g1', v: 1 }, '860 MB', wave(140, 0.62) + '<span class="w-pct">62%</span>', '20:40'],
+       [{ n: 'IMG_2041.jpg 等 3 张', th: 'g4' }, '10.9 MB', st('on', '正在显示'), '20:37'],
+       [{ n: '极光阅读_3.1.0.apks', app: 'a2', g: 'book' }, '112 MB', st('ok', '已安装'), '20:31'],
+       [{ n: 'dolphin-5.0.1.apk', app: 'a3', g: 'play' }, '63.5 MB', st('bad', '失败：签名与已安装的版本不同'), '20:28']]
+        .map(([f, s, x, t]) => `<div class="w-tr p"><span class="n">${th(f)}<span>${f.n}</span></span><span class="m">${s}</span><span class="stc">${x}</span><span class="m">${t}</span></div>`).join(''),
+      `<div class="w-snack pc"><span>电视无法打开这类文件</span><em>保存到 Download</em></div>`),
+    desk: () => desk('desk', `<div class="w-2c" style="margin-top:6px"><div class="w-card"><div class="h">${I.grid}应用</div>` +
+      [['星火影院', 'a4', 'spark', 'com.example.spark'], ['律动音乐', 'a1', 'wave', 'com.example.pulse'], ['海豚视频', 'a3', 'play', 'com.example.dolphin'],
+       ['云相册', 'a5', 'photo', 'com.example.photos'], ['游戏机', 'a7', 'hdmi', 'HDMI 1'], ['晴空天气', 'a6', 'sun', 'com.example.weather']]
+        .map(([n, a, g, p]) => fl({ n, app: a, g }, `<span>${p}</span>`, `<span class="w-ib">${I.edit}</span>`)).join('') + '</div>' +
+      `<div><div class="w-card"><div class="h">${I.image}壁纸照片</div><div class="w-grid3" style="padding:0"><div class="g4"></div><div class="g5"></div><div class="g6"></div><div class="g1"></div><div class="g2"></div><div class="add">${I.plus}</div></div></div>` +
+      `<div class="w-card"><div class="h">${I.openTv}屏保视频<span class="w-sp"></span><span class="w-btn t">${I.plus}添加</span></div>${fl(F[3], '<span>1.24 GB · 30:04</span>', `<span class="w-ib">${I.more}</span>`)}</div>` +
+      `<div class="w-card"><div class="h">${I.city}天气城市</div><div class="w-fld o"><span>杭州</span></div></div></div></div>`,
+      scrim + `<div class="w-dlg wide"><div class="tt">星火影院</div><div class="w-fld o"><small>显示名称</small><span>星火影院</span></div>` +
+      `<div class="w-ban a4">${G.spark}<span>星火影院</span></div><div class="bt" style="justify-content:flex-start"><span class="w-btn o">${I.image}更换图标</span><span class="w-btn t">恢复默认</span></div>` +
+      `<div class="bt"><span class="w-btn t">取消</span><span class="w-btn">保存</span></div></div>`),
+    more: () => desk('more', `<div class="w-2c" style="margin-top:6px"><div>` +
+      `<div class="w-card"><div class="r"><div class="w-th dir">${I.tv}</div><div class="w-nm"><b>${TVN}</b><span>${ADDR}</span></div></div></div>` +
+      `<div class="w-card"><div class="r"><div class="w-th">${I.doc}</div><b>诊断报告</b><span class="w-sp"></span><span class="w-btn s">${I.down}下载</span></div></div>` +
+      `<div style="padding:10px 0"><span class="w-btn do">${I.unlink}断开连接</span></div></div>` +
+      `<div class="w-card"><div class="h">${I.widget}小组件授权</div><div class="w-code">adb shell appwidget grantbind --package com.github.mytv.launcher --user current</div>` +
+      `<div class="r"><span class="w-sp"></span><span class="w-btn s">${I.copy}复制</span></div></div></div>`,
+      `<div class="w-snack pc"><span>已复制</span></div>`)
+  };
+
+  const tabs = root.querySelectorAll('#wxTabs button');
+  function show(s) {
+    tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.s === s)));
+    ph.innerHTML = PH[s](); pc.innerHTML = PC[s]();
+  }
+  tabs.forEach(b => b.addEventListener('click', () => show(b.dataset.s)));
+  const fit = () => root.querySelectorAll('.wx-box').forEach(b => { const i = b.firstElementChild; if (i.offsetWidth) i.style.transform = `scale(${b.clientWidth / i.offsetWidth})`; });
+  if (window.ResizeObserver) { const ro = new ResizeObserver(fit); root.querySelectorAll('.wx-box').forEach(b => ro.observe(b)); } else addEventListener('resize', fit);
+  show('files'); fit();
+})();
+</script>
+</figure>
+
+  <h4>连接与配对</h4>
+  <div class="flow">
+    <div><b>扫码 / 输入配对码</b>网页拿到令牌或 6 位配对码<em>#t= / X-Code</em></div><i>→</i>
+    <div><b>请求会话</b><code class="i">POST /api/session</code>，最长等待 60 秒<em>long-poll</em></div><i>→</i>
+    <div><b>电视确认</b>「iPhone · Safari 请求连接」，显示来源地址<em>confirm_phone</em></div><i>→</i>
+    <div><b>会话</b>允许 → 200 与会话号；拒绝 → 403；超时 → 408<em>X-Session</em></div><i>→</i>
+    <div><b>换码</b>令牌与配对码作废，二维码与配对码刷新<em>一次性</em></div>
+  </div>
+  <ul>
+    <li><strong>一次确认</strong>：电视确认发生在建立会话时，确认后该会话可做全部读写（v3.3 里每次写操作都确认，改为连接时确认一次）。理由：能拿到令牌或配对码的人已经看得见电视屏幕，电视前的人在连接时做一次决定；逐项确认会让批量上传无法使用。删除、覆盖在网页上二次确认，电视的传输列表记录每一项操作。</li>
+    <li><strong>配对码</strong>：6 位随机数字，连续输错 5 次立即换码，并对该来源地址返回 429 持续 30 秒。只在页面打开时有效。</li>
+    <li><strong>会话</strong>：10 分钟没有请求即失效（进行中的传输算作活动）；同时最多 4 个；网页「断开连接」或电视上「断开」立即失效。会话号放在请求头 <code class="i">X-Session</code>，不用 Cookie，因此不存在跨站请求伪造；不返回任何 CORS 头。</li>
+    <li><strong>监听</strong>：只绑定选定的局域网 IPv4 地址和本机回环地址 127.0.0.1（回环不对外，供 <code class="i">adb forward</code> 调试与验收），端口在 49152–65535 随机。选址时跳过 VPN 网络（<code class="i">NetworkCapabilities.TRANSPORT_VPN</code>）、tun 类接口和 198.18.0.0/15（代理软件常用的虚拟网段）；有多个候选时以太网优先，其次 Wi-Fi；没有可用地址时显示「未连接局域网」，不启动服务。网络变化时重新选址，地址变了就刷新二维码，已有会话失效。校验 <code class="i">Host</code> 头必须等于 <code class="i">&lt;地址&gt;:&lt;端口&gt;</code>，否则返回 421（防 DNS 重绑定）。</li>
+    <li><strong>传输加密</strong>：局域网内用 HTTP。自签名 HTTPS 会让每个浏览器弹出证书警告，不采用；同一 Wi-Fi 下的被动嗅探风险写入 §20。</li>
+  </ul>
+
+  <h4>存储与权限</h4>
+  <p>网页里的每个位置都表示为「根 + 相对路径」。根的种类与可写性取决于系统版本和授权：</p>
+  <div class="tbl"><table>
+    <thead><tr><th>系统</th><th>授权</th><th>可用的根</th><th>U 盘 / SD 卡</th></tr></thead>
+    <tbody>
+      <tr><td>Android 6–9（API 23–28）</td><td>存储权限：运行时申请 <code class="i">WRITE_EXTERNAL_STORAGE</code>（<code class="i">maxSdkVersion="29"</code>）；电视页设置行「存储权限」</td><td>内部存储：共享存储的全部目录（不可见目录除外）</td><td>只读；系统有 DocumentsUI 时，经 <code class="i">ACTION_OPEN_DOCUMENT_TREE</code> 授权整卷后可写，授权用 <code class="i">takePersistableUriPermission</code> 持久保存，卷换了要重新授权</td></tr>
+      <tr><td>Android 10（API 29）</td><td>同上，另在清单声明 <code class="i">requestLegacyExternalStorage="true"</code></td><td>同上</td><td>同上</td></tr>
+      <tr><td>Android 11+（API 30+），已授予「所有文件访问」</td><td><code class="i">MANAGE_EXTERNAL_STORAGE</code>：OK 打开 <code class="i">ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION</code>（带本应用包名），解析不到再试 <code class="i">ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION</code>；都没有时设置行显示 <code class="i">adb shell appops set --uid com.github.mytv.launcher MANAGE_EXTERNAL_STORAGE allow</code></td><td>内部存储：全部目录（不可见目录除外）</td><td>可读写（以 M0 ⑫ 实测为准）</td></tr>
+      <tr><td>Android 11+（API 30+），未授予</td><td>受限模式：媒体读取权限（API 30–32 为 <code class="i">READ_EXTERNAL_STORAGE</code>，API 33+ 为 <code class="i">READ_MEDIA_IMAGES / VIDEO / AUDIO</code>），不申请也能写入</td><td>内部存储下的 Download、Movies、Pictures、Music、Documents 五个标准目录，经 MediaStore 读写。列出本应用写入的全部文件和其他应用的媒体文件；重命名、移动、删除只对本应用写入的文件开放，其他文件在网页上只读（菜单只有「下载」「在电视上打开」）</td><td>经 <code class="i">ACTION_OPEN_DOCUMENT_TREE</code> 授权整卷后可读写（需要 DocumentsUI）；否则不列出</td></tr>
     </tbody>
   </table></div>
   <ul>
-    <li><strong>二维码地址</strong>：选择局域网 IPv4 地址时跳过 VPN 网络（<code class="i">NetworkCapabilities.TRANSPORT_VPN</code>）、tun 类接口和 198.18.0.0/15（代理软件常用的虚拟网段）；有多个候选时以太网优先，其次 Wi-Fi。没有可用地址时显示"未连接局域网"，不启动服务。</li>
+    <li><strong>不可见的目录</strong>：<code class="i">Android/data</code>、<code class="i">Android/obb</code>，以及桌面自己的私有目录。隐藏文件（以 . 开头）默认不列出，网页可切换显示。</li>
+    <li><strong>媒体库</strong>：每次写入、改名、移动、删除后调用 <code class="i">MediaScannerConnection.scanFile</code>，让相册、播放器应用看到变化。</li>
+    <li><strong>U 盘授权</strong>：需要目录授权的卷在「保存位置」抽屉里显示「未授权」，OK 打开系统的目录授权界面（API 29+ 用 <code class="i">StorageVolume.createOpenDocumentTreeIntent()</code>，更低版本用 <code class="i">ACTION_OPEN_DOCUMENT_TREE</code>）；授权后该卷出现在网页的根列表里。没有 DocumentsUI 的机型不显示「未授权」，卷只读或不列出。</li>
+    <li><strong>状态展示</strong>：电视页设置行显示授权状态；网页只显示能用的根，不解释原因；只读的项在菜单里只有「下载」「在电视上打开」。</li>
+  </ul>
+
+  <h4>文件操作</h4>
+  <div class="tbl"><table>
+    <thead><tr><th>操作</th><th>接口</th><th>规则</th></tr></thead>
+    <tbody>
+      <tr><td>列出</td><td><code class="i">GET /api/fs/roots</code>、<code class="i">GET /api/fs/list</code></td><td>根带容量、剩余空间、文件系统类型、是否可写；目录分页，每页 500 项；文件夹在前</td></tr>
+      <tr><td>缩略图</td><td><code class="i">GET /api/fs/thumb</code></td><td>图片降采样、视频取一帧（MediaMetadataRetriever，10 秒超时，同 §13）、APK 取应用图标；256 px JPEG，磁盘缓存 64 MB</td></tr>
+      <tr><td>上传</td><td><code class="i">POST /api/fs/uploads</code> → <code class="i">PUT /api/fs/uploads/&lt;id&gt;</code></td><td>断点续传，见下文</td></tr>
+      <tr><td>下载</td><td><code class="i">POST /api/fs/ticket</code> → <code class="i">GET /dl/&lt;票据&gt;/&lt;文件名&gt;</code></td><td>票据一次性、60 秒有效（浏览器下载无法带请求头）；单个文件支持 Range（断点续传、在浏览器里拖动播放）；多项或文件夹打包为不压缩的 zip 流，不在电视上生成临时文件</td></tr>
+      <tr><td>新建文件夹</td><td><code class="i">POST /api/fs/mkdir</code></td><td>同名时返回 409</td></tr>
+      <tr><td>重命名</td><td><code class="i">POST /api/fs/rename</code></td><td>同名时返回 409</td></tr>
+      <tr><td>移动</td><td><code class="i">POST /api/fs/move</code></td><td>只在同一个根内移动（rename，不复制）；跨根返回 400</td></tr>
+      <tr><td>删除</td><td><code class="i">POST /api/fs/delete</code></td><td>文件夹递归删除，逐项返回结果；网页先确认「删除 n 项？」；没有回收站</td></tr>
+      <tr><td>在电视上打开</td><td><code class="i">POST /api/open</code></td><td>对电视上已有的 APK、图片、视频、音乐执行与推送相同的动作</td></tr>
+      <tr><td>传输状态</td><td><code class="i">GET /api/transfers</code></td><td>网页在有进行中的传输或推送时每秒轮询一次</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>上传与断点续传</h4>
+  <ol>
+    <li><strong>建立</strong>：<code class="i">POST /api/fs/uploads</code> 带根、目录、文件名、大小与冲突策略（重命名 / 覆盖 / 跳过）。服务端先做预检：目录可写；剩余空间减去本文件后，内部存储至少留 1 GiB，U 盘至少留 64 MB；FAT32 卷单文件不超过 4 GiB − 1；不满足时返回 413 和原因。通过后返回上传号与当前偏移 0。</li>
+    <li><strong>写入</strong>：<code class="i">PUT /api/fs/uploads/&lt;id&gt;</code>，请求头 <code class="i">Upload-Offset</code> 必须等于服务端偏移，否则返回 409 和实际偏移。请求体直接流式写入同目录下的隐藏临时文件 <code class="i">.&lt;文件名&gt;.mlpart</code>，256 KB 缓冲，不整块读入内存。</li>
+    <li><strong>中断</strong>：网络断开后网页用 <code class="i">HEAD</code> 取回偏移再续传，自动重试 3 次（2 / 5 / 15 秒）；之后显示「重试」。临时文件保留 24 小时，超时或下次打开页面时清理。</li>
+    <li><strong>完成</strong>：偏移等于大小时，同一卷内原子改名为目标文件，设置修改时间（网页提供 <code class="i">lastModified</code>），扫描媒体库，返回最终路径。</li>
+    <li><strong>写满</strong>：写入中遇到 ENOSPC 立即中止、删除临时文件，返回 507，电视传输行显示「失败：空间不足」。</li>
+    <li><strong>U 盘拔出</strong>：卷卸载时中止该卷上的所有传输，返回 410；网页回到根列表。</li>
+  </ol>
+  <ul>
+    <li><strong>文件夹上传</strong>：电脑可拖入文件夹或用「上传文件夹」，网页按相对路径逐个建立上传，缺少的子目录自动创建。</li>
+    <li><strong>并发</strong>：每个会话同时 3 个上传、4 个下载；全部会话合计 6 个上传。</li>
+    <li><strong>同名</strong>：网页在建立前比对目录列表，有冲突时弹出「已有 n 个同名文件」：「覆盖」「保留两者」（命名为「名称 (1).扩展名」）「跳过」。</li>
+  </ul>
+
+  <h4>推送</h4>
+  <p>推送就是带「推送」标记的上传：文件默认存入应用私有的推送区（<code class="i">cacheDir/push</code>，上限 4 GiB，超出时按最近使用淘汰），保留到电视上的传输记录被删除或被淘汰为止；安装包在安装成功后立即删除；网页打开「同时保存一份」时改存到「保存位置」，不占推送区。上传完成时，电视在「手机与电脑」页位于前台的情况下立即执行动作；页面不在前台（选了「后台继续」）时标为「待处理」，下次打开页面时排在列表顶部。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>类型</th><th>识别</th><th>动作</th></tr></thead>
+    <tbody>
+      <tr><td>安装包</td><td>.apk；分包 .apks / .apkm（zip 内含多个 .apk）、.xapk（含 <code class="i">manifest.json</code>，可带 OBB）</td><td>预检后显示安装卡，按「安装」交给系统安装确认（见下文）</td></tr>
+      <tr><td>图片</td><td>JPEG、PNG、WebP、GIF、BMP；HEIC / HEIF（API 28+）、AVIF（API 31+），以系统解码器能否解码为准</td><td>打开查看页</td></tr>
+      <tr><td>视频与音乐</td><td>按扩展名与内容嗅探；以 Media3 能否解出为准</td><td>打开播放页</td></tr>
+      <tr><td>其他</td><td>—</td><td>网页在推送前判断类型，显示「电视无法打开这类文件」与按钮「保存到 Download」</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>安装</h4>
+  <ul>
+    <li><strong>预检</strong>：用 <code class="i">PackageManager.getPackageArchiveInfo</code> 读包名、版本、签名证书（API 28+ 用 <code class="i">GET_SIGNING_CERTIFICATES</code>），把 <code class="i">applicationInfo.sourceDir</code> 指向文件后取图标与名称。以下情况不显示「安装」，直接给出错误：
+      <ul>
+        <li>「签名与已安装的版本不同」：已安装同名包且证书不同（不提供"先卸载再装"）；</li>
+        <li>「版本低于已安装的版本」：versionCode 更低；</li>
+        <li>「需要 Android x 或更高版本」：minSdk 高于本机（API 24+ 可读出；API 23 交给安装器判断）；</li>
+        <li>「不支持这台电视的处理器」：包内有 <code class="i">lib/&lt;abi&gt;/</code> 但没有一个属于 <code class="i">Build.SUPPORTED_ABIS</code>；</li>
+        <li>「无法读取安装包」：解析失败、分包之间包名 / versionCode / 签名不一致、.apkm 已加密。</li>
+      </ul></li>
+    <li><strong>分包选择</strong>：base 与所有功能分包必装；ABI 分包按 <code class="i">SUPPORTED_ABIS</code> 的顺序选第一个可用的；密度分包选不低于本机密度的最接近值，没有时选最高的；语言分包按系统语言列表选，一个都不匹配时不装。.xapk 的 OBB 在提交会话前写入 <code class="i">Android/obb/&lt;包名&gt;/</code>（API 30+ 持有 REQUEST_INSTALL_PACKAGES 的应用可以写这个目录；更低版本用存储权限）。</li>
+    <li><strong>会话</strong>：<code class="i">PackageInstaller.createSession(MODE_FULL_INSTALL)</code>，逐个写入选中的 APK，<code class="i">setInstallReason(INSTALL_REASON_USER)</code>（API 26+）。推送安装<strong>始终要求用户确认</strong>：API 31+ 显式 <code class="i">setRequireUserAction(USER_ACTION_REQUIRED)</code>，即使目标应用最初由本桌面安装也不走免确认更新（免确认只留给 §16 的自身更新）。提交时的状态回调用 <code class="i">PendingIntent</code>（API 31+ 必须 FLAG_MUTABLE 才能收到 extras），收到 <code class="i">STATUS_PENDING_USER_ACTION</code> 后从前台启动其中的确认界面。</li>
+    <li><strong>未知来源</strong>：API 26+ 用 <code class="i">canRequestPackageInstalls()</code> 判断；未允许时安装卡显示「未允许安装未知应用」，有 <code class="i">ACTION_MANAGE_UNKNOWN_APP_SOURCES</code> 的处理者时给「去设置」，没有时显示 ADB 命令 <code class="i">adb shell appops set &lt;pkg&gt; REQUEST_INSTALL_PACKAGES allow</code>。API 23–25 读 <code class="i">Settings.Secure.INSTALL_NON_MARKET_APPS</code>，为 0 时打开安全设置页，没有时显示 <code class="i">adb shell settings put secure install_non_market_apps 1</code>。</li>
+    <li><strong>结果</strong>：安装卡依次显示「正在安装」→「已安装」（按钮「打开」「完成」）/「安装失败」+ 系统给出的原因 /「已取消」。网页的推送项同步显示。新安装的应用按 §06 的规则出现在应用页。</li>
+  </ul>
+
+  <h4>查看与播放</h4>
+  <ul>
+    <li><strong>查看页</strong>：Android 9+ 用 <code class="i">ImageDecoder</code>（支持动图），更低版本用 BitmapFactory；按屏幕分辨率降采样，按 EXIF 旋转；超过 1 亿像素显示「无法显示这张图片」。左右键在本次推送的图片间切换（从文件打开时为同目录图片），OK 显示 / 隐藏信息条，菜单键：「设为壁纸」（加入 §13 的照片壁纸来源）、「保存到「图片」」（只对推送区里的文件）、「删除」。</li>
+    <li><strong>播放页</strong>：Media3 ExoPlayer + SurfaceView（ADR-005），进入前按 §13 交接解码器。OK 播放 / 暂停，左右键 ±10 秒（长按加速），上下键唤出控制层，BACK 先收起控制层再退出。同目录同名的 .srt / .ass / .vtt 作为外挂字幕。音乐显示封面（内嵌封面，没有时用文件名生成种子色渐变），背景与配色走 §07 取色链路。不能解码时显示「无法播放这个文件」，有外部处理者时给「用其他应用打开」（经 FileProvider 授权读取）。</li>
+    <li><strong>新推送到达</strong>：网页一次选了多张图片时，它们属于同一批，后到的图片追加到当前查看页，计数「n / m」随之更新；其他新推送在查看或播放时直接替换当前内容，上一个推送项在列表中标为「已完成」。安装卡、连接请求打开期间到达的推送排队，关闭后依次执行。</li>
+  </ul>
+
+  <h4>路径与输入校验</h4>
+  <ul>
+    <li>相对路径按 <code class="i">/</code> 切分，拒绝空段、<code class="i">.</code>、<code class="i">..</code>、NUL、反斜杠和以 <code class="i">/</code> 开头的路径；先做一次 URL 解码再校验，不做第二次解码。</li>
+    <li>拼接后取 <code class="i">getCanonicalPath()</code>，必须以根的规范路径开头（防止符号链接跳出）；命中不可见目录返回 404。</li>
+    <li>文件名按 NFC 规范化，UTF-8 不超过 255 字节；FAT / exFAT 卷上把 <code class="i">\ : * ? " &lt; &gt; |</code> 与控制字符替换为 <code class="i">_</code>，其他卷只拒绝 <code class="i">/</code> 和 NUL。</li>
+    <li>JSON 请求体不超过 64 KB；路径不超过 1024 字节；单次删除 / 移动不超过 1000 项。</li>
+  </ul>
+
+  <h4>错误对照</h4>
+  <div class="tbl"><table>
+    <thead><tr><th>情况</th><th>HTTP</th><th>电视</th><th>网页</th></tr></thead>
+    <tbody>
+      <tr><td>没有会话或会话过期</td><td>401</td><td>—</td><td>「连接已断开」，回到连接页</td></tr>
+      <tr><td>电视拒绝连接 / 无人响应</td><td>403 / 408</td><td>—</td><td>「电视拒绝了连接」</td></tr>
+      <tr><td>配对码错误 5 次</td><td>429</td><td>配对码刷新</td><td>「配对码已失效」</td></tr>
+      <tr><td>Host 不符</td><td>421</td><td>—</td><td>—</td></tr>
+      <tr><td>路径非法或不可见</td><td>400 / 404</td><td>—</td><td>「找不到这个位置」</td></tr>
+      <tr><td>同名</td><td>409</td><td>—</td><td>冲突对话框</td></tr>
+      <tr><td>空间不足（预检 / 写入中）</td><td>413 / 507</td><td>「失败：空间不足」</td><td>「空间不足」</td></tr>
+      <tr><td>FAT32 单文件超限</td><td>413</td><td>—</td><td>「文件超过 4 GB，U 盘无法保存」</td></tr>
+      <tr><td>U 盘拔出</td><td>410</td><td>「失败：存储设备已移除」</td><td>「存储设备已移除」</td></tr>
+      <tr><td>没有写权限</td><td>403</td><td>—</td><td>「这个位置不能写入」</td></tr>
+      <tr><td>推送了无法打开的类型</td><td>415</td><td>—</td><td>「电视无法打开这类文件」</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>性能与资源</h4>
+  <ul>
+    <li>NanoHTTPD 线程池上限 12；每个连接的读写缓冲 256 KB；服务端不把文件整块读入内存。</li>
+    <li>电视传输列表的进度每秒最多刷新 4 次；列表只保留最近 200 项，更早的记录丢弃。</li>
+    <li>目标吞吐：5 GHz Wi-Fi 下单文件上传 ≥ 10 MB/s（低档盒子 ≥ 4 MB/s），写入期间主页帧时间预算不变（§17）。</li>
+    <li>网页静态资源（<code class="i">assets/web/</code>：index.html、app.js、app.css、icons.svg）预压缩后合计不超过 150 KB；服务端把当前 DynamicScheme（浅色、深色两套）写成 CSS 变量注入 index.html，网页与电视同色。</li>
   </ul>
 
   <h3>诊断导出</h3>
   <ul>
     <li><strong>内容</strong>：DiagLog 环形缓冲（最近 200 行，同时写入应用私有文件）；帧时间统计（每个页面最近 600 帧的 P50 / P90 / P99；API 24+ 用 FrameMetrics，API 23 用 Choreographer 估算）；设备与固件信息（厂商、型号、SoC、API 级别、<code class="i">Build.FINGERPRINT</code>、显示模式与刷新率、解码能力、设备档位、命中的 devices.json 条目与 ADB 覆盖项、PixelCopy 判定）；桌面版本、变体、是否为默认桌面、各项授权状态。</li>
     <li><strong>脱敏</strong>：IP 地址只留前两段，MAC 只留前 3 字节，令牌与 PIN 相关字段整体替换。不收集账户、Wi-Fi 名称、序列号、城市和已安装应用列表。</li>
-    <li><strong>导出</strong>：只通过手机整理页下载纯文本报告；桌面不向任何服务器上传。</li>
+    <li><strong>导出</strong>：只通过「手机与电脑」网页的「更多」栏下载纯文本报告；桌面不向任何服务器上传。</li>
   </ul>
 </section>
 
@@ -1811,10 +2590,12 @@ data:widgets           AppWidgetHost、绑定授权、网格布局、内置小�
 data:media             航拍片单、自己的视频、每日一图、缓存、许可信息
 data:weather           天气、城市表、农历
 data:restricted        儿童 / 长辈模式、PIN、计时
-core:update            版本检查、下载校验、安装会话（仅 standard）
+data:files             存储根与授权、路径校验、断点续传、下载打包、缩略图、媒体库扫描
+core:install           安装包解析与预检、分包选择、OBB、PackageInstaller 会话
+core:update            版本检查、下载校验（安装走 core:install；仅 standard）
 core:diag              DiagLog、帧统计、诊断报告、devices.json
 feature:home | apps | widgets | quicksettings
-feature:settings | onboarding | phone-organizer
+feature:settings | onboarding | phone-organizer | viewer
 oem                    EPG 全量、BIND_APPWIDGET、亮度等
 opt:shizuku            可选：小组件绑定授权</code></pre>
     </div>
@@ -1960,7 +2741,7 @@ opt:shizuku            可选：小组件绑定授权</code></pre>
         <li><strong>受限模式</strong>：计时（推进时钟、亮屏 / 关屏、进程重启后补算）、5 / 1 分钟提醒、锁屏倒计时、PIN 输错锁定、HOME 后重新上锁；在 API 28 / 31 / 34 模拟器上验证到时从后台拉起锁屏。</li>
         <li><strong>农历</strong>：1901–2100 逐日与 ICU ChineseCalendar 比对（API 24+）。</li>
         <li><strong>更新</strong>：本地 HTTP 服务提供版本文件与包，覆盖包名不符、签名不符、versionCode 不升、SHA-256 不符和退避节奏。</li>
-        <li><strong>手机整理页</strong>：视频限额、无视频轨文件的拒绝，VPN 接口与 198.18.0.0/15 的地址排除。</li>
+        <li><strong>手机与电脑</strong>：视频限额、无视频轨文件的拒绝，VPN 接口与 198.18.0.0/15 的地址排除；令牌与配对码一次性、连错换码、会话失效、Host 校验；路径穿越（含编码绕过与符号链接）、FAT 文件名替换；断点续传的偏移校验、中断续传、原子改名、临时文件清理、空间与 FAT32 预检；分包选择（ABI / 密度 / 语言）、.xapk 解析、签名 / 版本 / ABI 预检；在 API 23 / 28 / 31 / 34 模拟器上推送安装、查看图片、播放视频。</li>
       </ul>
     </div>
     <div class="panel"><h4>设备矩阵</h4>
@@ -1992,11 +2773,11 @@ opt:shizuku            可选：小组件绑定授权</code></pre>
     <thead><tr><th>阶段</th><th>内容</th><th>出口条件</th></tr></thead>
     <tbody>
       <tr><td>M0 技术验证（2 周）</td><td>
-        ① Haze T1 在 3 种 SoC 上的帧时间；② T2 冻结玻璃的对齐与换背景耗时；③ PixelCopy 抓 SurfaceView（API 24 / 26 / 31，含 DRM 内容）；④ READ_TV_LISTINGS 在 AOSP ATV 与 Google TV 上的可见范围；⑤ ACTION_REQUEST_CHANNEL_BROWSABLE 在系统桌面仍安装时由谁接收；⑥ 小组件：目标设备上 ACTION_APPWIDGET_BIND 有无处理者、Shizuku 与 ADB 授权、常见手机小组件在电视上的布局与焦点表现；⑦ material3 1.5.0-alpha25 在 Compose 1.12.1 下的运行验证，以及 MaterialKolor 模块的 minSdk 与依赖树；⑧ 系列应用直连联调（myBV、mydv、mytv-android）；⑨ 儿童模式的执行手段：默认桌面从后台拉起锁屏（API 29 / 31 / 34 模拟器与目标固件），ADB 授予悬浮窗与使用情况访问后的行为；⑩ HOME 兼容：COMMON_HOME、HOME.CC 与 TCL meta-data 在测试固件上的效果，<code class="i">cmd package set-home-activity</code> 与 <code class="i">cmd role add-role-holder</code> 是否可用；⑪ IP 推测服务的使用条款</td><td>每项给出数据或结论；未通过的项按"风险"列的预案处理</td></tr>
+        ① Haze T1 在 3 种 SoC 上的帧时间；② T2 冻结玻璃的对齐与换背景耗时；③ PixelCopy 抓 SurfaceView（API 24 / 26 / 31，含 DRM 内容）；④ READ_TV_LISTINGS 在 AOSP ATV 与 Google TV 上的可见范围；⑤ ACTION_REQUEST_CHANNEL_BROWSABLE 在系统桌面仍安装时由谁接收；⑥ 小组件：目标设备上 ACTION_APPWIDGET_BIND 有无处理者、Shizuku 与 ADB 授权、常见手机小组件在电视上的布局与焦点表现；⑦ material3 1.5.0-alpha25 在 Compose 1.12.1 下的运行验证，以及 MaterialKolor 模块的 minSdk 与依赖树；⑧ 系列应用直连联调（myBV、mydv、mytv-android）；⑨ 儿童模式的执行手段：默认桌面从后台拉起锁屏（API 29 / 31 / 34 模拟器与目标固件），ADB 授予悬浮窗与使用情况访问后的行为；⑩ HOME 兼容：COMMON_HOME、HOME.CC 与 TCL meta-data 在测试固件上的效果，<code class="i">cmd package set-home-activity</code> 与 <code class="i">cmd role add-role-holder</code> 是否可用；⑪ IP 推测服务的使用条款；⑫ 文件与安装的系统入口：「所有文件访问」与「安装未知应用」设置页是否存在、DocumentsUI 是否存在、U 盘在各授权状态下能否写入、PackageInstaller 确认界面在遥控器下能否操作</td><td>每项给出数据或结论；未通过的项按"风险"列的预案处理</td></tr>
       <tr><td>M1 骨架</td><td>主页结构、焦点引擎（含按键音效、触屏与鼠标）、应用行与应用页（含文件夹）、顶栏、T3 材质</td><td>只用方向键可完成全部基本操作</td></tr>
       <tr><td>M2 视觉</td><td>动态取色全链路、T1 / T2、背景切换、Expressive 动效与形变、高对比焦点框</td><td>对比度扫描通过；中档设备满足帧时间预算</td></tr>
       <tr><td>M3 系统能力</td><td>Channel（A / B）、审批、继续观看、片单、系列应用直连；第三方小组件全流程（选择器、授权、网格编辑、内部交互）与内置小组件（含时钟与天气、农历、24 小时制）</td><td>Google TV 与 AOSP ATV 各一台验收</td></tr>
-      <tr><td>M4 环境</td><td>环境模式（含真机抓帧、解码器交接、画质与缓存、屏保衔接与兜底）、自己的视频、必应每日一图、快速设置、HDMI（含实时画面壁纸、开机 / 唤醒目标、信号源键）、手机整理、机型修正数据、儿童 / 长辈模式与家长 PIN</td><td>片源许可清单完成；受限模式按 M0 结论的路径通过验收</td></tr>
+      <tr><td>M4 环境</td><td>环境模式（含真机抓帧、解码器交接、画质与缓存、屏保衔接与兜底）、自己的视频、必应每日一图、快速设置、HDMI（含实时画面壁纸、开机 / 唤醒目标、信号源键）、手机与电脑（双向文件管理、断点续传、推送安装 / 查看 / 播放）、机型修正数据、儿童 / 长辈模式与家长 PIN</td><td>片源许可清单完成；受限模式按 M0 结论的路径通过验收</td></tr>
       <tr><td>M5 加固</td><td>性能、内存（onTrimMemory）、刷新率、崩溃隔离、Baseline Profile 与 .dm、应用内更新、诊断导出、首次启动引导（含默认桌面页）</td><td>验收清单全部通过</td></tr>
     </tbody>
   </table></div>
@@ -2016,6 +2797,9 @@ opt:shizuku            可选：小组件绑定授权</code></pre>
       <tr><td>standard 变体无法强制执行儿童模式</td><td>额度用完后拉不回锁屏，或拦不住跳转到的应用</td><td>M0 验证默认桌面的后台启动豁免；ADB 授予悬浮窗与使用情况访问；设置页如实显示状态；需要强制时用 oem</td></tr>
       <tr><td>PixelCopy 在部分机型全黑或很慢</td><td>返回界面时背景全黑或主页卡顿</td><td>150 ms 预算、全黑检测、按固件记住、预置关键帧回退（§13）</td></tr>
       <tr><td>侧载更新的签名密钥丢失或泄露</td><td>无法再推送更新，或被冒充</td><td>离线保存并备份；安装前校验签名证书与 SHA-256（§16）</td></tr>
+      <tr><td>电视上没有「所有文件访问」设置页（API 30+）</td><td>网页只能管理下载、影片、图片、音乐、文档几个标准目录</td><td>受限模式照常可用；设置行显示 ADB 命令 <code class="i">appops set … MANAGE_EXTERNAL_STORAGE allow</code>；oem 预装为特权应用。此权限受 Google Play 政策限制，standard 为侧载发行，不受影响</td></tr>
+      <tr><td>局域网内用 HTTP 传输</td><td>同一网络里能被动嗅探文件内容与会话号</td><td>只绑定局域网地址、会话 10 分钟无活动失效、连接需电视确认、页面关闭即停止服务；家庭网络之外的场景（酒店、公共 Wi-Fi）由用户自行判断</td></tr>
+      <tr><td>推送安装被滥用</td><td>他人往电视上装应用</td><td>连接时电视确认；安装始终经过系统确认界面；不做静默安装与覆盖签名不同的应用</td></tr>
       <tr><td>国内固件不认第三方桌面</td><td>按 HOME 回到系统桌面</td><td>额外的 HOME 类别与 meta-data、默认桌面页与 ADB 命令（§14）；oem 预装</td></tr>
     </tbody>
   </table></div>
@@ -2032,6 +2816,7 @@ opt:shizuku            可选：小组件绑定授权</code></pre>
     <div class="decision"><b>ADR-008</b><div>系列应用继续用标准 TvProvider 发布，桌面原样读取；上屏审批、移除回传、初始化和没有 TvProvider 的设备，由双向证书校验的直连补上。原因：保证它们在其他桌面上行为不变，同时补齐第三方桌面缺少的系统权限。</div></div>
     <div class="decision"><b>ADR-009</b><div>儿童模式与长辈模式在 standard 变体中不用无障碍服务，只靠桌面自身、亮屏状态、使用情况访问和默认桌面的后台启动豁免；做不到的部分在设置页如实显示，系统级强制留给 oem。原因：standard 不接管系统按键、不做守护（§04）；执行强度取决于 M0 结论与可选的 ADB 授权。</div></div>
     <div class="decision"><b>ADR-010</b><div>standard 变体自带更新通道，用 PackageInstaller 会话安装，并在会话中附带 .dm。原因：侧载发行没有商店的更新与云端 profile；不带 .dm 时 Baseline Profile 要等系统空闲时编译，电视上可能长期不生效。</div></div>
+    <div class="decision"><b>ADR-011</b><div>「手机与电脑」在连接时由电视确认一次，此后该会话可做全部读写；推送安装始终经过系统确认界面（API 31+ 显式 USER_ACTION_REQUIRED）；局域网内用 HTTP。原因：能连接的人已经看得见电视屏幕，逐项确认会让批量传输无法使用；免确认安装只留给桌面自身的更新；自签名 HTTPS 会让每个浏览器弹出证书警告。</div></div>
   </div>
 </section>
 
@@ -2093,7 +2878,7 @@ opt:shizuku            可选：小组件绑定授权</code></pre>
 </section>
 
 <footer class="foot">
-  <p>TV Launcher 设计方案 v3.3 · 2026-11-02。顶部原型为交互演示：用 CIELAB-LCh 近似 HCT 进行取色和配色，用 CSS backdrop-filter 模拟 Haze，用 CSS linear() 曲线采样弹簧，生产实现以文中 API 为准。所有版本号与 minSdk 以 2026-11-02 的查询结果为准。图片均为程序生成，不含第三方素材。</p>
+  <p>TV Launcher 设计方案 v3.4 · 2026-11-02。顶部原型为交互演示：用 CIELAB-LCh 近似 HCT 进行取色和配色，用 CSS backdrop-filter 模拟 Haze，用 CSS linear() 曲线采样弹簧，生产实现以文中 API 为准。所有版本号与 minSdk 以 2026-11-02 的查询结果为准。图片均为程序生成，不含第三方素材。</p>
 </footer>
 
 </main>
@@ -2496,7 +3281,7 @@ const GRID = { apps: { items: appsGrid, cols: 4 }, widgets: { items: wdgGrid, co
 const navEls = $$('[data-f="nav"]', tv); navEls.forEach((el, i) => { el._z = { zone: 'nav', idx: i }; el.dataset.label = el.getAttribute('aria-label') || el.textContent.trim(); });
 const heroBtns = $$('[data-f="hero"]', tv); heroBtns.forEach((el, i) => { el._z = { zone: 'hero', idx: i }; el.dataset.label = el.getAttribute('aria-label') || el.textContent.trim(); });
 $('#heroDots').innerHTML = HERO.map(() => '<span class="dot"></span>').join('');
-const ccRows = [[$('[data-id="t-wifi"]'), $('[data-id="t-bt"]')], [$('[data-id="t-dnd"]'), $('[data-id="t-amb"]')], [$('[data-id="s-vol"]')], [$('[data-id="g-source"]')], [$('[data-id="g-glass"]')], [$('[data-id="g-style"]')]];
+const ccRows = [[$('[data-id="t-wifi"]'), $('[data-id="t-bt"]')], [$('[data-id="t-dnd"]'), $('[data-id="t-amb"]')], [$('[data-id="t-xfer"]')], [$('[data-id="s-vol"]')], [$('[data-id="g-source"]')], [$('[data-id="g-glass"]')], [$('[data-id="g-style"]')]];
 ccRows.forEach((r, ri) => r.forEach((el, ci) => { el._z = { zone: 'cc', row: ri, idx: ci }; el.dataset.label = el.textContent.trim().slice(0, 12); }));
 
 /* 形状：M3 Expressive 风格的 Cookie / Sunny / Clover 等，用等点数多边形生成，便于 clip-path 形变插值 */
@@ -2720,6 +3505,7 @@ function nearestByX(list, el) {
 }
 const nextRow = (r, d) => { for (let k = r + d; k >= 0 && k < rowEls.length; k += d) if (rowEls[k].items.length) return k; return -1; };
 function move(dir) {
+  if (xfMove(dir)) return;
   const z = S.zone;
   if (z === 'nav') {
     if (dir === 'left' || dir === 'right') return focus(navEls[clamp(S.nav + (dir === 'left' ? -1 : 1), 0, navEls.length - 1)]);
@@ -2796,6 +3582,7 @@ function toggleWatchlist(h) {
 }
 function activate() {
   const el = focused; if (!el) return;
+  if (xfActivate()) return;
   const z = el._z, it = el._it, id = el.dataset.id;
   if (z.zone === 'pk') { if (!S.pk.busy && el._act) el._act(); return; }
   if (z.zone === 'inner') return toast(`${APP[S.inner.host._it.it.app].name} · ${el.textContent}`);
@@ -2812,7 +3599,7 @@ function activate() {
     return toast(`「${h.title}」详情`);
   }
   if (z.zone === 'cc') {
-    if (el.classList.contains('tile')) { if (id === 't-amb') { closeCC(); return enterAmbient(); } S.tiles[id] = !S.tiles[id]; renderCC(); return; }
+    if (el.classList.contains('tile')) { if (id === 't-amb') { closeCC(); return enterAmbient(); } if (id === 't-xfer') { closeCC(); return openXfer(); } S.tiles[id] = !S.tiles[id]; renderCC(); return; }
     if (el.classList.contains('cg')) return move('right');
     return;
   }
@@ -2925,6 +3712,7 @@ function exitAmbient() {
   if (S.page === 'home') { const it = focused && focused._it; scheduleBackdrop(it && it.it.art ? it.it.art : HERO[S.hero].art, 0); }
 }
 function back() {
+  if (xfBack()) return;
   if (S.pk.open) return pkBack();
   if (S.zone === 'inner') return exitInner();
   if (S.ccOpen) return closeCC();
@@ -2933,9 +3721,500 @@ function back() {
   if (S.zone === 'nav' && S.page !== 'home') { switchPage('home', true); return focus(navEls[navSelIdx()]); }
 }
 
+/* =====================================================================
+   手机与电脑（§14）：传文件页、连接确认、安装卡、保存位置、查看页、播放页
+   ===================================================================== */
+/* 二维码：字节模式、纠错级别 M、版本 1–3（单块），掩码 0 */
+function qrMatrix(text) {
+  const bytes = Array.from(new TextEncoder().encode(text)), V = [null, [16, 10], [28, 16], [44, 26]];
+  let ver = 1; while (ver < 3 && bytes.length + 2 > V[ver][0]) ver++;
+  const [nd, ne] = V[ver], size = ver * 4 + 17, bits = [];
+  const put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >>> i) & 1); };
+  put(4, 4); put(bytes.length, 8); bytes.forEach(b => put(b, 8));
+  put(0, Math.min(4, nd * 8 - bits.length)); while (bits.length % 8) bits.push(0);
+  const data = []; for (let i = 0; i < bits.length; i += 8) data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
+  for (let p = 0xEC; data.length < nd; p ^= 0xEC ^ 0x11) data.push(p);
+  const mul = (x, y) => { let z = 0; for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; } return z; };
+  const div = new Array(ne).fill(0); div[ne - 1] = 1; let root = 1;
+  for (let i = 0; i < ne; i++) { for (let j = 0; j < ne; j++) { div[j] = mul(div[j], root); if (j + 1 < ne) div[j] ^= div[j + 1]; } root = mul(root, 2); }
+  const ec = new Array(ne).fill(0);
+  for (const b of data) { const f = b ^ ec.shift(); ec.push(0); div.forEach((c, i) => { ec[i] ^= mul(c, f); }); }
+  const all = data.concat(ec);
+  const M = Array.from({ length: size }, () => new Array(size).fill(0)), F = Array.from({ length: size }, () => new Array(size).fill(false));
+  const set = (x, y, d) => { M[y][x] = d ? 1 : 0; F[y][x] = true; };
+  for (let i = 0; i < size; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+  const finder = (cx, cy) => { for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const x = cx + dx, y = cy + dy; if (x >= 0 && x < size && y >= 0 && y < size) { const d = Math.max(Math.abs(dx), Math.abs(dy)); set(x, y, d !== 2 && d !== 4); } } };
+  finder(3, 3); finder(size - 4, 3); finder(3, size - 4);
+  if (ver > 1) { const a = size - 7; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(a + dx, a + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1); }
+  let r = 0; for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+  const fb = r ^ 0x5412, g = i => ((fb >>> i) & 1) === 1;   // 纠错 M（00）+ 掩码 0：数据位全 0
+  for (let i = 0; i <= 5; i++) set(8, i, g(i));
+  set(8, 7, g(6)); set(8, 8, g(7)); set(7, 8, g(8));
+  for (let i = 9; i < 15; i++) set(14 - i, 8, g(i));
+  for (let i = 0; i < 8; i++) set(size - 1 - i, 8, g(i));
+  for (let i = 8; i < 15; i++) set(8, size - 15 + i, g(i));
+  set(8, size - 8, true);
+  let k = 0;
+  for (let right = size - 1; right >= 1; right -= 2) {
+    if (right === 6) right = 5;
+    for (let v = 0; v < size; v++) for (let j = 0; j < 2; j++) {
+      const x = right - j, y = ((right + 1) & 2) === 0 ? size - 1 - v : v;
+      if (!F[y][x] && k < all.length * 8) { M[y][x] = (all[k >>> 3] >>> (7 - (k & 7))) & 1; k++; }
+    }
+  }
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!F[y][x] && (x + y) % 2 === 0) M[y][x] ^= 1;
+  return M;
+}
+function qrSvg(text) {
+  const M = qrMatrix(text), n = M.length; let d = '';
+  M.forEach((row, y) => row.forEach((v, x) => { if (v) d += `M${x} ${y}h1v1h-1z`; }));
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges"><path d="${d}" fill="#111"/></svg>`;
+}
+const IC = {
+  phone: '<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>',
+  pc: '<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg>',
+  wifi: '<svg viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M9 16a4.5 4.5 0 0 1 6 0"/><circle cx="12" cy="19" r=".8"/></svg>',
+  off: '<svg viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 6.2-3.6M13 5.1A14 14 0 0 1 21.5 9M5.5 12.5a9.5 9.5 0 0 1 4-2.3M16.5 11a9.5 9.5 0 0 1 2 1.5M9 16a4.5 4.5 0 0 1 6 0"/><circle cx="12" cy="19" r=".8"/><path d="M3 3l18 18"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M12 4v16M6 14l6 6 6-6"/></svg>',
+  up: '<svg viewBox="0 0 24 24"><path d="M12 20V4M6 10l6-6 6 6"/></svg>',
+  file: '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+  zip: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v1M12 13v1M12 16v1"/></svg>',
+  folder: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  usb: '<svg viewBox="0 0 24 24"><rect x="7" y="9" width="10" height="12" rx="2"/><path d="M9 9V3h6v6M10.5 5.5v1M13.5 5.5v1"/></svg>',
+  disk: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 14h.01M11 14h6"/></svg>',
+  upd: '<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
+  tray: '<svg viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+const PAUSE_D = 'M7 5h3.5v14H7zM13.5 5H17v14h-3.5z', PLAY_D = 'M8 5.5v13l10.5-6.5z';
+const XAPP = { id: 'reader', name: '极光阅读', pkg: 'com.example.reader', c1: '#ff8a65', c2: '#c2185b', g: 'book' };
+register('ico:reader', drawIcon(XAPP), XAPP.name, '应用图标', null, true); APP.reader = XAPP;
+const FS = {
+  primary: { label: '内部存储', free: '23.4 GB 可用', ic: 'disk', tree: { Download: {}, Movies: { 家庭: {}, 纪录片: {} }, Pictures: { Screenshots: {} }, Music: {}, Documents: {}, Podcasts: {} } },
+  usb: { label: 'SanDisk U 盘', free: '57.1 GB 可用', ic: 'usb', tree: { 电影: {}, 照片: { 2025: {}, 2026: {} }, 备份: {} } }
+};
+const DEVS = { phone: [{ kind: 'phone', name: 'iPhone · Safari', ip: '192.168.1.31' }, { kind: 'phone', name: 'Android 手机 · Chrome', ip: '192.168.1.35' }],
+  pc: [{ kind: 'pc', name: 'Windows 电脑 · Edge', ip: '192.168.1.40' }, { kind: 'pc', name: 'Mac 电脑 · Safari', ip: '192.168.1.42' }] };
+const SIM = {
+  upload: { name: '家庭聚会 2026.mp4', size: 1.24e9, kind: 'video', art: 'city', durS: 1804, dur: 7, rate: 11.8 },
+  download: { name: '旅行照片.zip', size: 386e6, kind: 'zip', dir: 'out', dur: 5, rate: 9.6 },
+  apk: { name: 'pulse-music-2.4.1.apk', size: 48.2e6, kind: 'apk', push: 1, app: 'pulse', ver: '2.4.1', upd: 1, cur: '2.3.0', dur: 3, rate: 12.4 },
+  apks: { name: '极光阅读_3.1.0.apks', size: 112e6, kind: 'apks', push: 1, app: 'reader', ver: '3.1.0', parts: 4, dur: 4, rate: 10.9 },
+  apksig: { name: 'dolphin-5.0.1.apk', size: 63.5e6, kind: 'apk', push: 1, app: 'dolphin', ver: '5.0.1', upd: 1, cur: '4.8.2', err: '签名与已安装的版本不同', dur: 3, rate: 12.1 },
+  video: { name: '海边日落.mp4', size: 860e6, kind: 'video', push: 1, art: 'ocean', durS: 2702, dur: 5, rate: 11.2 },
+  audio: { name: '潮汐.flac', size: 32.4e6, kind: 'audio', push: 1, art: 'rain', title: '潮汐', artist: '海边录音计划', durS: 340, dur: 2, rate: 10.4 },
+  full: { name: '电影合集.mkv', size: 18.2e9, kind: 'video', art: 'mars', durS: 7420, dur: 9, rate: 11.5, failAt: 0.35, failErr: '空间不足' }
+};
+const IMGS = [['sakura', 'IMG_2041.jpg', '4032 × 3024', 4.2e6], ['lotus', 'IMG_2042.jpg', '4032 × 3024', 3.9e6], ['autumn', 'IMG_2047.HEIC', '4284 × 5712', 2.8e6]];
+const ACT = { apk: '安装', apks: '安装', image: '查看', video: '播放', audio: '播放' };
+const XZ = new Set(['xf', 'dlg', 'sys', 'fc', 'mn', 'vw', 'pl']);
+const XF = { open: false, svc: 'off', from: null, online: true, addr: '192.168.1.23', port: 38517, token: '', code: '', devs: [], trs: [],
+  target: { root: 'primary', path: ['Download'] }, allFiles: false, unknown: false, seq: 0, sy: 0, els: { dev: [], tr: [], set: [] },
+  dlg: null, fc: null, menu: null, view: null, sysOpen: false, sys: [], waiting: [], ti: 0, pt: 0, plBtns: [] };
+const rnd = n => Array.from({ length: n }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'[Math.random() * 56 | 0]).join('');
+const fmtSize = b => b >= 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b >= 1e8 ? Math.round(b / 1e6) + ' MB' : b >= 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
+const fmtT = s => { s = Math.round(s); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
+const who = d => d.name.split(' · ')[0];
+const busyOf = () => XF.trs.filter(t => t.st === 'run' || t.st === 'wait');
+
+function xfRotate(anim) { XF.token = rnd(8); XF.code = String(100000 + Math.random() * 900000 | 0); if (XF.open) xfCard(anim); }
+function xfCard(anim) {
+  const c = $('#xfCard');
+  if (!XF.online) { c.innerHTML = `<div class="xf-off">${IC.off}未连接局域网</div>`; return; }
+  const html = () => `<div class="xf-qr" data-id="organizer:qr">${qrSvg(`http://${XF.addr}:${XF.port}/#t=${XF.token}`)}</div><div class="xf-addr" data-id="organizer:address">${XF.addr}:${XF.port}</div>` +
+    `<div class="xf-code"><span>配对码</span><b data-id="organizer:code">${XF.code.slice(0, 3)} ${XF.code.slice(3)}</b></div><div class="xf-net">${IC.wifi}Wi-Fi</div>`;
+  if (!anim || !c.querySelector('.xf-qr')) { c.innerHTML = html(); return; }
+  c.querySelector('.xf-qr').classList.add('swap'); c.querySelector('.xf-code b').classList.add('swap');
+  setTimeout(() => { c.innerHTML = html(); const q = c.querySelector('.xf-qr'), b = c.querySelector('.xf-code b'); q.classList.add('swap'); b.classList.add('swap'); requestAnimationFrame(() => requestAnimationFrame(() => { q.classList.remove('swap'); b.classList.remove('swap'); })); }, 400);
+}
+function trStatus(t) {
+  if (t.st === 'run') return wavy(120, t.p, 'xw' + t.id, 'color-mix(in srgb,currentColor 25%,transparent)') + `<span class="spd">${t.spd} MB/s</span>`;
+  if (t.st === 'wait') return '等待中';
+  if (t.st === 'fail') return `<span class="bad">失败：${t.err}</span>`;
+  if (t.st === 'cancel') return '已取消';
+  if (t.res === 'installed') return '已安装';
+  if (t.res === 'install_cancel') return '已取消';
+  if (!t.push) return '已完成';
+  return (t.st === 'pending' ? '待处理' : '') + `<span class="xf-act${t.st === 'pending' ? '' : ' soft'}">${ACT[t.kind]}</span>`;
+}
+const trMeta = t => `<i class="xf-dir">${t.dir === 'in' ? IC.down : IC.up}</i>${fmtSize(t.size)} · ${t.push ? '推送 · ' : ''}${t.dir === 'in' ? '来自' : '发往'} ${who(t.dev)}`;
+function trThumb(t) {
+  if (t.app) return `<div class="xf-ic round" style="background-image:url(${SRC['ico:' + t.app].url})"></div>`;
+  if (t.art) return `<div class="xf-ic" style="background-image:url(${SRC['art:' + t.art].url})">${t.kind === 'video' ? `<i>${IC.play}</i>` : ''}</div>`;
+  return `<div class="xf-ic">${IC[t.kind === 'zip' ? 'zip' : 'file']}</div>`;
+}
+function xfEl(cls, html, z, key, label, id) {
+  const el = document.createElement('div'); el.className = 'fx ' + cls; el.innerHTML = html; el._z = z; el.dataset.key = key; el.dataset.label = label; if (id) el.dataset.id = id; return el;
+}
+const xfDefault = () => XF.els.tr[0] || XF.els.set[0];
+function xfRender() {
+  const side = $('#xfSide'), key = focused && focused.dataset.key, E = XF.els = { dev: [], tr: [], set: [] };
+  side.innerHTML = '';
+  if (XF.devs.length) {
+    const sec = document.createElement('div'); sec.className = 'xf-sec'; sec.innerHTML = '<div class="xf-l">设备</div><div class="xf-devs"></div>';
+    XF.devs.forEach((d, i) => { const busy = XF.trs.some(t => t.dev === d && t.st === 'run');
+      const el = xfEl('xf-dev' + (busy ? ' busy' : ''), `${IC[d.kind]}${d.name}<small>${busy ? '传输中' : '空闲'}</small>`, { zone: 'xf', sec: 'dev', idx: i }, 'd' + d.id, d.name, 'organizer:device:s' + d.id);
+      el._dev = d; sec.lastChild.appendChild(el); E.dev.push(el); });
+    side.appendChild(sec);
+  }
+  const sec = document.createElement('div'); sec.className = 'xf-sec grow'; sec.innerHTML = '<div class="xf-l">传输</div><div class="xf-vp"><div class="xf-list" id="xfList"></div></div>';
+  side.appendChild(sec); const list = sec.querySelector('.xf-list');
+  if (!XF.trs.length) list.innerHTML = `<div class="xf-empty">${IC.tray}暂无传输</div>`;
+  XF.trs.slice().sort((a, b) => (b.st === 'pending') - (a.st === 'pending') || b.id - a.id).forEach((t, i) => {
+    const el = xfEl('xf-row', `${trThumb(t)}<div class="xf-mid"><b>${t.name}</b><span>${trMeta(t)}</span></div><div class="xf-st">${trStatus(t)}</div>`, { zone: 'xf', sec: 'tr', idx: i }, 't' + t.id, t.name, 'transfer:t' + t.id);
+    el._tr = t; t.el = el;
+    if (t.art || t.app) el._it = { type: 'xf', it: { app: t.app || 'files' }, src: SRC[t.art ? 'art:' + t.art : 'ico:' + t.app] };
+    list.appendChild(el); E.tr.push(el);
+  });
+  const sets = document.createElement('div'); sets.className = 'xf-sets';
+  const tp = [FS[XF.target.root].label, ...XF.target.path].join(' › ');
+  const s1 = xfEl('xf-set', `${IC.folder}保存位置<em>${tp}</em>`, { zone: 'xf', sec: 'set', idx: 0 }, 's0', '保存位置', 'organizer:target');
+  const s2 = xfEl('xf-set', `${IC.shield}所有文件访问<em class="${XF.allFiles ? '' : 'warn'}">${XF.allFiles ? '已授予' : '未授予'}</em>`, { zone: 'xf', sec: 'set', idx: 1 }, 's1', '所有文件访问', 'organizer:storage');
+  sets.append(s1, s2); E.set.push(s1, s2); side.appendChild(sets);
+  if (XF.open && S.zone === 'xf') focus([...E.dev, ...E.tr, ...E.set].find(e => e.dataset.key === key) || xfDefault());
+  xfScroll();
+}
+function xfScroll() {
+  const list = $('#xfList'); if (!list) return;
+  const el = focused && focused._tr && focused.isConnected ? focused : null;
+  if (el) { const vh = list.parentElement.clientHeight, top = el.offsetTop - list.offsetTop, h = el.offsetHeight;
+    if (top - 4 < XF.sy) XF.sy = top - 4; if (top + h + 12 > XF.sy + vh) XF.sy = top + h + 12 - vh; XF.sy = Math.max(0, XF.sy); }
+  else if (!XF.els.tr.length) XF.sy = 0;
+  list.style.transform = `translateY(${-XF.sy}px)`;
+}
+function xfRestore(key) {
+  if (XF.view) { focus(XF.view.kind === 'player' ? XF.plBtns[1] : $('#tvViewer')); return; }
+  if (!XF.open) return;
+  focus([...XF.els.dev, ...XF.els.tr, ...XF.els.set].find(e => e.dataset.key === key) || xfDefault()); xfScroll();
+}
+const retKey = () => focused && focused.dataset.key;
+/* 传输进度（原型里压缩了时间） */
+function xfTick() {
+  let structural = false;
+  XF.trs.forEach(t => {
+    if (t.st !== 'run') return;
+    t.p = Math.min(1, t.p + 0.25 / t.dur * (0.85 + Math.random() * 0.3)); t.spd = (t.rate * (0.9 + Math.random() * 0.2)).toFixed(1);
+    if (t.failAt && t.p >= t.failAt) { t.st = 'fail'; t.err = t.failErr; structural = true; return; }
+    if (t.p >= 1) { xfComplete(t); structural = true; return; }
+    if (XF.open && t.el && t.el.isConnected) { const st = t.el.querySelector('.xf-st'); if (st) st.innerHTML = trStatus(t); }
+  });
+  XF.trs.filter(t => t.st === 'wait').forEach(t => { if (XF.trs.filter(x => x.st === 'run' && x.dev === t.dev).length < 3) { t.st = 'run'; structural = true; } });
+  if (structural) { if (XF.open) xfRender(); xfMaybeStop(); }
+  if (!busyOf().length) { clearInterval(XF.ti); XF.ti = 0; }
+}
+function xfComplete(t) {
+  t.p = 1;
+  if (!t.push) { t.st = 'done'; return; }
+  if (!XF.open) { t.st = 'pending'; return; }
+  t.st = 'done'; xfAction(t);
+}
+function xfAction(t) {
+  if (XF.dlg || XF.sysOpen) { XF.waiting.push(t); return; }
+  if (t.kind === 'apk' || t.kind === 'apks') return openInstall(t);
+  if (t.kind === 'image') return openViewer(t);
+  if (t.kind === 'video' || t.kind === 'audio') return openPlayer(t);
+}
+function xfNext() { const t = XF.waiting.shift(); if (t) xfAction(t); }
+function xfAdd(o, d) {
+  const t = { id: ++XF.seq, dir: 'in', p: 0, spd: '0.0', dev: d, ...o };
+  t.st = XF.trs.filter(x => x.st === 'run' && x.dev === d).length < 3 ? 'run' : 'wait';
+  XF.trs.push(t); if (XF.trs.length > 200) XF.trs.shift();
+  if (XF.open) xfRender();
+  if (!XF.ti) XF.ti = setInterval(xfTick, 250);
+}
+function xfMaybeStop() { if (XF.svc === 'stopping' && !busyOf().length) { XF.svc = 'off'; XF.devs = []; } }
+
+/* 打开 / 离开页面 */
+function openXfer() {
+  if (XF.open) return;
+  clearTimeout(pageTimer);
+  XF.from = { page: S.page, mode: S.mode, el: focused };
+  XF.open = true; XF.svc = 'on'; xfRotate(false);
+  S.page = 'xfer'; tv.dataset.page = 'xfer'; S.mode = 'page'; tv.dataset.mode = 'page';
+  xfCard(false); XF.sy = 0; xfRender(); focus(xfDefault()); xfScroll(); trackGlass(800);
+}
+function closeXfer(force) {
+  const n = busyOf().length;
+  if (n && !force) return openLeave(n);
+  XF.open = false; XF.svc = n ? 'stopping' : 'off'; if (!n) XF.devs = [];
+  const f = XF.from || { page: 'home', mode: 'hero', el: heroBtns[0] };
+  S.page = f.page; tv.dataset.page = f.page; S.mode = f.mode; tv.dataset.mode = f.mode;
+  navEls.forEach(x => x.classList.toggle('sel', x.dataset.page === f.page));
+  focus(f.el && f.el.isConnected ? f.el : navEls[navSelIdx()]);
+  if (f.page === 'home') layout();
+  trackGlass(800);
+}
+function xfDisconnect(d) {
+  XF.devs = XF.devs.filter(x => x !== d);
+  XF.trs.forEach(t => { if (t.dev === d && (t.st === 'run' || t.st === 'wait')) { t.st = 'fail'; t.err = '连接已断开'; } });
+  xfRender();
+}
+function xfNet() {
+  XF.online = !XF.online; const b = $('[data-xf="offline"]'); b.classList.toggle('on', !XF.online); b.textContent = XF.online ? '断开局域网' : '恢复局域网';
+  if (!XF.online) { if (XF.dlg && XF.dlg.kind === 'confirm') dlgClose(); XF.devs = []; busyOf().forEach(t => { t.st = 'fail'; t.err = '连接已断开'; }); }
+  else xfRotate(false);
+  if (XF.open) { xfCard(false); xfRender(); }
+}
+function xfAllFiles() { toast('正在打开「所有文件访问」'); setTimeout(() => { XF.allFiles = !XF.allFiles; if (XF.open) xfRender(); }, 1400); }
+
+/* 浮层：连接请求、安装卡、离开确认 */
+function dlgOpen(d) { XF.dlg = d; tv.dataset.dlg = 'on'; dlgRender(); trackGlass(600); }
+function dlgClose(skip) { const d = XF.dlg; if (!d) return; clearTimeout(d.timer); XF.dlg = null; tv.dataset.dlg = ''; if (!skip) { xfRestore(d.ret); xfNext(); } }
+function dlgRender() {
+  const d = XF.dlg, box = $('#tvDlg'); let html = '', btns = [];
+  if (d.kind === 'confirm') {
+    html = `<div class="dlg-ic">${IC[d.dev.kind]}</div><div class="dlg-t">${d.dev.name} 请求连接</div><div class="dlg-s">${d.dev.ip}</div><div class="dlg-tick" id="dlgTick"></div>`;
+    btns = [['confirm_phone:allow', '允许', 1, () => confirmAnswer(true)], ['confirm_phone:deny', '拒绝', 0, () => confirmAnswer(false)]];
+  } else if (d.kind === 'leave') {
+    html = `<div class="dlg-t">有 ${d.n} 个传输正在进行</div>`;
+    btns = [['leave:background', '后台继续', 1, () => { dlgClose(true); closeXfer(true); }],
+      ['leave:stop', '全部停止', 0, () => { busyOf().forEach(t => { t.st = 'cancel'; }); dlgClose(true); closeXfer(true); }]];
+  } else {
+    const t = d.t, a = APP[t.app], done = ['install:done', '完成', 0, () => dlgClose()];
+    const chips = `<span class="acc">${t.upd ? `更新 · 当前 ${t.cur}` : '新安装'}</span>${t.parts ? `<span>分包 · ${t.parts} 个文件</span>` : ''}<span>${fmtSize(t.size)}</span><span>来自 ${who(t.dev)}</span>`;
+    html = `<div class="dlg-ic app" style="background-image:url(${SRC['ico:' + t.app].url})"></div><div class="dlg-t">${a.name}</div><div class="dlg-s">版本 ${t.ver}</div><div class="dlg-chips">${chips}</div>`;
+    if (d.st === 'ready' || d.st === 'sys') btns = [['install:ok', '安装', 1, () => { d.st = 'sys'; sysOpen(t); }], ['install:cancel', '取消', 0, () => dlgClose()]];
+    else if (d.st === 'blocked') { html += `<div class="dlg-err">${t.err}</div>`; btns = [done]; }
+    else if (d.st === 'unknown') { html += '<div class="dlg-err">未允许安装未知应用</div>';
+      btns = [['install:settings', '去设置', 1, () => { toast('正在打开「安装未知应用」'); setTimeout(() => { XF.unknown = true; if (XF.dlg === d) { d.st = 'ready'; dlgRender(); } }, 1400); }], done]; }
+    else if (d.st === 'installing') html += '<div class="dlg-busy"><div class="morph"></div>正在安装</div>';
+    else if (d.st === 'installed') { html += `<div class="dlg-busy">${IC.check}已安装</div>`; btns = [['install:open', '打开', 1, () => { dlgClose(); toast(`正在启动 ${a.name}`); }], done]; }
+    else if (d.st === 'cancelled') { html += '<div class="dlg-busy">已取消</div>'; btns = [done]; }
+  }
+  box.innerHTML = html + '<div class="dlg-btns"></div>';
+  const row = box.querySelector('.dlg-btns');
+  d.btns = btns.map(([id, label, pri, act], i) => { const b = xfEl('tvbtn' + (pri ? ' primary' : ''), label, { zone: 'dlg', idx: i }, '', label, id); b._act = act; row.appendChild(b); return b; });
+  if (d.btns.length) focus(d.btns[0]); else { box._z = { zone: 'dlg', idx: 0 }; focus(box); }
+}
+function dlgBack() {
+  const d = XF.dlg; if (!d) return;
+  if (d.kind === 'confirm') return confirmAnswer(false);
+  if (d.kind === 'install' && d.st === 'installing') return;
+  dlgClose();
+}
+function openConfirm(dev, then) {
+  dlgOpen({ kind: 'confirm', dev, then, ret: retKey() });
+  const tk = $('#dlgTick'); tk.style.transform = 'scaleX(1)';
+  requestAnimationFrame(() => requestAnimationFrame(() => { tk.style.transition = 'transform 60s linear'; tk.style.transform = 'scaleX(0)'; }));
+  XF.dlg.timer = setTimeout(() => confirmAnswer(false), 60000);
+}
+function confirmAnswer(ok) {
+  const d = XF.dlg; if (!d || d.kind !== 'confirm') return;
+  dlgClose(true);
+  if (ok) XF.devs.push(d.dev);
+  xfRotate(true); xfRender(); xfRestore(d.ret);
+  if (ok && d.then) d.then();
+  xfNext();
+}
+function openInstall(t) {
+  closeView(true);
+  dlgOpen({ kind: 'install', t, st: t.err ? 'blocked' : XF.unknown ? 'ready' : 'unknown', ret: 't' + t.id });
+}
+function openLeave(n) { dlgOpen({ kind: 'leave', n, ret: retKey() }); }
+/* 系统安装确认（PackageInstaller 的界面） */
+function sysOpen(t) {
+  const s = $('#sysDlg');
+  s.innerHTML = `<div class="hd"><i style="background-image:url(${SRC['ico:' + t.app].url})"></i>${APP[t.app].name}</div><p>${t.upd ? '要安装此应用的更新吗？' : '要安装此应用吗？'}</p><div class="bt"><span class="fx">取消</span><span class="fx">安装</span></div>`;
+  XF.sys = $$('.bt span', s); XF.sys.forEach((b, i) => { b._z = { zone: 'sys', idx: i }; b._act = () => sysAnswer(i === 1); b.dataset.label = b.textContent; });
+  XF.sysOpen = true; tv.dataset.sys = 'on'; focus(XF.sys[1]);
+}
+function sysAnswer(ok) {
+  XF.sysOpen = false; tv.dataset.sys = ''; const d = XF.dlg; if (!d) return;
+  d.st = ok ? 'installing' : 'cancelled'; dlgRender();
+  if (ok) setTimeout(() => { if (XF.dlg !== d) return; d.st = 'installed'; d.t.res = 'installed'; dlgRender(); xfRender(); }, 1600);
+  else { d.t.res = 'install_cancel'; xfRender(); }
+}
+
+/* 保存位置抽屉 */
+function openFC() { XF.fc = { root: XF.target.root, path: XF.target.path.slice() }; tv.dataset.fc = 'open'; fcRender(); trackGlass(900); }
+function closeFC() { XF.fc = null; tv.dataset.fc = ''; xfRender(); xfRestore('s0'); trackGlass(900); }
+function fcRender() {
+  const f = XF.fc, body = $('#fcBody'), rows = []; body.innerHTML = '';
+  const add = (html, cls, label, act, id) => { const e = xfEl('fc-row ' + cls, html, { zone: 'fc', idx: rows.length }, '', label, id); e._act = act; rows.push(e); body.appendChild(e); };
+  if (!f.root) {
+    $('#fcPath').textContent = '';
+    Object.entries(FS).forEach(([id, r]) => add(`${IC[r.ic]}${r.label}<small>${r.free}</small>`, '', r.label, () => { f.root = id; f.path = []; fcRender(); }, 'folder_choose:root:' + id));
+  } else {
+    let node = FS[f.root].tree; f.path.forEach(p => { node = node[p]; });
+    $('#fcPath').textContent = [FS[f.root].label, ...f.path].join(' › ');
+    add(`${IC.upd}上一级`, '', '上一级', () => { if (f.path.length) f.path.pop(); else f.root = null; fcRender(); }, 'folder_choose:up');
+    Object.keys(node).forEach(n => add(`${IC.folder}${n}`, '', n, () => { f.path.push(n); fcRender(); }, 'folder_choose:dir:' + n));
+    add('选择此文件夹', 'pick', '选择此文件夹', () => { XF.target = { root: f.root, path: f.path.slice() }; closeFC(); }, 'folder_choose:select');
+  }
+  f.rows = rows; focus(rows[f.root ? Math.min(1, rows.length - 1) : 0]);
+}
+
+/* 菜单（OK 或菜单键） */
+function openMenu(items, at) {
+  XF.menu = { ret: focused, items }; const m = $('#tvMenu'); m.innerHTML = '';
+  XF.menu.els = items.map((it, i) => { const e = xfEl('mn-i', it.label, { zone: 'mn', idx: i }, '', it.label, it.id); e._act = it.act; m.appendChild(e); return e; });
+  const h = items.length * 46 + 12; let x, y;
+  if (at.nodeType) { const tr = tv.getBoundingClientRect(), r = at.getBoundingClientRect(); x = (r.right - tr.left) / scale - 222; y = (r.top - tr.top) / scale - 4; }
+  else ({ x, y } = at);
+  m.style.left = clamp(x, 14, 960 - 228) + 'px'; m.style.top = clamp(y, 14, 540 - h - 14) + 'px';
+  tv.dataset.menu = 'open'; focus(XF.menu.els[0]); trackGlass(400);
+}
+function closeMenu() { const r = XF.menu && XF.menu.ret; XF.menu = null; tv.dataset.menu = ''; if (r && r.isConnected) focus(r); else xfRestore(r && r.dataset.key); }
+function xfMenuFor(el) {
+  if (el._dev) return [{ id: 'menu:disconnect', label: '断开', act: () => xfDisconnect(el._dev) }];
+  const t = el._tr; if (!t) return null;
+  const rm = { id: 'menu:remove_transfer', label: '移除', act: () => { XF.trs = XF.trs.filter(x => x !== t); xfRender(); } };
+  if (t.st === 'run' || t.st === 'wait') return [{ id: 'menu:cancel_transfer', label: '取消传输', act: () => { t.st = 'cancel'; xfRender(); } }];
+  if (t.st === 'fail' || t.st === 'cancel' || t.dir === 'out' || t.res === 'installed') return [rm];
+  return [{ id: 'menu:open', label: ACT[t.kind], act: () => { t.st = 'done'; t.res = null; xfAction(t); } },
+    { id: 'menu:delete', label: '删除', act: () => { XF.trs = XF.trs.filter(x => x !== t); xfRender(); toast('已删除'); } }];
+}
+
+/* 查看页 */
+function openViewer(t) {
+  const v = XF.view;
+  if (v && v.kind === 'viewer' && v.batch === t.batch) { v.list.push(t); vwShow(true); return; }
+  closeView(true);
+  XF.view = { kind: 'viewer', batch: t.batch, list: [t], i: 0, ret: XF.open ? 't' + t.id : retKey() };
+  tv.dataset.view = 'viewer'; vwShow(); focus($('#tvViewer'));
+}
+function vwShow(quiet) {
+  const v = XF.view, t = v.list[v.i], el = $('#tvViewer');
+  $('#vwImg').style.backgroundImage = `url(${SRC['art:' + t.art].url})`;
+  $('#vwName').textContent = t.name; $('#vwMeta').textContent = `${v.i + 1} / ${t.batchN || v.list.length} · ${t.dim}`;
+  el._it = { type: 'xf', it: { app: 'cloud' }, src: SRC['art:' + t.art] }; el.dataset.label = t.name;
+  if (!quiet) { vwInfo(); if (focused === el) scheduleTheme(el, 0); }
+}
+function vwInfo(on = true) { const i = $('#vwInfo'); i.classList.toggle('off', !on); clearTimeout(vwInfo.t); if (on) vwInfo.t = setTimeout(() => i.classList.add('off'), 3000); }
+function vwDelete() {
+  const v = XF.view, t = v.list[v.i]; v.list.splice(v.i, 1); XF.trs = XF.trs.filter(x => x !== t); toast('已删除');
+  if (!v.list.length) return closeView(false);
+  v.i = Math.min(v.i, v.list.length - 1); vwShow(); if (XF.open) xfRender();
+}
+function closeView(silent) {
+  const v = XF.view; if (!v) return;
+  XF.view = null; tv.dataset.view = ''; tv.dataset.play = ''; clearInterval(XF.pt); clearTimeout(plCtl.t);
+  if (!silent) xfRestore(v.ret);
+}
+/* 播放页 */
+function openPlayer(t) {
+  closeView(true);
+  XF.view = { kind: 'player', t, pos: 0, dur: t.durS, playing: true, ctl: true, ret: XF.open ? 't' + t.id : retKey() };
+  const pl = $('#tvPlayer'), music = t.kind === 'audio';
+  pl.classList.toggle('music', music);
+  $('#plVideo').style.backgroundImage = $('#plCover').style.backgroundImage = `url(${SRC['art:' + t.art].url})`;
+  $('#plMt').textContent = t.title || t.name; $('#plMa').textContent = t.artist || ''; $('#plTt').textContent = t.name;
+  tv.dataset.view = 'player'; plRender(); focus(XF.plBtns[1]); plCtl(true);
+  applySeed('art:' + t.art, t.name);
+  XF.pt = setInterval(() => { const v = XF.view; if (!v || v.kind !== 'player' || !v.playing) return; v.pos = Math.min(v.dur, v.pos + 1); if (v.pos >= v.dur) v.playing = false; plRender(); }, 1000);
+}
+function flatBar(w, p) { const x = Math.max(2, (w - 6) * p); return `<svg class="wave" viewBox="0 0 ${w} 8" style="width:${w}px"><line x1="2" y1="4" x2="${x}" y2="4" style="stroke:var(--primary)" stroke-width="3" stroke-linecap="round"/><line x1="${Math.min(w - 2, x + 6)}" y1="4" x2="${w - 2}" y2="4" style="stroke:rgba(255,255,255,.32)" stroke-width="3" stroke-linecap="round"/></svg>`; }
+function plRender() {
+  const v = XF.view; if (!v || v.kind !== 'player') return;
+  $('#plPos').textContent = fmtT(v.pos); $('#plDur').textContent = fmtT(v.dur);
+  $('#plWave').innerHTML = (v.playing ? wavy : flatBar)(v.t.kind === 'audio' ? 420 : 720, v.pos / v.dur, 'plw');
+  $('#plTgl').setAttribute('d', v.playing ? PAUSE_D : PLAY_D); XF.plBtns[1].setAttribute('aria-label', XF.plBtns[1].dataset.label = v.playing ? '暂停' : '播放');
+  tv.dataset.play = v.playing ? 'on' : '';
+}
+function plCtl(on) {
+  const v = XF.view; if (!v || v.kind !== 'player') return; if (v.t.kind === 'audio') on = true;
+  v.ctl = on; $('#plCtl').classList.toggle('off', !on); clearTimeout(plCtl.t);
+  if (on) plCtl.t = setTimeout(() => { if (XF.view === v && v.playing) plCtl(false); }, 4000);
+}
+function plSeek(d) { const v = XF.view; v.pos = clamp(v.pos + d, 0, v.dur); plRender(); }
+function plMove(dir) {
+  const v = XF.view, bs = XF.plBtns, i = bs.indexOf(focused);
+  if (!v.ctl) { if (dir === 'left' || dir === 'right') plSeek(dir === 'left' ? -10 : 10); plCtl(true); return; }
+  if (dir === 'left' && i > 0) focus(bs[i - 1]); else if (dir === 'right' && i < bs.length - 1) focus(bs[i + 1]);
+  plCtl(true);
+}
+function plOk() {
+  const v = XF.view, id = focused.dataset.id;
+  if (!v.ctl || id === 'player:toggle') { v.playing = !v.playing; if (v.playing && v.pos >= v.dur) v.pos = 0; plRender(); }
+  else plSeek(id === 'player:back10' ? -10 : 10);
+  plCtl(true);
+}
+
+/* 按键路由：返回 true 表示已处理 */
+function xfMove(dir) {
+  const z = S.zone; if (!XZ.has(z)) return false;
+  const lin = (list, d) => { const j = focused._z.idx + d; if (list && j >= 0 && j < list.length) focus(list[j]); };
+  const ud = dir === 'up' ? -1 : dir === 'down' ? 1 : 0, lr = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+  if (z === 'mn') { if (ud) lin(XF.menu.els, ud); return true; }
+  if (z === 'fc') { if (ud) lin(XF.fc.rows, ud); return true; }
+  if (z === 'dlg') { if (lr) lin(XF.dlg.btns, lr); return true; }
+  if (z === 'sys') { if (lr) lin(XF.sys, lr); return true; }
+  if (z === 'vw') { const v = XF.view; if (lr) { const j = v.i + lr; if (j >= 0 && j < v.list.length) { v.i = j; vwShow(); } } else vwInfo(); return true; }
+  if (z === 'pl') { plMove(dir); return true; }
+  const E = XF.els, { sec, idx } = focused._z, order = ['dev', 'tr', 'set'].filter(s => E[s].length);
+  if (lr) { if (sec === 'dev') lin(E.dev, lr); return true; }
+  if (sec !== 'dev' && E[sec][idx + ud]) { focus(E[sec][idx + ud]); xfScroll(); return true; }
+  const si = order.indexOf(sec) + ud; if (si < 0 || si >= order.length) return true;
+  const L = E[order[si]]; focus(ud > 0 || order[si] === 'dev' ? L[0] : L[L.length - 1]); xfScroll(); return true;
+}
+function xfActivate() {
+  const z = S.zone; if (!XZ.has(z)) return false; const el = focused;
+  if (z === 'mn') { const a = el._act; closeMenu(); if (a) a(); return true; }
+  if (z === 'fc' || z === 'dlg' || z === 'sys') { if (el._act) el._act(); return true; }
+  if (z === 'vw') { vwInfo($('#vwInfo').classList.contains('off')); return true; }
+  if (z === 'pl') { plOk(); return true; }
+  if (el._z.sec === 'set') { if (el._z.idx === 0) openFC(); else xfAllFiles(); return true; }
+  const items = xfMenuFor(el); if (items) openMenu(items, el); return true;
+}
+function xfBack() {
+  const z = S.zone; if (!XZ.has(z)) return false;
+  if (z === 'mn') closeMenu();
+  else if (z === 'sys') sysAnswer(false);
+  else if (z === 'dlg') dlgBack();
+  else if (z === 'fc') closeFC();
+  else if (z === 'vw') closeView(false);
+  else if (z === 'pl') { if (XF.view.ctl && XF.view.t.kind !== 'audio') plCtl(false); else closeView(false); }
+  else closeXfer(false);
+  return true;
+}
+function xfMenuKey() {
+  const z = S.zone; if (!XZ.has(z)) return false;
+  if (z === 'xf' && (focused._dev || focused._tr)) openMenu(xfMenuFor(focused), focused);
+  if (z === 'vw') { const t = XF.view.list[XF.view.i];
+    openMenu([{ id: 'viewer:wallpaper', label: '设为壁纸', act: () => toast('已设为壁纸') },
+      ...(t.push ? [{ id: 'viewer:save', label: '保存到「图片」', act: () => toast('已保存到「图片」') }] : []),
+      { id: 'viewer:delete', label: '删除', act: vwDelete }], { x: 960 - 242, y: 26 }); }
+  return true;
+}
+function xfClick(e) {
+  const el = e.target.closest('.fx'), zn = el && el._z ? el._z.zone : '', inside = s => e.target.closest(s);
+  const hit = z => { if (zn !== z) return false; if (el === focused) xfActivate(); else { focus(el); if (z === 'xf') xfScroll(); } return true; };
+  if (XF.sysOpen) { hit('sys'); return true; }
+  if (XF.menu) { if (zn === 'mn') { focus(el); xfActivate(); } else closeMenu(); return true; }
+  if (XF.dlg) { if (zn === 'dlg') { focus(el); xfActivate(); } else if (!inside('#tvDlg')) dlgBack(); return true; }
+  if (XF.fc) { if (zn === 'fc') { focus(el); xfActivate(); } else if (!inside('#tvFC')) closeFC(); return true; }
+  if (XF.view) { if (XF.view.kind === 'player') { if (zn === 'pl') { focus(el); xfActivate(); } else plCtl(!XF.view.ctl); } else vwInfo($('#vwInfo').classList.contains('off')); return true; }
+  if (XF.open) { hit('xf'); return true; }
+  return false;
+}
+
+/* 检查器里的模拟按钮：扮演手机和电脑 */
+function xfRequest(kind, then) {
+  if (XF.dlg) return;
+  const d = DEVS[kind].find(x => !XF.devs.some(y => y.name === x.name)); if (!d) return;
+  openConfirm({ ...d, id: ++XF.seq }, then);
+}
+function xfSim(k) {
+  stage.focus({ preventScroll: true }); poke();
+  if (k === 'offline') return xfNet();
+  if (S.mode === 'ambient') exitAmbient();
+  if (!XF.open) { if (S.ccOpen) closeCC(); if (S.pk.open) closePicker(); if (XF.view) closeView(true); openXfer(); }
+  if (!XF.online) return;
+  if (k === 'phone' || k === 'pc') return xfRequest(k);
+  const want = k === 'download' || k === 'apks' ? 'pc' : 'phone', d = XF.devs.find(x => x.kind === want) || XF.devs[0];
+  if (!d) return xfRequest(want, () => xfSim(k));
+  if (k === 'image') { const b = ++XF.seq; IMGS.forEach(([art, name, dim, size], i) => xfAdd({ name, size, kind: 'image', push: 1, art, dim, batch: b, batchN: IMGS.length, dur: 1.4 + i * 0.6, rate: 9.8 }, d)); return; }
+  xfAdd({ ...SIM[k], batch: ++XF.seq }, d);
+}
+$('#tvViewer')._z = { zone: 'vw' };
+XF.plBtns = $$('#plCtl .tvbtn'); XF.plBtns.forEach((b, i) => { b._z = { zone: 'pl', idx: i }; b.dataset.label = b.getAttribute('aria-label'); });
+$$('#xfSim button').forEach(b => b.addEventListener('click', () => xfSim(b.dataset.xf)));
+
 /* 输入 */
 let idleT = 0;
-function poke() { clearTimeout(idleT); idleT = setTimeout(() => { if (document.activeElement === stage && !S.ccOpen && !S.pk.open) enterAmbient(); }, 60000); }
+function poke() { clearTimeout(idleT); idleT = setTimeout(() => { if (document.activeElement === stage && !S.ccOpen && !S.pk.open && !XF.open && !XF.view) enterAmbient(); }, 60000); }
 function handleKey(k) {
   poke();
   if (S.mode === 'ambient') { exitAmbient(); return true; }
@@ -2944,8 +4223,8 @@ function handleKey(k) {
     case 'ArrowLeft': move('left'); return true; case 'ArrowRight': move('right'); return true;
     case 'Enter': case ' ': activate(); return true;
     case 'Escape': case 'Backspace': back(); return true;
-    case 'm': case 'M': case 'ContextMenu': if (S.pk.open || S.zone === 'inner') return true; S.ccOpen ? closeCC() : openCC(); return true;
-    case 'a': case 'A': if (S.pk.open) return true; enterAmbient(); return true;
+    case 'm': case 'M': case 'ContextMenu': if (xfMenuKey()) return true; if (S.pk.open || S.zone === 'inner') return true; S.ccOpen ? closeCC() : openCC(); return true;
+    case 'a': case 'A': if (S.pk.open || XF.open || XF.view) return true; enterAmbient(); return true;
   }
   return false;
 }
@@ -2954,6 +4233,7 @@ stage.addEventListener('focus', () => stage.classList.add('active'));
 tv.addEventListener('click', e => {
   stage.focus({ preventScroll: true }); poke();
   if (S.mode === 'ambient') return exitAmbient();
+  if (xfClick(e)) return;
   let el = e.target.closest('.fx'); if (!el || !el._z) return;
   if (el._z.zone === 'inner' && (!S.inner || S.inner.host !== el._host)) el = el._host;
   if (el._z.zone === 'pk' && !S.pk.open) return;
@@ -2966,7 +4246,7 @@ tv.addEventListener('click', e => {
 });
 $$('.dpad button').forEach(b => b.addEventListener('click', () => { stage.focus({ preventScroll: true }); handleKey(b.dataset.k); }));
 $$('.insp input[type=radio]').forEach(r => r.addEventListener('change', () => { if (r.checked) setOpt(r.name, r.value, true); }));
-$('#btnAmb').addEventListener('click', () => { stage.focus({ preventScroll: true }); S.mode === 'ambient' ? exitAmbient() : enterAmbient(); });
+$('#btnAmb').addEventListener('click', () => { stage.focus({ preventScroll: true }); if (XF.open || XF.view) return; S.mode === 'ambient' ? exitAmbient() : enterAmbient(); });
 $('#btnFull').addEventListener('click', () => { const p = stage.requestFullscreen ? stage.requestFullscreen() : null; if (p && p.catch) p.catch(() => {}); stage.focus({ preventScroll: true }); });
 
 /* 缩放 & 时钟 & 自动轮播 */

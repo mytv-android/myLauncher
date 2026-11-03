@@ -271,7 +271,7 @@ def static_checks(rep, milestone, info) -> list[Result]:
 
     # S11 文案白名单
     v = strings_violations()
-    add("S11", "strings.xml 文案全部在白名单内、无提示性文字", not v, "；".join(v[:25]) + (f" …共 {len(v)} 条" if len(v) > 25 else ""))
+    add("S11", "strings.xml 文案全部在白名单内、界面与网页无提示性文字", not v, "；".join(v[:25]) + (f" …共 {len(v)} 条" if len(v) > 25 else ""))
 
     if ms_le("M4", milestone):
         add_media_license_check(add)
@@ -334,6 +334,18 @@ def strings_violations() -> list[str]:
                 continue
             if sample not in exact and not any(p.search(sample) for p in pats):
                 bad.append(f"{name}「{v}」不在白名单")
+    # 「手机与电脑」网页（assets/web/）：含中文的文字片段不得出现禁用词
+    for f in project_files("*"):
+        if "/assets/web/" not in f.as_posix() or f.suffix.lower() not in (".html", ".htm", ".js", ".mjs", ".json", ".svg"):
+            continue
+        try:
+            text = f.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for frag in re.findall(r"[^'\"`<>{}\n]*[\u4e00-\u9fff][^'\"`<>{}\n]*", text):
+            for b in banned:
+                if b.search(frag):
+                    bad.append(f"{f.name}「{frag.strip()[:40]}」禁用词 /{b.pattern}/")
     return bad
 
 
@@ -385,6 +397,13 @@ def add_manifest_checks(add, milestone, dbg, rel):
         for pm in ("android.permission.SYSTEM_ALERT_WINDOW", "android.permission.PACKAGE_USAGE_STATS"):
             if pm not in perms:
                 msgs.append(f"未声明 {pm}（§14 儿童模式）")
+        for pm in ("android.permission.REQUEST_INSTALL_PACKAGES", "android.permission.MANAGE_EXTERNAL_STORAGE",
+                   "android.permission.WRITE_EXTERNAL_STORAGE"):
+            if pm not in perms:
+                msgs.append(f"未声明 {pm}（§14 手机与电脑）")
+        app = m.find("application")
+        if app is None or app.get(A + "requestLegacyExternalStorage") != "true":
+            msgs.append("application 未声明 requestLegacyExternalStorage=\"true\"（§14 手机与电脑，API 29）")
     if ms_le("M5", milestone):
         for pm in ("android.permission.REQUEST_INSTALL_PACKAGES", "android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION"):
             if pm not in perms:
@@ -441,7 +460,7 @@ def add_m0_report_check(add):
     except Exception as e:
         add("S14", "M0 报告 docs/m0/m0-results.json 结构完整", False, f"无法解析：{e}")
         return
-    for k in map(str, range(1, 12)):
+    for k in map(str, range(1, 13)):
         it = (d.get("items") or {}).get(k)
         if not it:
             msgs.append(f"缺少第 {k} 项")
