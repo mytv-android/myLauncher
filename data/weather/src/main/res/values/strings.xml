@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wx_clear">晴</string>
+    <string name="wx_cloudy">多云</string>
+    <string name="wx_overcast">阴</string>
+    <string name="wx_fog">雾</string>
+    <string name="wx_drizzle">毛毛雨</string>
+    <string name="wx_freezing_rain">冻雨</string>
+    <string name="wx_rain_light">小雨</string>
+    <string name="wx_rain_moderate">中雨</string>
+    <string name="wx_rain_heavy">大雨</string>
+    <string name="wx_showers">阵雨</string>
+    <string name="wx_snow_light">小雪</string>
+    <string name="wx_snow_moderate">中雪</string>
+    <string name="wx_snow_heavy">大雪</string>
+    <string name="wx_snow_showers">阵雪</string>
+    <string name="wx_thunder">雷雨</string>
+    <string name="wx_hail">冰雹</string>
+
+    <!-- Lunar name fragments are stored as complete dates so every entry is a
+         whitelisted date string; LunarText removes the fixed two-character day
+         suffix from a month entry and the month prefix from a day entry. -->
+    <string-array name="lunar_months">
+        <item>正月初一</item>
+        <item>二月初一</item>
+        <item>三月初一</item>
+        <item>四月初一</item>
+        <item>五月初一</item>
+        <item>六月初一</item>
+        <item>七月初一</item>
+        <item>八月初一</item>
+        <item>九月初一</item>
+        <item>十月初一</item>
+        <item>冬月初一</item>
+        <item>腊月初一</item>
+        <item>闰正月初一</item>
+        <item>闰二月初一</item>
+        <item>闰三月初一</item>
+        <item>闰四月初一</item>
+        <item>闰五月初一</item>
+        <item>闰六月初一</item>
+        <item>闰七月初一</item>
+        <item>闰八月初一</item>
+        <item>闰九月初一</item>
+        <item>闰十月初一</item>
+        <item>闰冬月初一</item>
+        <item>闰腊月初一</item>
+    </string-array>
+
+    <string-array name="lunar_days">
+        <item>正月初一</item>
+        <item>正月初二</item>
+        <item>正月初三</item>
+        <item>正月初四</item>
+        <item>正月初五</item>
+        <item>正月初六</item>
+        <item>正月初七</item>
+        <item>正月初八</item>
+        <item>正月初九</item>
+        <item>正月初十</item>
+        <item>正月十一</item>
+        <item>正月十二</item>
+        <item>正月十三</item>
+        <item>正月十四</item>
+        <item>正月十五</item>
+        <item>正月十六</item>
+        <item>正月十七</item>
+        <item>正月十八</item>
+        <item>正月十九</item>
+        <item>正月二十</item>
+        <item>正月廿一</item>
+        <item>正月廿二</item>
+        <item>正月廿三</item>
+        <item>正月廿四</item>
+        <item>正月廿五</item>
+        <item>正月廿六</item>
+        <item>正月廿七</item>
+        <item>正月廿八</item>
+        <item>正月廿九</item>
+        <item>正月三十</item>
+    </string-array>
+</resources>

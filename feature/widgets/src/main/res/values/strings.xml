@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="page_widgets_title">小组件</string>
+    <string name="widgets_add">添加小组件</string>
+    <string name="widget_auth_title">允许桌面添加小组件</string>
+    <string name="widget_auth_body">这台电视没有提供小组件授权界面，需要授权一次，以后添加不再询问。</string>
+    <string name="widget_auth_adb">用电脑授权</string>
+    <string name="widget_auth_shizuku">通过 Shizuku 授权</string>
+    <string name="widget_auth_adb_body">在电视的开发者选项中打开网络调试，然后在电脑上运行：</string>
+    <string name="widget_auth_command">adb shell appwidget grantbind --package com.github.mytv.launcher --user current</string>
+    <string name="widget_auth_done">已运行，继续</string>
+    <string name="cancel">取消</string>
+    <string name="back">返回</string>
+    <string name="widget_broken">小组件无法加载</string>
+    <string name="widget_missing">小组件已失效</string>
+    <string name="widget_reload">重新加载</string>
+    <string name="widget_remove">移除</string>
+    <string name="menu_move">移动</string>
+    <string name="menu_resize">调整大小</string>
+    <string name="menu_reconfigure">重新配置</string>
+    <string name="menu_to_home">加入主页速览</string>
+    <string name="menu_from_home">移出主页速览</string>
+</resources>

@@ -22,9 +22,33 @@ data class Counters(
     var click: Int = 0,
     var back: Int = 0,
     var invalid: Int = 0,
+    var themeTransitions: Int = 0,
+    var rowRecompositions: Int = 0,
+    val widgetReloads: MutableMap<String, Int> = HashMap(),
+)
+
+data class ExternalUi(
+    val page: String?,
+    val overlay: String?,
+    val focusTag: String?,
 )
 
 object StateHub {
+    @Volatile
+    var externalUi: ExternalUi? = null
+
+    @Volatile
+    var organizerProvider: (() -> JSONObject?)? = null
+
+    @Volatile
+    var storageProvider: (() -> JSONObject?)? = null
+
+    @Volatile
+    var ambientProvider: (() -> JSONObject?)? = null
+
+    @Volatile
+    var widgetsProvider: (() -> JSONArray?)? = null
+
     private val lock = Any()
     private var snapshot = LauncherSnapshot.EMPTY
     private val counters = Counters()
@@ -46,12 +70,34 @@ object StateHub {
         }
     }
 
+    fun incrementThemeTransition() {
+        synchronized(lock) {
+            counters.themeTransitions++
+        }
+    }
+
+    fun incrementWidgetReload(appWidgetId: Int) {
+        synchronized(lock) {
+            val key = appWidgetId.toString()
+            counters.widgetReloads[key] = (counters.widgetReloads[key] ?: 0) + 1
+        }
+    }
+
+    fun incrementRowRecomposition() {
+        synchronized(lock) {
+            counters.rowRecompositions++
+        }
+    }
+
     fun resetCounters() {
         synchronized(lock) {
             counters.nav = 0
             counters.click = 0
             counters.back = 0
             counters.invalid = 0
+            counters.themeTransitions = 0
+            counters.rowRecompositions = 0
+            counters.widgetReloads.clear()
         }
     }
 
@@ -61,18 +107,27 @@ object StateHub {
 
     private fun build(state: LauncherSnapshot, counters: Counters): JSONObject {
         val root = JSONObject()
+        val external = externalUi
         root.put("contract", 1)
-        root.put("page", state.page)
-        root.put("overlay", state.overlay ?: JSONObject.NULL)
+        root.put("page", external?.page ?: state.page)
+        root.put("overlay", external?.overlay ?: state.overlay ?: JSONObject.NULL)
         root.put("mode", state.mode)
+        val externalFocus = external?.focusTag
         root.put(
             "focus",
-            state.focus?.let {
+            if (externalFocus != null) {
                 JSONObject()
-                    .put("tag", it.tag)
-                    .put("rowId", it.rowId ?: JSONObject.NULL)
-                    .put("index", it.index ?: JSONObject.NULL)
-            } ?: JSONObject.NULL,
+                    .put("tag", externalFocus)
+                    .put("rowId", JSONObject.NULL)
+                    .put("index", JSONObject.NULL)
+            } else {
+                state.focus?.let {
+                    JSONObject()
+                        .put("tag", it.tag)
+                        .put("rowId", it.rowId ?: JSONObject.NULL)
+                        .put("index", it.index ?: JSONObject.NULL)
+                } ?: JSONObject.NULL
+            },
         )
         root.put(
             "hero",
@@ -90,32 +145,27 @@ object StateHub {
             )
         }
         root.put("rows", rows)
-        root.put("theme", theme())
-        root.put("glass", JSONObject().put("tier", "T3").put("blurRegions", 0))
-        root.put("deviceTier", "mid")
-        root.put("approvals", JSONArray())
-        root.put(
-            "widgets",
-            JSONArray().put(
+        root.put("theme", theme(state.theme))
+        root.put("glass", JSONObject().put("tier", state.glassTier).put("blurRegions", state.blurRegions))
+        root.put("deviceTier", state.deviceTier)
+        val approvals = JSONArray()
+        for (approval in state.approvals) {
+            approvals.put(
                 JSONObject()
-                    .put("id", 0)
-                    .put("provider", "builtin:clock")
-                    .put("page", 0)
-                    .put("x", 0)
-                    .put("y", 0)
-                    .put("spanX", 2)
-                    .put("spanY", 2)
-                    .put("onHome", false)
-                    .put("state", "ok"),
-            ),
-        )
+                    .put("pkg", approval.packageName)
+                    .put("channelKey", approval.channelKey)
+                    .put("state", approval.state),
+            )
+        }
+        root.put("approvals", approvals)
+        root.put("widgets", widgetsProvider?.invoke() ?: JSONArray())
         root.put("watchlist", JSONArray(state.watchlist))
         root.put("hiddenApps", JSONArray(state.hiddenApps))
         root.put("series", JSONArray())
-        root.put("organizer", JSONObject().put("running", false))
+        root.put("organizer", organizerProvider?.invoke() ?: JSONObject().put("running", false))
         root.put(
             "storage",
-            JSONObject()
+            storageProvider?.invoke() ?: JSONObject()
                 .put("allFiles", JSONObject.NULL)
                 .put("legacy", JSONObject.NULL)
                 .put("writePermission", JSONObject.NULL)
@@ -134,26 +184,34 @@ object StateHub {
             )
         }
         root.put("folders", folders)
-        root.put("ambient", JSONObject.NULL)
+        root.put("ambient", ambientProvider?.invoke() ?: JSONObject.NULL)
+        val restrictedLocked = state.restrictedMode == "kids" && state.restrictedRemaining <= 0L
         root.put(
             "restricted",
             JSONObject()
-                .put("mode", "off")
+                .put("mode", state.restrictedMode)
                 .put("paused", false)
-                .put("locked", false)
-                .put("remainingS", JSONObject.NULL)
-                .put("hasPin", false)
-                .put("pinLockedUntil", 0)
-                .put("unlockedUntil", 0),
+                .put("locked", restrictedLocked)
+                .put("remainingS", if (state.restrictedMode == "off") JSONObject.NULL else state.restrictedRemaining)
+                .put("hasPin", state.restrictedHasPin)
+                .put("pinLockedUntil", state.restrictedPinLockedUntil)
+                .put("unlockedUntil", state.restrictedUnlockedUntil),
         )
         root.put("clock", JSONObject().put("is24h", state.clockIs24h))
-        root.put("weather", JSONObject().put("visible", false))
+        root.put(
+            "weather",
+            JSONObject()
+                .put("visible", state.weatherVisible)
+                .put("tempC", state.weatherTempC ?: JSONObject.NULL)
+                .put("code", state.weatherCode ?: JSONObject.NULL)
+                .put("city", state.weatherCity ?: JSONObject.NULL),
+        )
         root.put("defaultHome", JSONObject.NULL)
         root.put(
             "memory",
             JSONObject()
                 .put("imageCacheBytes", 0)
-                .put("frozenBlurBytes", 0),
+                .put("frozenBlurBytes", state.frozenBlurBytes),
         )
         root.put(
             "update",
@@ -165,9 +223,9 @@ object StateHub {
         root.put(
             "counters",
             JSONObject()
-                .put("rowRecompositionsDuringThemeTransition", 0)
-                .put("themeTransitions", 0)
-                .put("widgetReloads", JSONObject())
+                .put("rowRecompositionsDuringThemeTransition", counters.rowRecompositions)
+                .put("themeTransitions", counters.themeTransitions)
+                .put("widgetReloads", JSONObject(counters.widgetReloads as Map<*, *>))
                 .put(
                     "soundEffects",
                     JSONObject()
@@ -182,27 +240,27 @@ object StateHub {
         return root
     }
 
-    private fun theme(): JSONObject = JSONObject()
-        .put("seed", "#6750A4")
-        .put("sourceKey", "fixed")
-        .put("style", "tonal")
-        .put("contrast", 0.0)
-        .put("transitioning", false)
+    private fun theme(snapshot: ThemeSnapshot): JSONObject = JSONObject()
+        .put("seed", String.format(Locale.US, "#%06X", snapshot.seed and 0xFFFFFF))
+        .put("sourceKey", snapshot.sourceKey)
+        .put("style", snapshot.style)
+        .put("contrast", snapshot.contrast)
+        .put("transitioning", snapshot.transitioning)
         .put(
             "roles",
             JSONObject()
-                .put("primary", hex(LauncherPrimary))
-                .put("onPrimary", hex(LauncherOnPrimary))
-                .put("primaryContainer", hex(LauncherPrimaryContainer))
-                .put("onPrimaryContainer", hex(LauncherOnPrimaryContainer))
-                .put("secondaryContainer", hex(LauncherSecondaryContainer))
-                .put("onSecondaryContainer", hex(LauncherOnSecondaryContainer))
-                .put("surface", hex(LauncherSurface))
-                .put("onSurface", hex(LauncherOnSurface))
-                .put("surfaceContainer", hex(LauncherSurfaceContainer))
-                .put("surfaceContainerHigh", hex(LauncherSurfaceContainerHigh))
-                .put("outline", hex(LauncherOutline))
-                .put("focusRing", hex(LauncherFocusRing)),
+                .put("primary", hex(snapshot.roles.primary))
+                .put("onPrimary", hex(snapshot.roles.onPrimary))
+                .put("primaryContainer", hex(snapshot.roles.primaryContainer))
+                .put("onPrimaryContainer", hex(snapshot.roles.onPrimaryContainer))
+                .put("secondaryContainer", hex(snapshot.roles.secondaryContainer))
+                .put("onSecondaryContainer", hex(snapshot.roles.onSecondaryContainer))
+                .put("surface", hex(snapshot.roles.surface))
+                .put("onSurface", hex(snapshot.roles.onSurface))
+                .put("surfaceContainer", hex(snapshot.roles.surfaceContainer))
+                .put("surfaceContainerHigh", hex(snapshot.roles.surfaceContainerHigh))
+                .put("outline", hex(snapshot.roles.outline))
+                .put("focusRing", hex(snapshot.roles.focusRing)),
         )
 
     private fun hex(color: androidx.compose.ui.graphics.Color): String =

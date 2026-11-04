@@ -27,6 +27,21 @@ sealed interface HomeItem {
         override val tag: String
             get() = "folder:${folder.id}"
     }
+
+    data class Program(val program: com.github.mytv.data.channels.ChannelProgram) : HomeItem {
+        override val tag: String
+            get() = program.tag
+    }
+
+    data object ManageChannels : HomeItem {
+        override val tag: String
+            get() = "manage_channels"
+    }
+
+    data class Widget(val appWidgetId: Int) : HomeItem {
+        override val tag: String
+            get() = "widget:$appWidgetId"
+    }
 }
 
 data class HomeRowData(

@@ -20,6 +20,10 @@ import kotlinx.coroutines.launch
 class AppsRepository(private val context: Context) {
     private val launcherApps =
         context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+    private val organizerPrefs =
+        context.getSharedPreferences("launcher_organizer", Context.MODE_PRIVATE)
+    private val labelListener =
+        android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _apps = MutableStateFlow<List<AppEntry>>(emptyList())
     val apps: StateFlow<List<AppEntry>> = _apps.asStateFlow()
@@ -45,6 +49,7 @@ class AppsRepository(private val context: Context) {
 
     init {
         launcherApps.registerCallback(callback)
+        organizerPrefs.registerOnSharedPreferenceChangeListener(labelListener)
         refresh()
     }
 
@@ -64,7 +69,6 @@ class AppsRepository(private val context: Context) {
         val user = Process.myUserHandle()
         val seen = HashSet<String>()
         val out = ArrayList<AppEntry>()
-        val installTimes = HashMap<String, Long>()
         val activities = try {
             launcherApps.getActivityList(null, user)
         } catch (_: Exception) {
@@ -76,7 +80,7 @@ class AppsRepository(private val context: Context) {
             if (component.packageName == context.packageName) continue
             val key = "${component.packageName}/${component.className}"
             if (!seen.add(key)) continue
-            val label = try {
+            val label = organizerPrefs.getString("label:$key", null) ?: try {
                 activity.label.toString()
             } catch (_: Exception) {
                 component.packageName
@@ -96,15 +100,26 @@ class AppsRepository(private val context: Context) {
             } catch (_: Exception) {
                 null
             }
-            installTimes[component.packageName] = try {
-                context.packageManager.getPackageInfo(component.packageName, 0).firstInstallTime
+            val packageInfo = try {
+                context.packageManager.getPackageInfo(component.packageName, 0)
             } catch (_: Exception) {
-                0L
+                null
             }
-            out += AppEntry(component.packageName, component.className, label, icon, banner)
+            val versionCode = packageInfo?.let {
+                if (android.os.Build.VERSION.SDK_INT >= 28) it.longVersionCode else it.versionCode.toLong()
+            } ?: 0L
+            out += AppEntry(
+                component.packageName,
+                component.className,
+                label,
+                icon,
+                banner,
+                versionCode,
+                packageInfo?.lastUpdateTime ?: 0L,
+            )
         }
         return out.sortedWith(
-            compareByDescending<AppEntry> { installTimes[it.packageName] ?: 0L }
+            compareByDescending<AppEntry> { it.lastUpdateTime }
                 .thenBy(String.CASE_INSENSITIVE_ORDER) { it.label },
         )
     }

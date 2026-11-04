@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qs_source">取色来源</string>
+    <string name="qs_glass">玻璃效果</string>
+    <string name="qs_style">配色风格</string>
+    <string name="qs_content">焦点内容</string>
+    <string name="qs_icon">应用图标</string>
+    <string name="qs_wallpaper">壁纸</string>
+    <string name="qs_fixed">固定</string>
+    <string name="qs_auto">自动</string>
+    <string name="qs_live">实时模糊</string>
+    <string name="qs_frozen">冻结模糊</string>
+    <string name="qs_solid">纯色</string>
+    <string name="qs_wifi">Wi-Fi</string>
+    <string name="qs_bt">蓝牙</string>
+    <string name="qs_dnd">勿扰</string>
+    <string name="qs_volume">音量</string>
+    <string name="qs_inputs">信号源</string>
+    <string name="qs_saver">屏保</string>
+    <string name="qs_parent">家长</string>
+    <string name="qs_transfer">传文件</string>
+    <string name="qs_ambient">环境模式</string>
+</resources>

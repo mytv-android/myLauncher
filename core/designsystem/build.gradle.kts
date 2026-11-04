@@ -35,4 +35,5 @@ dependencies {
     api(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.haze)
+    implementation(libs.coil)
 }

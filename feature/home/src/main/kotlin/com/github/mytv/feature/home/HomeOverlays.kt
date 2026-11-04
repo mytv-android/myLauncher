@@ -28,6 +28,7 @@ import com.github.mytv.core.designsystem.LauncherCard
 import com.github.mytv.core.designsystem.LauncherCardFocused
 import com.github.mytv.core.designsystem.LauncherScrim
 import com.github.mytv.core.designsystem.LauncherSurfaceContainerHigh
+import com.github.mytv.core.designsystem.launcherFocusRing
 import com.github.mytv.core.tvfocus.TvFocusable
 import com.github.mytv.data.apps.AppEntry
 import com.github.mytv.data.apps.Folder
@@ -72,6 +73,7 @@ fun MenuOverlay(
                             .height(52.dp)
                             .clip(RoundedCornerShape(14.dp))
                             .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
+                            .launcherFocusRing(focused, RoundedCornerShape(14.dp))
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.CenterStart,
                     ) {
@@ -162,7 +164,8 @@ private fun PresetName(tag: String, label: String, onPick: (String, String) -> U
                 .width(104.dp)
                 .height(64.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh),
+                .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
+                .launcherFocusRing(focused, RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Text(text = label, color = Color.White, fontSize = 15.sp)
@@ -184,6 +187,7 @@ private fun FolderPickRow(tag: String, label: String, onClick: () -> Unit) {
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
+                .launcherFocusRing(focused, RoundedCornerShape(14.dp))
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.CenterStart,
         ) {

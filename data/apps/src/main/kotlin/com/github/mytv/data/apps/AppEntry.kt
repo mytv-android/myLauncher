@@ -8,6 +8,8 @@ data class AppEntry(
     val label: String,
     val icon: Bitmap?,
     val banner: Bitmap?,
+    val versionCode: Long = 0,
+    val lastUpdateTime: Long = 0,
 ) {
     val tag: String
         get() = "app:$packageName/$className"

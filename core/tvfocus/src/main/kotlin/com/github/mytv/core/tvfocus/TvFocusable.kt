@@ -1,7 +1,8 @@
 package com.github.mytv.core.tvfocus
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import com.github.mytv.core.designsystem.LocalHighContrastFocus
+import com.github.mytv.core.designsystem.launcherFastSpatialSpec
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +55,7 @@ fun TvFocusable(
     var longJob by remember { mutableStateOf<Job?>(null) }
     var down by remember { mutableStateOf(false) }
     var longFired by remember { mutableStateOf(false) }
+    var downTime by remember { mutableStateOf(0L) }
     val scope = rememberCoroutineScope()
 
     DisposableEffect(entry) {
@@ -82,9 +84,10 @@ fun TvFocusable(
         }
     }
 
+    val highContrast = LocalHighContrastFocus.current
     val scale by animateFloatAsState(
-        targetValue = if (focused) scaleOnFocus else 1f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 700f),
+        targetValue = if (focused && !highContrast.value) scaleOnFocus else 1f,
+        animationSpec = launcherFastSpatialSpec(),
     )
 
     fun pressCenter(fromKey: Boolean = false) {
@@ -112,6 +115,7 @@ fun TvFocusable(
                 if (!down) {
                     down = true
                     longFired = false
+                    downTime = event.nativeKeyEvent.eventTime
                     longJob?.cancel()
                     longJob = scope.launch {
                         delay(400)
@@ -128,10 +132,14 @@ fun TvFocusable(
                 return true
             }
             KeyEventType.KeyUp -> {
+                val hadDown = down
                 down = false
                 longJob?.cancel()
                 longJob = null
-                if (!longFired) pressCenter(fromKey = true)
+                if (hadDown && !longFired) {
+                    val held = event.nativeKeyEvent.eventTime - downTime
+                    if (held >= 400L) longCenter(fromKey = true) else pressCenter(fromKey = true)
+                }
                 longFired = false
                 return true
             }
@@ -157,10 +165,15 @@ fun TvFocusable(
                 if (!enabled) return@pointerInput
                 detectTapGestures(
                     onTap = {
-                        pressCenter()
+                        // 触屏/鼠标不移动遥控焦点：只执行一次打开（§10）
+                        focusState.onUserAction?.invoke()
+                        onClick()
                     },
                     onLongPress = {
-                        longCenter()
+                        if (onLongClick != null) {
+                            focusState.onUserAction?.invoke()
+                            onLongClick.invoke()
+                        }
                     },
                 )
             },

@@ -32,6 +32,6 @@ dependencies {
     implementation(project(":core:tvfocus"))
     implementation(project(":core:glass"))
     implementation(project(":data:apps"))
-    implementation(project(":data:channels"))
+    api(project(":data:channels"))
     implementation(libs.kotlinx.coroutines.android)
 }

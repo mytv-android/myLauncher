@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>手机与电脑</title>
+<link rel="stylesheet" href="/app.css">
+<style id="scheme">/*__THEME__*/</style>
+</head>
+<body>
+<div id="login" class="login">
+  <div class="brand">
+    <svg class="ico big"><use href="/icons.svg#tv"></use></svg>
+    <h1>手机与电脑</h1>
+  </div>
+  <div id="loginCode" class="card login-card">
+    <label for="code">配对码</label>
+    <input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7">
+    <button id="connect" class="primary">连接</button>
+    <p id="loginMsg" class="msg"></p>
+  </div>
+  <div id="loginWait" class="card login-card" hidden>
+    <div class="spinner"></div>
+    <p>等待电视确认</p>
+  </div>
+</div>
+
+<div id="shell" class="shell" hidden>
+  <header class="top">
+    <div class="tv">
+      <svg class="ico"><use href="/icons.svg#tv"></use></svg>
+      <span id="tvName"></span>
+      <i id="dot" class="dot"></i>
+    </div>
+    <button id="disconnectTop" class="icon-btn" aria-label="断开连接">
+      <svg class="ico"><use href="/icons.svg#power"></use></svg>
+    </button>
+  </header>
+
+  <nav class="nav">
+    <button data-view="files" class="on"><svg class="ico"><use href="/icons.svg#folder"></use></svg><span>文件</span></button>
+    <button data-view="push"><svg class="ico"><use href="/icons.svg#push"></use></svg><span>推送</span></button>
+    <button data-view="desktop"><svg class="ico"><use href="/icons.svg#desktop"></use></svg><span>桌面</span></button>
+    <button data-view="more"><svg class="ico"><use href="/icons.svg#more"></use></svg><span>更多</span></button>
+  </nav>
+
+  <main class="main">
+    <section id="view-files" class="view">
+      <div id="roots" class="chips"></div>
+      <div class="bar">
+        <div id="crumb" class="crumb"></div>
+        <div class="grow"></div>
+        <button id="newFolder" class="ghost">新建文件夹</button>
+        <button id="uploadBtn" class="primary">上传</button>
+        <button id="uploadFolderBtn" class="ghost">上传文件夹</button>
+        <button id="sortBtn" class="ghost">排序</button>
+        <button id="hiddenBtn" class="ghost">显示隐藏文件</button>
+      </div>
+      <div id="selection" class="selection" hidden>
+        <span id="selectionText"></span>
+        <button id="selectAll" class="ghost">全选</button>
+        <button id="moveSel" class="ghost">移动到…</button>
+        <button id="deleteSel" class="danger">删除</button>
+      </div>
+      <div id="fileList" class="list"></div>
+      <div id="uploadQueue" class="queue"></div>
+      <input id="fileInput" type="file" multiple hidden>
+      <input id="folderInput" type="file" webkitdirectory directory multiple hidden>
+    </section>
+
+    <section id="view-push" class="view" hidden>
+      <div id="dropZone" class="drop">
+        <svg class="ico huge"><use href="/icons.svg#push"></use></svg>
+        <b>推送</b>
+        <button id="pushChoose" class="primary">选择文件</button>
+        <label class="toggle"><input id="keepCopy" type="checkbox"><span>同时保存一份</span></label>
+        <input id="pushInput" type="file" multiple hidden>
+      </div>
+      <div class="section-title">最近推送</div>
+      <div id="pushList" class="list"></div>
+    </section>
+
+    <section id="view-desktop" class="view" hidden>
+      <div class="section-title">显示名称</div>
+      <div id="appList" class="list compact"></div>
+      <div class="section-title">壁纸照片</div>
+      <div class="card row-card">
+        <button id="wallpaperChoose" class="primary">选择文件</button>
+        <span id="wallpaperName" class="dim"></span>
+        <input id="wallpaperInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+      <div class="section-title">屏保视频</div>
+      <div class="card row-card">
+        <button id="clipChoose" class="primary">选择文件</button>
+        <span id="clipName" class="dim"></span>
+        <input id="clipInput" type="file" accept="video/*" hidden>
+      </div>
+      <div class="section-title">天气城市</div>
+      <div class="card row-card">
+        <input id="city" class="text">
+        <button id="saveCity" class="primary">保存</button>
+      </div>
+    </section>
+
+    <section id="view-more" class="view" hidden>
+      <div class="section-title">诊断报告</div>
+      <div class="card row-card">
+        <button id="diag" class="primary">诊断报告</button>
+      </div>
+      <div class="section-title">小组件授权</div>
+      <div class="card">
+        <code id="grant" class="code"></code>
+        <button id="copyGrant" class="ghost">复制</button>
+      </div>
+      <div class="section-title">设备</div>
+      <div class="card row-card">
+        <button id="disconnect" class="danger">断开连接</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="dialog" class="dialog-wrap" hidden>
+  <div class="dialog">
+    <div id="dialogTitle" class="dialog-title"></div>
+    <div id="dialogBody" class="dialog-body"></div>
+    <div id="dialogActions" class="dialog-actions"></div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+<script src="/app.js"></script>
+</body>
+</html>

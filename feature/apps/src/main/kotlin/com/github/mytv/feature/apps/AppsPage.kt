@@ -2,7 +2,6 @@ package com.github.mytv.feature.apps
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,9 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.mytv.core.designsystem.LauncherCard
 import com.github.mytv.core.designsystem.LauncherCardFocused
-import com.github.mytv.core.designsystem.LauncherFocusRing
 import com.github.mytv.core.designsystem.LauncherSurfaceContainerHigh
 import com.github.mytv.core.designsystem.RowLeft
+import com.github.mytv.core.designsystem.launcherFocusRing
 import com.github.mytv.core.designsystem.rememberArtwork
 import com.github.mytv.core.tvfocus.TvFocusable
 import com.github.mytv.data.apps.AppEntry
@@ -65,7 +64,7 @@ fun AppsPage(
     onFolderClick: (Folder, List<AppEntry>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize().background(Color(0xFF0E0D11))) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(start = RowLeft, top = 92.dp)) {
             Text(
                 text = stringResource(DsR.string.page_apps_title),
@@ -112,7 +111,7 @@ private fun AppGridCard(
     TvFocusable(
         tag = app.tag,
         enabled = enabled,
-        scaleOnFocus = 1.05f,
+        scaleOnFocus = 1.1f,
         shape = RoundedCornerShape(18.dp),
         onClick = onClick,
         onLongClick = onLongClick,
@@ -127,11 +126,7 @@ private fun AppGridCard(
                     .height(86.dp)
                     .clip(RoundedCornerShape(18.dp))
                     .background(if (focused) LauncherCardFocused else LauncherCard)
-                    .border(
-                        width = 2.dp,
-                        color = if (focused) LauncherFocusRing else Color.Transparent,
-                        shape = RoundedCornerShape(18.dp),
-                    ),
+                    .launcherFocusRing(focused, RoundedCornerShape(18.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 val banner = app.banner
@@ -190,7 +185,7 @@ private fun FolderGridCard(
     TvFocusable(
         tag = "folder:${folder.id}",
         enabled = enabled,
-        scaleOnFocus = 1.05f,
+        scaleOnFocus = 1.1f,
         shape = RoundedCornerShape(18.dp),
         onClick = onClick,
     ) { focused ->
@@ -204,11 +199,7 @@ private fun FolderGridCard(
                     .height(86.dp)
                     .clip(RoundedCornerShape(18.dp))
                     .background(if (focused) LauncherCardFocused else LauncherCard)
-                    .border(
-                        width = 2.dp,
-                        color = if (focused) LauncherFocusRing else Color.Transparent,
-                        shape = RoundedCornerShape(18.dp),
-                    )
+                    .launcherFocusRing(focused, RoundedCornerShape(18.dp))
                     .padding(8.dp),
             ) {
                 Column(

@@ -70,6 +70,8 @@ class TvFocusState {
         entries.values.firstOrNull { it.rowId == rowId && it.index == index }?.tag
 
     fun snapshotLastByRow(): Map<String, String> = lastByRow.toMap()
+
+    fun clearRowMemory() = lastByRow.clear()
 }
 
 val LocalTvFocus = staticCompositionLocalOf<TvFocusState> {

@@ -30,4 +30,6 @@ kotlin {
 dependencies {
     api(project(":core:designsystem"))
     api(libs.haze)
+    api(libs.haze.blur)
+    testImplementation("junit:junit:4.13.2")
 }

@@ -26,4 +26,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.tvprovider)
+    api(project(":data:series"))
 }

@@ -29,6 +29,7 @@ import com.github.mytv.core.designsystem.LauncherCardFocused
 import com.github.mytv.core.designsystem.LauncherFocusRing
 import com.github.mytv.core.designsystem.LauncherSurfaceContainerHigh
 import com.github.mytv.core.designsystem.RowLeft
+import com.github.mytv.core.designsystem.launcherFocusRing
 import com.github.mytv.core.tvfocus.TvFocusable
 import com.github.mytv.core.designsystem.R as DsR
 
@@ -38,8 +39,10 @@ fun WidgetsPage(
     clockText: String,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
+    weatherVisible: Boolean = false,
+    weatherTempC: Int? = null,
 ) {
-    Box(modifier = modifier.fillMaxSize().background(Color(0xFF0E0D11))) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(start = RowLeft, top = 94.dp)) {
             Text(
                 text = stringResource(DsR.string.page_widgets_title),
@@ -64,21 +67,25 @@ fun WidgetsPage(
                             .height(124.dp)
                             .clip(RoundedCornerShape(24.dp))
                             .background(if (focused) LauncherCardFocused else LauncherCard)
-                            .then(
-                                if (focused) {
-                                    Modifier.padding(2.dp)
-                                } else {
-                                    Modifier
-                                },
-                            ),
+                            .launcherFocusRing(focused, RoundedCornerShape(24.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = clockText,
-                            color = Color.White,
-                            fontSize = 38.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = clockText,
+                                color = Color.White,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            if (weatherVisible && weatherTempC != null) {
+                                Text(
+                                    text = "$weatherTempC°",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                        }
                     }
                 }
                 TvFocusable(
@@ -94,13 +101,7 @@ fun WidgetsPage(
                             .height(124.dp)
                             .clip(RoundedCornerShape(24.dp))
                             .background(LauncherSurfaceContainerHigh)
-                            .then(
-                                if (focused) {
-                                    Modifier.padding(2.dp)
-                                } else {
-                                    Modifier
-                                },
-                            ),
+                            .launcherFocusRing(focused, RoundedCornerShape(24.dp)),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {

@@ -7,6 +7,8 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Bundle
+import com.github.mytv.core.ambient.BackdropOverride
+import com.github.mytv.core.ambient.BackdropSource
 import com.github.mytv.launcher.StateHub
 
 class StateProvider : ContentProvider() {
@@ -47,14 +49,38 @@ class StateProvider : ContentProvider() {
                 val key = raw.substring(0, split)
                 val value = raw.substring(split + 1)
                 if (key in ALLOWED_PREFS) {
-                    val prefs = context?.getSharedPreferences("launcher_debug", Context.MODE_PRIVATE)
+                    val prefs = context?.getSharedPreferences("launcher_settings", Context.MODE_PRIVATE)
                     prefs?.edit()?.putString(key, value)?.apply()
                 }
             }
-            "set_backdrop", "net_check" -> Unit
+            "set_backdrop" -> BackdropOverride.set(parseBackdrop(arg))
+            "net_check" -> Unit
             else -> return null
         }
         return null
+    }
+
+    private fun parseBackdrop(raw: String?): BackdropSource? {
+        val value = raw?.trim() ?: return null
+        if (value == "none") return null
+        val parts = value.split(':')
+        return when (parts.firstOrNull()) {
+            "solid" -> parts.getOrNull(1)?.let { color ->
+                runCatching { android.graphics.Color.parseColor(color) }.getOrNull()
+                    ?.let { BackdropSource.Solid(it) }
+            }
+            "checker" -> {
+                val cell = parts.getOrNull(1)?.toIntOrNull()
+                val first = parts.getOrNull(2)?.let { runCatching { android.graphics.Color.parseColor(it) }.getOrNull() }
+                val second = parts.getOrNull(3)?.let { runCatching { android.graphics.Color.parseColor(it) }.getOrNull() }
+                if (cell != null && first != null && second != null) {
+                    BackdropSource.Checker(cell, first, second)
+                } else {
+                    null
+                }
+            }
+            else -> null
+        }
     }
 
     private companion object {

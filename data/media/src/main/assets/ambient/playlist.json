@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "clips": [
+    {
+      "id": "nasa-artemis-sunrise-39b",
+      "url": "https://images-assets.nasa.gov/video/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656~medium.mp4",
+      "title": "阿耳忒弥斯一号 · 39B 发射台日出",
+      "license": "NASA 公有领域",
+      "source": "aerial",
+      "poster": "https://images-assets.nasa.gov/video/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656~large.jpg",
+      "keyColor": "#2B3648",
+      "durationMs": 60000,
+      "variants": {
+        "HEVC_4K": "https://images-assets.nasa.gov/video/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656~orig.mp4",
+        "H264_1080P": "https://images-assets.nasa.gov/video/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656~medium.mp4"
+      },
+      "keyframes": [
+        {
+          "positionMs": 0,
+          "image": "https://images-assets.nasa.gov/video/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656/KSC-20220826-MH-MTD01-0001-Artemis_I_Helicopter_Imagery-3312656~large.jpg"
+        }
+      ],
+      "location": "美国 · 肯尼迪航天中心 39B 发射台"
+    },
+    {
+      "id": "nasa-artemis-rollout-aerials",
+      "url": "https://images-assets.nasa.gov/video/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013~medium.mp4",
+      "title": "阿耳忒弥斯一号 · 转运航拍",
+      "license": "NASA 公有领域",
+      "source": "aerial",
+      "poster": "https://images-assets.nasa.gov/video/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013~large.jpg",
+      "keyColor": "#57606B",
+      "durationMs": 60000,
+      "variants": {
+        "HEVC_4K": "https://images-assets.nasa.gov/video/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013~orig.mp4",
+        "H264_1080P": "https://images-assets.nasa.gov/video/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013~medium.mp4"
+      },
+      "keyframes": [
+        {
+          "positionMs": 0,
+          "image": "https://images-assets.nasa.gov/video/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013/KSC-20220816-MH-RLB01-0001-Artemis_I_Launch_Rollout_AERIALS-3312013~large.jpg"
+        }
+      ],
+      "location": "美国 · 肯尼迪航天中心"
+    },
+    {
+      "id": "nasa-artemis-rollout-helo",
+      "url": "https://images-assets.nasa.gov/video/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810~medium.mp4",
+      "title": "阿耳忒弥斯一号 · 直升机航拍",
+      "license": "NASA 公有领域",
+      "source": "aerial",
+      "poster": "https://images-assets.nasa.gov/video/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810~large.jpg",
+      "keyColor": "#6D7B8A",
+      "durationMs": 60000,
+      "variants": {
+        "HEVC_4K": "https://images-assets.nasa.gov/video/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810~orig.mp4",
+        "H264_1080P": "https://images-assets.nasa.gov/video/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810~medium.mp4"
+      },
+      "keyframes": [
+        {
+          "positionMs": 0,
+          "image": "https://images-assets.nasa.gov/video/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810/KSC-20221104-MH-ICH01-0001-Artemis_I_Rollout_for_Launch_HELO-3317810~large.jpg"
+        }
+      ],
+      "location": "美国 · 肯尼迪航天中心"
+    },
+    {
+      "id": "nasa-mobile-launcher-pad-39b",
+      "url": "https://images-assets.nasa.gov/video/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717~medium.mp4",
+      "title": "39B 发射台 · 移动发射塔航拍",
+      "license": "NASA 公有领域",
+      "source": "aerial",
+      "poster": "https://images-assets.nasa.gov/video/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717~large.jpg",
+      "keyColor": "#3A4652",
+      "durationMs": 60000,
+      "variants": {
+        "HEVC_4K": "https://images-assets.nasa.gov/video/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717~orig.mp4",
+        "H264_1080P": "https://images-assets.nasa.gov/video/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717~medium.mp4"
+      },
+      "keyframes": [
+        {
+          "positionMs": 0,
+          "image": "https://images-assets.nasa.gov/video/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717/KSC-20190628-MH-JBS02_0001-ML_on_Pad_39B_Helo_Shot-3224717~large.jpg"
+        }
+      ],
+      "location": "美国 · 肯尼迪航天中心 39B 发射台"
+    },
+    {
+      "id": "nasa-sls-uav-aerial",
+      "url": "https://images-assets.nasa.gov/video/MSFC_072319_SLS_Aerial_Resource_Reel_0119/MSFC_072319_SLS_Aerial_Resource_Reel_0119~medium.mp4",
+      "title": "太空发射系统 · 无人机航拍",
+      "license": "NASA 公有领域",
+      "source": "aerial",
+      "poster": "https://images-assets.nasa.gov/video/MSFC_072319_SLS_Aerial_Resource_Reel_0119/MSFC_072319_SLS_Aerial_Resource_Reel_0119~large.jpg",
+      "keyColor": "#4B5560",
+      "durationMs": 60000,
+      "variants": {
+        "H264_1080P": "https://images-assets.nasa.gov/video/MSFC_072319_SLS_Aerial_Resource_Reel_0119/MSFC_072319_SLS_Aerial_Resource_Reel_0119~medium.mp4"
+      },
+      "keyframes": [
+        {
+          "positionMs": 0,
+          "image": "https://images-assets.nasa.gov/video/MSFC_072319_SLS_Aerial_Resource_Reel_0119/MSFC_072319_SLS_Aerial_Resource_Reel_0119~large.jpg"
+        }
+      ],
+      "location": "美国 · 马歇尔航天飞行中心"
+    }
+  ]
+}

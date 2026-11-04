@@ -5,6 +5,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +32,7 @@ import com.github.mytv.core.designsystem.LauncherScrim
 import com.github.mytv.core.designsystem.LauncherSurfaceContainer
 import com.github.mytv.core.designsystem.LauncherSurfaceContainerHigh
 import com.github.mytv.core.designsystem.RowLeft
+import com.github.mytv.core.designsystem.launcherFocusRing
 import com.github.mytv.core.tvfocus.TvFocusable
 import com.github.mytv.core.designsystem.R as DsR
 
@@ -80,15 +83,17 @@ fun QuickSettingsOverlay(
 fun SettingsPage(
     hiddenApps: List<com.github.mytv.data.apps.AppEntry>,
     expanded: Boolean,
+    highContrast: Boolean,
     enabled: Boolean,
     onToggleHidden: () -> Unit,
+    onToggleHighContrast: () -> Unit,
     onRestore: (com.github.mytv.data.apps.AppEntry) -> Unit,
+    onOrganizer: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0E0D11))
             .testTag("settings"),
     ) {
         Column(modifier = Modifier.padding(start = RowLeft, top = 92.dp)) {
@@ -108,6 +113,21 @@ fun SettingsPage(
                     enabled = enabled,
                     onClick = onToggleHidden,
                 )
+                SettingsRow(
+                    tag = "settings:high_contrast",
+                    label = stringResource(DsR.string.settings_high_contrast),
+                    value = stringResource(
+                        if (highContrast) DsR.string.settings_on else DsR.string.settings_off,
+                    ),
+                    enabled = enabled,
+                    onClick = onToggleHighContrast,
+                )
+                SettingsRow(
+                    tag = "settings:organizer",
+                    label = stringResource(DsR.string.organizer_transfer),
+                    enabled = enabled,
+                    onClick = onOrganizer,
+                )
                 if (expanded) {
                     for (app in hiddenApps) {
                         HiddenAppRow(
@@ -126,6 +146,7 @@ fun SettingsPage(
 private fun SettingsRow(
     tag: String,
     label: String,
+    value: String = "",
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
@@ -142,10 +163,20 @@ private fun SettingsRow(
                 .height(56.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(if (focused) LauncherCardFocused else LauncherCard)
+                .launcherFocusRing(focused, RoundedCornerShape(14.dp))
                 .padding(horizontal = 18.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
-            Text(text = label, color = Color.White, fontSize = 17.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text = label, color = Color.White, fontSize = 17.sp)
+                if (value.isNotEmpty()) {
+                    Spacer(Modifier.weight(1f))
+                    Text(text = value, color = Color(0xFFCAC4D0), fontSize = 15.sp)
+                }
+            }
         }
     }
 }
@@ -170,6 +201,7 @@ private fun HiddenAppRow(
                 .height(56.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
+                .launcherFocusRing(focused, RoundedCornerShape(14.dp))
                 .padding(horizontal = 18.dp),
             contentAlignment = Alignment.CenterStart,
         ) {

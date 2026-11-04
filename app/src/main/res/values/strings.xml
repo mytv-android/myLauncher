@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">myLauncher</string>
+    <string name="glass_downgraded">玻璃效果已改为冻结模糊</string>
 </resources>
