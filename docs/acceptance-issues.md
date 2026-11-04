@@ -117,3 +117,140 @@ adb -s emulator-5564 shell dumpsys package com.android.backuptester | grep -E 'f
 - 修改 `acceptance/mla/launcher.py` 的 `copy_violations()`：先判断节点的豁免标签子树（`exemptTagPrefixes`、小组件宿主），豁免子树同时跳过禁用词与白名单；其余文字仍按原规则检查。
 - 与 A-002 同一次重新冻结：根哈希 `fa89122330b63740bc69f48dca8c135c3dbf35963ac85124673599d8b7f66832`；压缩包 SHA-256 `bd63bdbfc254088f38851bcc8bafda9eaf60382417bc3424d34a1f899fecb5fb`。
 - 验证：api23 上 D105/D110 的无障碍树汇总后 D199 PASS（`acceptance/out/20261103-171038-M1-dev/`），系统应用名 `BACKUP TEST` 不再误报。
+
+## A-004：D202 把路径上其他应用的主题切换当成低彩度来源的结果
+
+- 发现于：M2，2026-11-03
+- 检查编号：D202（api31g；api23/api28 同样适用）
+- 严重性：阻塞 M2 设备验收
+
+### 复现
+
+D202 先让焦点停在「棱镜直播」（`prism`），等 1.4 秒并 `settle()` 后记录 `theme.seed`；再用 `seek(..., ("RIGHT", "LEFT"), 12)` 找「文件管理」（`files`），等 1.4 秒并 `settle()` 后再次记录种子，要求两者 ΔE < 3。
+
+应用行按安装时间倒序显示。D202 开始前 `ctx.F.install(*PROTO_APPS)` 会按 dolphin、spark、cloud、prism、pulse、sky、files… 的顺序重装，当前行序为：
+
+```
+book, fit, store, files, sky, pulse, prism, cloud, spark, dolphin
+```
+
+从 `prism` 到 `files` 的每格路径是 `prism → pulse → sky → files`（先向右走到头，再向左）。`seek()` 每次按键后 `press()` 都会 `settle()`；本机一次 `content query` 约 1.05 秒，`settle()` 约 3.4 秒，两次按键之间约 5.2 秒。桌面按设计稿 §07 在焦点停留 180ms 后切换主题，因此 `pulse`、`sky` 的主题在各自焦点停留期间正常生效。最后 `files` 是低彩度来源，按设计保持当前全局主题（即 `sky`）。
+
+### 实测（api31g，2026-11-03）
+
+在 emulator-5562（Television_1080p）上按 D202 的步骤逐键记录焦点与 `theme.seed`：
+
+```
+ 83.20s RIGHT -> prism  #F7AC19
+ 94.95s RIGHT -> cloud  #39B77B
+100.27s RIGHT -> spark  #DB354C
+105.48s RIGHT -> dolphin #1B97A5
+110.65s RIGHT -> dolphin #1B97A5（到头）
+117.85s LEFT  -> spark  #DB354C
+123.17s LEFT  -> cloud  #39B77B
+128.92s LEFT  -> prism  #F7AC19
+134.16s LEFT  -> pulse  #C257D0
+139.55s LEFT  -> sky    #468AE9
+144.62s LEFT  -> files  #468AE9
+before #F7AC19, after #468AE9
+```
+
+`files` 的图标是灰色（`acceptance/fixtures/art/ico_files.png` 的主要颜色为 #606163 等），本地取色返回 `LowChroma`，聚焦 `files` 没有产生新的主题过渡；`after` 的 `#468AE9` 是路径上 `sky` 的合法主题，不是 `files` 的回退蓝 `#4285f4`。D202 的失败信息把路径上的 `sky` 误判成 `files` 的结果。
+
+证据：本节的逐键时间线；`acceptance/out/20261103-202332-M2-device-api31g/results.json` 中 D202 的 `message`；`acceptance/out/20261103-205544-M2-device-api31g/`（复跑）。
+
+### 期望行为
+
+「低彩度来源不改变全局主题」只约束 `files` 自身，不能约束从 `prism` 到 `files` 路径上其他应用的合法主题切换。检查应满足以下任一条件：
+
+1. 确保移动发生在两个相邻项之间（例如先聚焦 `files` 的相邻项，再移到 `files`）；或
+2. 在 `files` 获得焦点后比较「聚焦瞬间的种子」与「稳定后的种子」，并断言 `counters.themeTransitions` 在 `files` 聚焦期间没有增加、`theme.sourceKey` 不是 `files` 的键；不要与路径起点的 `prism` 种子比较。
+
+按当前实现（每步之间约 5.2 秒的停顿），任何符合设计稿 180ms 焦点停留规则、且在 `files` 上保持当前主题的桌面都会在 D202 失败；除非它刻意让路径中间的应用不切换主题，这与设计稿 §07 相矛盾。
+
+### 状态
+
+待用户裁决。实现方未修改 `acceptance/` 下的任何文件。
+
+## A-005：api31g 上 `KEYCODE_TV_INPUT` 不会送达到应用窗口
+
+- 发现于：M4，2026-11-04
+- 检查编号：D407（api31g，Television_1080p，Android 12 Google TV）
+- 严重性：阻塞 M4 在 api31g 上的设备验收
+
+### 复现
+
+在 api31g 上把被测桌面设为默认桌面并置于前台，然后执行：
+
+```bash
+adb -s emulator-5562 shell input keyevent KEYCODE_TV_INPUT
+adb -s emulator-5562 shell dumpsys activity activities | grep -m1 mResumedActivity
+```
+
+D407 期望桌面显示信号源浮层（`overlay=inputs`）。实测浮层不出现，前台仍是桌面本身。
+
+### 实测
+
+- 桌面的 `Activity.dispatchKeyEvent` 记录所有到达的按键。同一窗口里 `MENU`(82)、`DPAD_UP`(19)、`DPAD_DOWN`(20)、`DPAD_CENTER`(23) 都能收到；`KEYCODE_TV_INPUT`(178) 从未到达（日志见下方证据）。
+- `dumpsys input` 的 `RecentQueue` 里能看到两次 `KeyEvent`（按下/抬起）已入队，但之后没有任何窗口收到该事件；`dumpsys window` 的 `mCurrentFocus` 一直是被测桌面。
+- 对照：系统自带的 Google TV 桌面（`com.google.android.apps.tv.launcherx`）在前台时发送同一按键，也没有出现信号源面板，前台 Activity 不变（`acceptance/out/20261104-062133-M4-device-api31g` 之外的手工复现截图）。
+- 同一台设备上 D407 的失败信息始终是 `overlay=None，前台 com.github.mytv.launcher/...MainActivity`，说明按键没有送达应用，而不是浮层实现有误（`LauncherModel.openInputs()`、`MainActivity.dispatchKeyEvent` 均已实现，MENU/方向键路径正常）。
+
+证据：`docs/m4/evidence/d407-tv-input-dispatch.txt`（本机 logcat 摘录与 dumpsys 输出）。
+
+### 期望行为
+
+`KEYCODE_TV_INPUT` 在 Android TV 上属于系统键，可能由 WindowManager 策略层消费。请确认：
+
+1. 验收工具在矩阵设备上是否应当用另一种方式触发信号源页（例如 `am broadcast`、或验收工具提供的测试入口）；
+2. 或者明确本需求在 API 31+ Google TV 上不可由第三方桌面实现，需要 ADR 调整设计稿 §14「信号源键打开信号源页」的验收方式。
+
+实现方不修改验收工具包，也未用任何方式绕过系统按键分发。
+
+### 状态
+
+待用户裁决。实现方已实现该按键的正常分发路径（在事件能到达应用时生效），但本机平台不把该键送达应用窗口，D407 无法通过。
+
+## A-006：D406 改名后 D413 仍要求夹具原始名称
+
+- 发现于：M4，2026-11-04
+- 检查编号：D413（同一轮中 D406 先执行；api31g）
+- 严重性：阻塞 M4 设备验收
+
+### 复现
+
+```
+python acceptance/run.py device M4 --serial emulator-5562 --name api31g --only D406,D413
+```
+
+D406 通过后紧接着执行 D413，结果：
+
+```
+[ FAIL] api31g  D413   长辈模式：大磁贴每排 4 个、名称常显、强制高对比焦点框  - 没有常显名称：['dolphin']
+```
+
+### 实测
+
+- D406 的协议步骤里有 `POST /api/apps/label`，把 `com.github.mytv.mlfixture.dolphin/…LauncherActivity` 改名为「改名测试」；D406 末尾还断言主页应用卡片必须显示「改名测试」，即改名要作用到桌面的应用名称并保持。
+- D413 用 `acceptance/fixtures/content.json` 的原始名称（海豚视频）逐个比对磁贴文字：
+
+```python
+missing = [f for f in allowed if not any(label(f) in t for t in tree.find(app_tag(f)).texts())]
+```
+
+- 此时海豚视频的磁贴显示的是「改名测试」，因此必然缺失。无障碍树证据里五个磁贴名称都在，只有 dolphin 一项是「改名测试」：`acceptance/out/20261104-132159-M4-device-api31g/api31g/002-elders.xml`。
+- 改名是本项目的产品功能（设计稿 §14「手机整理：改名…」，AppNames 持久保存），不是测试钩子；D406 自己要求它生效且保留。
+
+### 期望行为
+
+D413 不应假设夹具的原始名称。可选做法：
+
+1. D406 结束时通过 `POST /api/apps/label` 把名称改回原值；
+2. D413 对每个应用先经 `GET /api/apps` 读取当前名称，用当前名称比对磁贴；
+3. D413 不比对具体文字，只要求磁贴内存在非空名称文本。
+
+否则任何正确实现「改名并保持」的桌面都会在完整 M4 跑批里被 D413 判为失败。
+
+### 状态
+
+待用户裁决。实现方未修改 `acceptance/` 下的任何文件。

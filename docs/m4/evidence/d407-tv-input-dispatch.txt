@@ -1,0 +1,22 @@
+# D407 KEYCODE_TV_INPUT 分发证据（api31g，2026-11-04）
+
+## 1. 桌面 dispatchKeyEvent 记录（MENU 可达，TV_INPUT 不可达）
+```
+11-03 21:07:40.279 D/MLDBG: dispatch 19 0   # DPAD_UP down
+11-03 21:07:40.339 D/MLDBG: dispatch 19 1   # DPAD_UP up
+11-03 21:07:52.930 D/MLDBG: dispatch 82 0   # MENU down
+11-03 21:07:52.932 D/MLDBG: dispatch 82 1   # MENU up
+# input keyevent KEYCODE_TV_INPUT (178) 前后没有任何 dispatch 记录
+```
+
+## 2. 系统侧的入队记录（事件已注入，但未分发给窗口）
+```
+adb shell dumpsys input | sed -n '/RecentQueue/,/PendingEvent/p'
+  RecentQueue: length=10
+    KeyEvent, age=30402ms
+    KeyEvent, age=30402ms
+  mFocusedWindow=Window{... com.github.mytv.launcher/com.github.mytv.launcher.MainActivity}
+```
+
+## 3. 系统桌面同样收不到
+- 前台切到 com.google.android.apps.tv.launcherx 后发送 KEYCODE_TV_INPUT，mResumedActivity 不变，未出现信号源面板。

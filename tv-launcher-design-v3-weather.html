@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>主屏天气设计补充</title>
+<meta name="description" content="TV Launcher 设计方案 v3.4 的补充 A：天气移到顶栏右端的状态底板，按 HOME 即可看到；环境模式中天气放在大时钟左侧。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&family=Roboto+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+/* 版式沿用 v3.4：原型舞台在上（TV 960×540dp 等比缩放 + 右侧控制），其下为目录 + 760px 阅读列；色值与字体 token 与 v3.4 相同。 */
+:root{
+  --p10:#001a42; --p20:#002e6a; --p30:#004395; --p40:#2b5bb5; --p80:#afc6ff; --p90:#d9e2ff; --p100:#ffffff;
+  --t30:#5a3d60; --t40:#735479; --t80:#e0bae6; --t90:#fdd7ff;
+  --n4:#0c0e12; --n6:#111317; --n10:#1a1c20; --n12:#1e2024; --n17:#282a2e; --n22:#333539; --n90:#e2e2e8; --n94:#eeedf3; --n96:#f3f3f9; --n98:#f9f9ff; --n100:#ffffff;
+  --nv30:#444750; --nv50:#757780; --nv60:#8f9099; --nv80:#c5c6d0;
+
+  --bg:var(--n98); --bg-2:var(--n96); --card:var(--n100); --sunk:var(--n94);
+  --fg:var(--n10); --fg-2:var(--nv30); --line:var(--nv80); --line-strong:var(--nv50);
+  --accent:var(--p40); --on-accent:var(--p100); --accent-soft:var(--p90); --on-accent-soft:var(--p10);
+  --tag:var(--t90); --on-tag:var(--t30);
+  --code-bg:var(--n10); --code-fg:var(--n90);
+  --ok:#1b7a4c; --ok-bg:#dff3e7; --warn:#8f5200; --warn-bg:#fdeed9; --bad:#b3261e; --bad-bg:#fbe3e1;
+
+  --font-body:"Roboto Flex","Noto Sans SC","Microsoft YaHei UI","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+  --font-display:"Roboto Flex","Noto Sans SC","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;
+  --font-mono:"Roboto Mono","Cascadia Code",Consolas,"SFMono-Regular",monospace;
+  --measure:760px;
+  --cookie:circle(50%);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:var(--n6); --bg-2:var(--n10); --card:var(--n12); --sunk:var(--n4);
+    --fg:var(--n90); --fg-2:var(--nv80); --line:var(--nv30); --line-strong:var(--nv60);
+    --accent:var(--p80); --on-accent:var(--p20); --accent-soft:var(--p30); --on-accent-soft:var(--p90);
+    --tag:var(--t30); --on-tag:var(--t90); --code-bg:var(--n4); --code-fg:var(--n90);
+    --ok:#86d8a8; --ok-bg:#12331f; --warn:#ffc27a; --warn-bg:#3a2608; --bad:#f2b8b5; --bad-bg:#3d1311;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:var(--n6); --bg-2:var(--n10); --card:var(--n12); --sunk:var(--n4);
+  --fg:var(--n90); --fg-2:var(--nv80); --line:var(--nv30); --line-strong:var(--nv60);
+  --accent:var(--p80); --on-accent:var(--p20); --accent-soft:var(--p30); --on-accent-soft:var(--p90);
+  --tag:var(--t30); --on-tag:var(--t90); --code-bg:var(--n4); --code-fg:var(--n90);
+  --ok:#86d8a8; --ok-bg:#12331f; --warn:#ffc27a; --warn-bg:#3a2608; --bad:#f2b8b5; --bad-bg:#3d1311;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--accent);text-underline-offset:3px;text-decoration-thickness:1px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+code,pre{font-family:var(--font-mono)}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,5.2vw,60px);line-height:1.04;font-weight:760;font-stretch:112%;letter-spacing:-.02em;font-variation-settings:"opsz" 96}
+h2{font-size:clamp(25px,3vw,32px);line-height:1.2;font-weight:720;font-stretch:108%;letter-spacing:-.01em}
+h3{font-size:19px;line-height:1.4;font-weight:680;margin:34px 0 10px}
+p{margin:10px 0}
+ul,ol{padding-left:22px;margin:10px 0}
+li{margin:5px 0}
+li::marker{color:var(--line-strong)}
+strong{font-weight:680}
+.small{font-size:13.5px}
+code.i{font-size:.86em;background:var(--sunk);color:var(--fg);padding:1.5px 6px;border-radius:6px;overflow-wrap:break-word}
+.muted{color:var(--fg-2)}
+
+.wrap{max-width:1400px;margin:0 auto}
+.mast{padding-block:44px 22px;display:grid;gap:18px}
+.eyebrow{font-size:12px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-2);display:flex;gap:14px;flex-wrap:wrap}
+.eyebrow b{color:var(--accent);font-weight:700}
+.thesis{font-size:clamp(17px,1.6vw,19.5px);line-height:1.65;color:var(--fg-2);max-width:880px;margin:0}
+.thesis strong{color:var(--fg)}
+.thesis.std{font-size:15px;line-height:1.65}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;line-height:1;padding:8px 12px;border-radius:999px;border:1px solid var(--line);color:var(--fg-2);background:var(--card);white-space:nowrap}
+.chip.key{background:var(--accent-soft);color:var(--on-accent-soft);border-color:transparent;font-weight:650}
+
+/* 原型带 */
+.proto{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;padding-bottom:28px}
+.stage{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;border-radius:18px;overflow:hidden;background:#06070a;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--fg) 14%,transparent),0 30px 60px -30px rgba(0,0,0,.55)}
+.insp{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;display:grid;gap:13px;min-width:0;font-size:13.5px;line-height:1.55}
+.ctl{display:grid;gap:6px;min-width:0}
+.ctl-label{font-size:12px;font-weight:650;color:var(--fg-2);letter-spacing:.04em}
+.seg{display:flex;flex-wrap:wrap;gap:3px;background:var(--sunk);border-radius:14px;padding:3px}
+.seg label{flex:1 1 auto;position:relative}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:block;text-align:center;font-size:12px;line-height:1.2;padding:7px 8px;border-radius:11px;color:var(--fg-2);cursor:pointer;transition:background-color .2s,color .2s,border-radius .3s;white-space:nowrap}
+.seg input:checked+span{background:var(--accent);color:var(--on-accent);font-weight:650;border-radius:8px}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.readout{font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--fg-2);background:var(--bg-2);border-radius:14px;padding:10px 12px;font-variant-numeric:tabular-nums}
+.readout b{color:var(--fg);font-weight:500}
+
+/* 正文 */
+.doc{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;padding-block:28px 80px;border-top:1px solid var(--line)}
+.toc{position:sticky;top:20px;align-self:start;font-size:13.5px;line-height:1.45}
+.toc p{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-2);font-weight:700;margin:0 0 6px}
+.toc a{display:grid;grid-template-columns:28px 1fr;padding:5px 8px;border-radius:10px;color:var(--fg-2);text-decoration:none}
+.toc a span{font-family:var(--font-mono);font-size:11.5px;color:var(--line-strong);padding-top:1px}
+.toc a:hover{background:var(--bg-2);color:var(--fg)}
+main.content{min-width:0}
+section{margin:0 0 64px;scroll-margin-top:20px}
+.sh{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;margin-bottom:14px}
+.num{width:44px;height:44px;display:grid;place-items:center;background:var(--accent-soft);color:var(--on-accent-soft);font-family:var(--font-mono);font-weight:500;font-size:14px;clip-path:var(--cookie);margin-top:-2px}
+.lead{font-size:17.5px;line-height:1.7;color:var(--fg-2);max-width:var(--measure);margin:8px 0 0}
+.prose{max-width:var(--measure)}
+.note{border-radius:16px;padding:14px 18px;margin:16px 0;background:var(--bg-2);border:1px solid var(--line);max-width:calc(var(--measure) + 120px)}
+.note>b:first-child{display:inline-block;font-size:11.5px;letter-spacing:.08em;font-weight:750;padding:3px 9px;border-radius:999px;margin-bottom:6px;background:var(--accent-soft);color:var(--on-accent-soft)}
+.note.warn{background:var(--warn-bg);border-color:transparent}
+.note.warn>b:first-child{background:var(--warn);color:var(--bg)}
+.note p{margin:4px 0}
+.note ol{margin:6px 0 2px}
+.tbl{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px;line-height:1.55}
+th{text-align:left;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--fg-2);background:var(--bg-2);padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600}
+td.n{color:var(--bad);font-weight:650}
+td.p{color:var(--warn);font-weight:650}
+.num-col td{font-variant-numeric:tabular-nums}
+pre{background:var(--code-bg);color:var(--code-fg);border-radius:16px;padding:18px 20px;overflow:auto;font-size:12.5px;line-height:1.7;margin:14px 0;tab-size:2}
+pre .c{color:#8b93a7}pre .k{color:#c9a7ff}pre .s{color:#a8d98a}pre .n{color:#ffc387}pre .a{color:#7fd1ff}
+.decision{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px 0;border-bottom:1px solid var(--line);max-width:calc(var(--measure) + 120px)}
+.decision:last-child{border-bottom:0}
+.decision>b{font-size:14px;color:var(--accent)}
+.decision p{margin:0}
+
+/* 图标标本：电视画面里的深色底，两种主题下都保持深色 */
+.specimen{background:#0b0c10;border-radius:20px;padding:22px 18px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:18px 10px;color:#e6e6ea;margin:14px 0;
+  --g-cloud:#c9cdd8;--g-sun:#ffc24d;--g-moon:#d7defa;--g-rain:#7ab8ff;--g-snow:#eef3ff;--g-bolt:#ffd447}
+.specimen figure{margin:0;display:grid;justify-items:center;gap:8px}
+.specimen svg{width:56px;height:56px}
+.specimen figcaption{font-size:12px;color:#a9abb4;text-align:center;line-height:1.35}
+.specimen figcaption b{display:block;color:#e6e6ea;font-size:13px;font-weight:600}
+.plate-spec{background:#0b0c10;border-radius:20px;padding:26px 18px;margin:14px 0;display:flex;flex-wrap:wrap;gap:22px 34px;align-items:flex-end;justify-content:center;overflow:hidden;
+  background-image:linear-gradient(120deg,#20324a,#0d1522 55%,#2b2034)}
+.plate-spec .cell{display:grid;gap:12px;justify-items:center;min-width:0}
+.plate-spec .cap{font-size:12px;color:#a9abb4;text-align:center}
+.tv.ps{position:relative;width:auto;height:auto;background:none;overflow:visible;zoom:1.6}
+@media (max-width:720px){ .tv.ps{zoom:1} }
+.foot{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:var(--fg-2)}
+
+@media (max-width:1180px){ .proto{grid-template-columns:1fr} .insp{grid-template-columns:repeat(2,minmax(0,1fr))} .insp>.readout{grid-column:1/-1} }
+@media (max-width:980px){ .doc{grid-template-columns:1fr;gap:20px} .toc{display:none} }
+@media (max-width:720px){ .insp{grid-template-columns:1fr} .sh{grid-template-columns:1fr;gap:8px} .mast{padding-block:28px 16px} .decision{grid-template-columns:1fr;gap:4px} }
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition-duration:.01ms!important;animation-duration:.01ms!important} }
+
+/* ===== TV 原型（960×540 逻辑 dp，等比缩放；样式取自 v3.4 原型）===== */
+.tv{position:absolute;left:0;top:0;width:960px;height:540px;transform-origin:0 0;overflow:hidden;
+  --primary:#afc6ff;--on-primary:#002e6a;--surface:#111317;--sc:#1e2024;--sc-high:#282a2e;
+  --on-surface:#e2e2e8;--on-surface-var:#c5c6d0;--amb:#001a42;--ring:#d9e2ff;--glow:rgba(120,160,255,.55);
+  --g-cloud:#c9cdd8;--g-sun:#ffc24d;--g-moon:#d7defa;--g-rain:#7ab8ff;--g-snow:#eef3ff;--g-bolt:#ffd447;
+  --spr-fast:cubic-bezier(.34,1.45,.64,1);--spr-def:cubic-bezier(.3,1.12,.5,1);--d-def:520ms;--ease-fx:cubic-bezier(.2,0,0,1);
+  --pa:50%;
+  background:var(--surface);color:var(--on-surface);font-family:"Roboto Flex","Noto Sans SC","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;line-height:1.4;user-select:none;-webkit-user-select:none}
+.tv *{box-sizing:border-box}
+.tv[data-scene="elder"]{--g-sun:#ffd98a;--g-moon:#e6ebff;--g-rain:#acd2ff;--g-bolt:#ffe383;--g-cloud:#dde0e8}
+.tv-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity .6s var(--ease-fx)}
+.tv-scrim{position:absolute;inset:0;pointer-events:none;transition:opacity .6s var(--ease-fx);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--amb) 92%,transparent) 0%,color-mix(in srgb,var(--amb) 66%,transparent) 36%,transparent 72%),
+             linear-gradient(0deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 78%,transparent) 30%,transparent 64%)}
+.tv-scrim2{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s var(--ease-fx);
+  background:linear-gradient(0deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 88%,transparent) 52%,color-mix(in srgb,var(--surface) 30%,transparent) 100%)}
+.tv:not([data-scene="home"]) .tv-scrim2{opacity:1}
+.tv[data-scene="amb"] .tv-scrim,.tv[data-scene="amb"] .tv-scrim2{opacity:0}
+.tv-ambshade{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .8s var(--ease-fx);background:linear-gradient(0deg,rgba(0,0,0,.45),transparent 42%)}
+.tv[data-scene="amb"] .tv-ambshade{opacity:1}
+
+.glass{position:relative;isolation:isolate;background:color-mix(in srgb,var(--sc) var(--pa),transparent);
+  -webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1px rgba(255,255,255,.07);transition:background-color .5s var(--ease-fx)}
+.tv[data-v="34"]{--pa:50%}
+
+.tv-top{position:absolute;left:48px;right:48px;top:22px;height:46px;display:flex;align-items:center;gap:12px;z-index:20;transition:opacity .6s var(--ease-fx)}
+.tv[data-scene="amb"] .tv-top{opacity:0}
+.tv-tabs{display:flex;align-items:center;gap:4px;height:46px;margin-left:6px}
+.tv-tab{height:38px;padding:0 17px;border-radius:19px;display:flex;align-items:center;font-size:14.5px;font-weight:560;color:var(--on-surface-var);white-space:nowrap}
+.tv-tab.sel{color:var(--on-surface);background:color-mix(in srgb,var(--on-surface) 12%,transparent)}
+.tv-spacer{flex:1}
+.tv-pill{display:flex;align-items:center;gap:2px;padding:4px;border-radius:24px;height:46px}
+.tv-ico{width:38px;height:38px;border-radius:19px;display:grid;place-items:center;color:var(--on-surface)}
+.tv-ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* 状态底板：天气单元 + 分隔线 + 日期与时钟 */
+.plate{display:flex;align-items:center;height:46px;border-radius:23px;padding:0 18px 0 14px;white-space:nowrap}
+.wxu{display:flex;align-items:center;gap:6px;overflow:hidden;max-width:120px;opacity:1;
+  transition:max-width var(--d-def) var(--spr-def),opacity .35s var(--ease-fx) .12s}
+.wxu .glyph{width:24px;height:24px;flex:none;display:block}
+.wxu .glyph svg,.amb-wx .glyph svg{width:100%;height:100%;display:block}
+.temp{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.sep{width:1px;height:18px;background:color-mix(in srgb,var(--on-surface) 24%,transparent);margin:0 14px;flex:none;transition:margin var(--d-def) var(--spr-def),opacity .3s var(--ease-fx)}
+.dt{display:flex;align-items:baseline;gap:10px}
+.pdate{font-size:13px;font-weight:500;color:var(--on-surface-var);font-variant-numeric:tabular-nums}
+.clk{font-size:18px;font-weight:520;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.plate.nodata .wxu{max-width:0;opacity:0;transition:max-width var(--d-def) var(--spr-def),opacity .2s var(--ease-fx)}
+.plate.nodata .sep{margin:0;opacity:0;width:0}
+.plate.nodata{padding-left:18px}
+.tv[data-scene="elder"] .plate{height:52px;border-radius:26px;padding:0 20px 0 16px}
+.tv[data-scene="elder"] .wxu{gap:8px;max-width:140px}
+.tv[data-scene="elder"] .wxu .glyph{width:28px;height:28px}
+.tv[data-scene="elder"] .temp,.tv[data-scene="elder"] .clk{font-size:22px}
+.tv[data-scene="elder"] .sep{height:22px}
+.tv[data-scene="elder"] .dt{gap:12px}
+.tv[data-scene="elder"] .pdate{font-size:16px}
+.tv[data-scene="elder"] .plate.nodata{padding-left:20px}
+.tv[data-scene="elder"] .plate.nodata .wxu{max-width:0}
+.glyph.swap{animation:gfade .5s var(--ease-fx)}
+@keyframes gfade{from{opacity:0}to{opacity:1}}
+
+/* v3.4 原文：时钟 16sp，下方一行 13sp 日期 · 农历 · 天气 */
+.clk34{display:none;flex-direction:column;align-items:flex-end;line-height:1.18;padding-left:4px}
+.clk34 b{font-size:16px;font-weight:520;font-variant-numeric:tabular-nums}
+.clk34 small{font-size:13px;font-weight:500;color:var(--on-surface-var);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tv[data-v="34"] .plate{display:none}
+.tv[data-v="34"] .clk34{display:flex}
+
+/* Hero */
+.tv-hero{position:absolute;left:48px;top:98px;width:500px;z-index:10;transition:opacity .45s var(--ease-fx),transform .6s var(--spr-def)}
+.tv:not([data-scene="home"]) .tv-hero{opacity:0;transform:translateY(-28px)}
+.hero-src{display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:600;color:var(--on-surface-var);letter-spacing:.02em}
+.badge{width:20px;height:20px;border-radius:50%;flex:none}
+.hero-title{font-size:48px;line-height:1.06;font-weight:820;margin:10px 0 10px;letter-spacing:.01em;font-stretch:110%;text-shadow:0 2px 24px rgba(0,0,0,.25)}
+.hero-meta{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--on-surface-var);flex-wrap:wrap}
+.hero-meta .q{border:1px solid color-mix(in srgb,var(--on-surface) 45%,transparent);border-radius:5px;padding:1px 5px;font-size:10.5px;font-weight:700;color:var(--on-surface)}
+.hero-desc{font-size:14px;line-height:1.62;color:var(--on-surface-var);max-width:450px;margin:12px 0 20px}
+.btn-group{display:flex;gap:8px;align-items:center;height:48px}
+.tvbtn{height:46px;border-radius:23px;padding:0 20px;display:inline-flex;gap:8px;align-items:center;justify-content:center;font-size:14.5px;font-weight:650;white-space:nowrap;background:color-mix(in srgb,var(--on-surface) 15%,transparent);color:var(--on-surface)}
+.tvbtn svg{width:18px;height:18px;fill:currentColor;flex:none}
+.tvbtn.primary{background:var(--primary);color:var(--on-primary);padding:0 30px;border-radius:14px;transform:scale(1.05);box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--ring),0 12px 30px -8px var(--glow)}
+.tvbtn.icon{width:46px;padding:0}
+.dots{display:flex;gap:6px;margin-top:22px;align-items:center}
+.dot{width:8px;height:8px;border-radius:4px;background:color-mix(in srgb,var(--on-surface) 32%,transparent)}
+.dot.on{width:28px;background:var(--on-surface)}
+
+/* 浏览信息头 */
+.tv-info{position:absolute;left:48px;top:86px;width:560px;z-index:10;opacity:0;transform:translateY(14px);transition:opacity .45s var(--ease-fx),transform .6s var(--spr-def)}
+.tv[data-scene="browse"] .tv-info{opacity:1;transform:none}
+.info-title{font-size:30px;font-weight:820;line-height:1.15;margin:6px 0 6px;font-stretch:106%}
+.info-desc{font-size:13px;line-height:1.55;color:var(--on-surface-var);max-width:520px;margin-top:8px}
+
+/* 内容行 */
+.tv-rows{position:absolute;left:0;right:0;top:404px;z-index:6;transition:top .7s var(--spr-def),opacity .4s var(--ease-fx)}
+.tv[data-scene="browse"] .tv-rows{top:236px}
+.tv[data-scene="apps"] .tv-rows,.tv[data-scene="elder"] .tv-rows,.tv[data-scene="amb"] .tv-rows{opacity:0}
+.row-h{padding-left:48px;height:24px;font-size:15px;font-weight:660;display:flex;align-items:center}
+.track{display:flex;gap:18px;padding:12px 48px 32px}
+.card{position:relative;flex:none;border-radius:14px}
+.card .art{position:absolute;inset:0;border-radius:inherit;overflow:hidden;box-shadow:0 6px 18px -8px rgba(0,0,0,.5)}
+.w-next{width:200px;height:112px}
+.w-next .shade{position:absolute;inset:auto 0 0 0;height:56%;background:linear-gradient(transparent,rgba(0,0,0,.72))}
+.w-next .ttl{position:absolute;left:12px;bottom:20px;font-size:12.5px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.w-next .pg{position:absolute;left:12px;right:12px;bottom:10px;height:3px;border-radius:2px;background:rgba(255,255,255,.28)}
+.w-next .pg i{display:block;height:100%;border-radius:2px;background:#fff}
+.tv[data-scene="browse"] .card.f{transform:scale(1.1);border-radius:24px;z-index:3;box-shadow:0 0 0 3px var(--ring),0 20px 40px -10px var(--glow)}
+.card .lbl{position:absolute;left:2px;top:calc(100% + 8px);white-space:nowrap;font-size:11.5px;font-weight:600;opacity:0}
+.card .lbl small{font-weight:450;color:var(--on-surface-var);margin-left:6px}
+.tv[data-scene="browse"] .card.f .lbl{opacity:1}
+.aicon{width:70px;height:70px}
+.aicon .art{border-radius:50%;display:grid;place-items:center}
+.art svg{width:44%;height:44%;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* 应用页 / 长辈模式 */
+.tv-page{position:absolute;left:0;right:0;top:88px;bottom:0;z-index:6;opacity:0;transition:opacity .4s var(--ease-fx)}
+.tv[data-scene="apps"] .pg-apps,.tv[data-scene="elder"] .pg-elder{opacity:1}
+.pg-h{padding:0 48px;font-size:22px;font-weight:780}
+.grid{display:grid;gap:20px 22px;padding:22px 48px 0;justify-content:start}
+.pg-apps .grid{grid-template-columns:repeat(4,186px)}
+.banner{width:186px;height:105px}
+.banner .art{display:grid;place-items:center}
+.banner .art svg{width:34px;height:34px}
+.pg-apps .card .lbl{opacity:1;color:var(--on-surface-var);font-weight:550}
+.pg-apps .card.f{transform:scale(1.1);border-radius:22px;z-index:3;box-shadow:0 0 0 3px var(--ring),0 20px 40px -10px var(--glow)}
+.pg-apps .card.f .lbl{color:var(--on-surface)}
+.pg-elder{top:96px}
+.pg-elder .grid{grid-template-columns:repeat(4,198px);gap:46px 22px;padding-top:14px}
+.tile{width:198px;height:112px}
+.tile .art{display:grid;place-items:center}
+.tile .art svg{width:40px;height:40px}
+.tile .lbl{opacity:1;font-size:15px;font-weight:650;top:calc(100% + 10px);color:var(--on-surface)}
+.tile.f{transform:scale(1.06);z-index:3;box-shadow:0 0 0 4px #fff,0 0 0 6px #000}
+
+/* 环境模式 */
+.tv-amb{position:absolute;inset:0;z-index:30;opacity:0;pointer-events:none;transition:opacity 1s var(--ease-fx)}
+.tv[data-scene="amb"] .tv-amb{opacity:1}
+.amb-loc{position:absolute;left:48px;bottom:42px;font-size:13px;color:var(--on-surface-var);max-width:420px;text-shadow:0 1px 12px rgba(0,0,0,.4)}
+.amb-loc b{display:block;font-size:20px;color:var(--on-surface);font-weight:700;margin-bottom:2px}
+.amb-blk{position:absolute;right:48px;bottom:36px;display:grid;justify-items:end;gap:10px;text-shadow:0 2px 30px rgba(0,0,0,.35)}
+.amb-row{display:flex;align-items:baseline;gap:28px}
+.amb-wx{display:flex;align-items:baseline;gap:10px}
+.amb-wx .glyph{width:44px;height:44px;align-self:center;filter:drop-shadow(0 2px 14px rgba(0,0,0,.35))}
+.amb-wx .t{font-size:44px;font-weight:300;font-stretch:115%;font-variant-numeric:tabular-nums;line-height:1}
+.amb-clk{font-size:72px;font-weight:250;font-stretch:125%;line-height:1;font-variant-numeric:tabular-nums}
+.amb-date{font-size:20px;font-weight:400;color:var(--on-surface-var);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tv[data-v="34"] .amb-wx{display:none}
+.amb-wx.nodata{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow"><b>设计补充 A</b><span>2026-11-03</span><span>基于设计方案 v3.4</span><span>用户指示 · 优先于 v3.4</span><span>涉及 §06 §07 §09 §12 §13</span></div>
+    <h1>主屏天气</h1>
+    <p class="thesis"><strong>按 HOME 就能看到天气。</strong>v3.4 里，天气在顶栏是时钟下方 13sp 灰字的最后一项，原型和 M1 实现干脆没有画出来；另外两处在主页靠后的小组件速览和环境模式日期行的末尾。本补充把顶栏右端做成一块状态底板：左边是天气图标和温度，右边是日期、农历和时钟。环境模式里，天气单独放在大时钟左侧。天气数据的来源与刷新规则沿用 §12。</p>
+    <p class="thesis std">本补充由用户直接交给实现方，属于 PLAN.md 取舍顺序里的"用户的明确指示"，与 v3.4 冲突时以本补充为准。v3.4、AGENTS.md、PLAN.md 和 <code class="i">acceptance/</code> 都不改，实现方也不得修改本文件。</p>
+    <div class="chips">
+      <span class="chip key">顶栏状态底板 · 天气 + 日期农历 + 时钟</span>
+      <span class="chip key">不可聚焦，焦点链不变</span>
+      <span class="chip key">环境模式：大时钟左侧</span>
+      <span class="chip">数据规则沿用 §12</span>
+      <span class="chip">不改工具包，不新增界面文字与测试标签</span>
+    </div>
+  </header>
+
+  <div class="proto">
+    <div class="stage" id="stage" role="img" aria-label="电视桌面原型：顶栏右端的状态底板显示天气图标、温度、日期、农历与时钟">
+      <div class="tv" id="tv" data-v="a" data-scene="home" data-bg="dark">
+        <div class="tv-bg" id="tvBg"></div>
+        <div class="tv-scrim"></div>
+        <div class="tv-scrim2"></div>
+        <div class="tv-ambshade"></div>
+
+        <header class="tv-top">
+          <nav class="tv-tabs">
+            <div class="tv-tab sel">主页</div>
+            <div class="tv-tab">应用</div>
+            <div class="tv-tab">小组件</div>
+          </nav>
+          <div class="tv-spacer"></div>
+          <div class="tv-pill glass">
+            <div class="tv-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></div>
+            <div class="tv-ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="13" rx="3"/><path d="m6.5 15 3.5-4 3 3 2-2 2.5 3"/></svg></div>
+            <div class="tv-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2"/></svg></div>
+          </div>
+          <div class="plate glass" id="plate">
+            <div class="wxu" id="wxu"><span class="glyph" id="glyph"></span><span class="temp" id="temp">14°</span></div>
+            <i class="sep"></i>
+            <span class="dt"><span class="pdate" id="pdate"></span><span class="clk" id="clk">20:08</span></span>
+          </div>
+          <div class="clk34" id="clk34"><b id="clk34t">20:08</b><small id="clk34d"></small></div>
+        </header>
+
+        <section class="tv-hero">
+          <div class="hero-src"><span class="badge" id="heroBadge"></span><span id="heroSrc"></span></div>
+          <div class="hero-title" id="heroTitle"></div>
+          <div class="hero-meta" id="heroMeta"></div>
+          <div class="hero-desc" id="heroDesc"></div>
+          <div class="btn-group">
+            <div class="tvbtn primary"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>播放</div>
+            <div class="tvbtn"><svg viewBox="0 0 24 24"><path d="M11 5h2v14h-2zM5 11h14v2H5z"/></svg>片单</div>
+            <div class="tvbtn icon"><svg viewBox="0 0 24 24"><path d="M11 10h2v8h-2zM11 6h2v2h-2z"/></svg></div>
+          </div>
+          <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        </section>
+
+        <section class="tv-info">
+          <div class="hero-src"><span class="badge" id="infoBadge"></span><span id="infoSrc"></span></div>
+          <div class="info-title" id="infoTitle"></div>
+          <div class="hero-meta" id="infoMeta"></div>
+          <div class="info-desc" id="infoDesc"></div>
+        </section>
+
+        <div class="tv-rows" id="tvRows"></div>
+        <section class="tv-page pg-apps"><div class="pg-h">应用</div><div class="grid" id="appsGrid"></div></section>
+        <section class="tv-page pg-elder"><div class="grid" id="elderGrid"></div></section>
+
+        <div class="tv-amb">
+          <div class="amb-loc"><b id="ambT"></b><span id="ambS"></span></div>
+          <div class="amb-blk">
+            <div class="amb-row">
+              <span class="amb-wx" id="ambWx"><span class="glyph" id="ambGlyph"></span><span class="t" id="ambTemp">14°</span></span>
+              <span class="amb-clk" id="ambClk">20:08</span>
+            </div>
+            <div class="amb-date" id="ambDate"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="insp" aria-label="原型控制">
+      <div class="ctl"><div class="ctl-label">版本</div>
+        <div class="seg">
+          <label><input type="radio" name="v" id="v-a" value="a" checked><span>补充 A</span></label>
+          <label><input type="radio" name="v" id="v-34" value="34"><span>v3.4 原文</span></label>
+        </div></div>
+      <div class="ctl"><div class="ctl-label">场景</div>
+        <div class="seg">
+          <label><input type="radio" name="scene" id="s-home" value="home" checked><span>主页</span></label>
+          <label><input type="radio" name="scene" id="s-browse" value="browse"><span>浏览</span></label>
+          <label><input type="radio" name="scene" id="s-apps" value="apps"><span>应用页</span></label>
+          <label><input type="radio" name="scene" id="s-elder" value="elder"><span>长辈模式</span></label>
+          <label><input type="radio" name="scene" id="s-amb" value="amb"><span>环境模式</span></label>
+        </div></div>
+      <div class="ctl"><div class="ctl-label">背景</div>
+        <div class="seg">
+          <label><input type="radio" name="bg" id="b-dark" value="dark" checked><span>深色海报</span></label>
+          <label><input type="radio" name="bg" id="b-bright" value="bright"><span>明亮海报</span></label>
+        </div></div>
+      <div class="ctl"><div class="ctl-label">天气</div>
+        <div class="seg">
+          <label><input type="radio" name="sky" id="w-clear" value="clear" checked><span>晴</span></label>
+          <label><input type="radio" name="sky" id="w-partly" value="partly"><span>多云</span></label>
+          <label><input type="radio" name="sky" id="w-overcast" value="overcast"><span>阴</span></label>
+          <label><input type="radio" name="sky" id="w-fog" value="fog"><span>雾</span></label>
+          <label><input type="radio" name="sky" id="w-rain" value="rain"><span>雨</span></label>
+          <label><input type="radio" name="sky" id="w-snow" value="snow"><span>雪</span></label>
+          <label><input type="radio" name="sky" id="w-thunder" value="thunder"><span>雷雨</span></label>
+        </div></div>
+      <div class="ctl"><div class="ctl-label">时段</div>
+        <div class="seg">
+          <label><input type="radio" name="day" id="d-day" value="day" checked><span>白天</span></label>
+          <label><input type="radio" name="day" id="d-night" value="night"><span>夜间</span></label>
+        </div></div>
+      <div class="ctl"><div class="ctl-label">天气数据</div>
+        <div class="seg">
+          <label><input type="radio" name="data" id="x-yes" value="yes" checked><span>已取到</span></label>
+          <label><input type="radio" name="data" id="x-no" value="no"><span>没有或已过期</span></label>
+        </div></div>
+      <div class="readout" id="readout" aria-live="polite"></div>
+    </aside>
+  </div>
+
+  <div class="doc">
+    <nav class="toc" aria-label="目录">
+      <p>补充 A</p>
+      <a href="#a1"><span>A1</span>问题</a>
+      <a href="#a2"><span>A2</span>顶栏状态底板</a>
+      <a href="#a3"><span>A3</span>天气图标</a>
+      <a href="#a4"><span>A4</span>状态与动效</a>
+      <a href="#a5"><span>A5</span>环境模式</a>
+      <a href="#a6"><span>A6</span>取舍</a>
+      <a href="#a7"><span>A7</span>对 v3.4 的修改</a>
+      <a href="#a8"><span>A8</span>里程碑与验收</a>
+    </nav>
+    <main class="content">
+
+<section id="a1">
+  <div class="sh"><div class="num">A1</div><div><h2>问题：v3.4 里的天气在哪</h2>
+  <p class="lead">回到主页的第一屏，看不到天气，或者要找才看得到。v3.4 一共有四处提到天气，没有一处能一眼看到。</p></div></div>
+  <div class="tbl"><table>
+    <thead><tr><th>位置</th><th>怎么到达</th><th>v3.4 的呈现</th><th>一眼可见</th></tr></thead>
+    <tbody>
+      <tr><td>顶栏</td><td>按 HOME 即在屏幕上</td><td>§09 字号表："日期 · 农历 · 天气"13sp，时钟下方一行，onSurfaceVariant，天气排在最后。§06 顶栏规格没有这一行，原型与 M1 实现都只有时钟。</td><td class="n">否：13sp 灰字、没有图标，排在一串日期之后；顶栏右端没有遮罩，亮色海报上读不清</td></tr>
+      <tr><td>主页小组件速览</td><td>HOME 后按 ↓ 4–7 次：Hero → 继续观看 → 片单 → 你的应用 → 频道行（1–3 行）→ 小组件速览；还要先把"时钟与天气"放进速览</td><td>236×124 的小组件</td><td class="n">否</td></tr>
+      <tr><td>小组件页</td><td>↑ 到顶栏，→ 两次，停 320ms</td><td>同上</td><td class="n">否</td></tr>
+      <tr><td>环境模式</td><td>主页空闲 10 秒</td><td>大时钟下方日期行的末尾，20sp（原型 14px 且没有天气）</td><td class="p">部分：要先等空闲，且排在日期和农历后面</td></tr>
+    </tbody>
+  </table></div>
+  <p class="prose">原型右侧把"版本"切到"v3.4 原文"，可以看到按字号表画出的顶栏；再把"背景"切到"明亮海报"，那行字就读不清了。</p>
+</section>
+
+<section id="a2">
+  <div class="sh"><div class="num">A2</div><div><h2>顶栏状态底板</h2>
+  <p class="lead">§07 材质表里已经有"时钟底板"，这里把它扩成状态底板：左边是天气图标和当前温度，右边是日期、农历和时钟。它和胶囊组同为 Chrome 玻璃、同高，顶栏右侧因此读作两块：能操作的胶囊组，只用来看的状态底板。</p></div></div>
+
+  <div class="plate-spec" aria-label="状态底板标本，按 1.6 倍绘制">
+    <div class="cell"><div class="tv ps" data-scene="home"><div class="plate glass" style="--pa:50%"><div class="wxu"><span class="glyph" data-g="clear"></span><span class="temp">14°</span></div><i class="sep"></i><span class="dt"><span class="pdate" data-date></span><span class="clk">20:08</span></span></div></div><div class="cap">有天气数据 · 约 320dp</div></div>
+    <div class="cell"><div class="tv ps" data-scene="home"><div class="plate glass nodata" style="--pa:50%"><div class="wxu"><span class="glyph" data-g="clear"></span><span class="temp">14°</span></div><i class="sep"></i><span class="dt"><span class="pdate" data-date></span><span class="clk">20:08</span></span></div></div><div class="cap">没有天气数据 · 约 230dp</div></div>
+  </div>
+
+  <div class="tbl num-col"><table>
+    <thead><tr><th>项</th><th>默认（dp / sp）</th><th>长辈模式</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>位置</td><td>顶栏右端，右缘 x 912；与胶囊组间距 12</td><td>同左</td><td>垂直居中于 y 44；顶栏其余部分不变</td></tr>
+      <tr><td>底板</td><td>高 46，圆角 23；左内边距 14，右内边距 18</td><td>高 52，圆角 26；16 / 20</td><td>Chrome 玻璃，不透明度按下文"对比度守护"取档</td></tr>
+      <tr><td>天气图标</td><td>24</td><td>28</td><td>两色填充造型，见 A3</td></tr>
+      <tr><td>图标与温度间距</td><td>6</td><td>8</td><td></td></tr>
+      <tr><td>温度</td><td>18sp，字重 600，等宽数字</td><td>22sp</td><td>"14°""-3°"；不带 C</td></tr>
+      <tr><td>分隔线</td><td>1×18，onSurface 24%，两侧各 14</td><td>1×22</td><td>没有天气时随天气单元一起收起</td></tr>
+      <tr><td>日期与农历</td><td>13sp，字重 500，onSurfaceVariant，等宽数字</td><td>16sp</td><td>形如"11月3日 周二 · 九月廿五"，与环境模式日期行同一格式；农历的开关与默认值按 §12，不显示农历时为"11月3日 周二"</td></tr>
+      <tr><td>日期与时钟间距</td><td>10，基线对齐</td><td>12</td><td></td></tr>
+      <tr><td>时钟</td><td>18sp，字重 520，等宽数字</td><td>22sp</td><td>由 v3.4 的 16sp 改为 18sp，与温度同高；12 / 24 小时制按 §12</td></tr>
+      <tr><td>总宽</td><td>约 320；没有天气数据时约 230</td><td>约 375 / 280</td><td>顶栏左侧 Tab 结束于 x 270 左右，余量足够</td></tr>
+    </tbody>
+  </table></div>
+
+  <ul class="prose">
+    <li><strong>排列</strong>：天气在最左，用分隔线与"日期 + 时钟"隔开。日期和时钟是一组，底板右缘固定，所以天气出现或消失时，日期和时钟都不移动；没有天气数据时，天气单元和分隔线一起收起，不留孤立的分隔线。</li>
+    <li><strong>出现范围</strong>：顶栏可见时都显示，即主页的 Hero 与浏览态、应用页、小组件页。手机与电脑页、查看页、播放页本来就隐藏顶栏；环境模式顶栏淡出，天气、日期与农历改由 A5 的布局显示。</li>
+    <li><strong>焦点</strong>：状态底板不可聚焦。焦点在齿轮上按 → 仍是边界，播放 FX_KEYPRESS_INVALID。顶栏的焦点链、BACK 链和 HOME 行为都不变。</li>
+    <li><strong>触屏与鼠标</strong>：点按、长按都不响应。</li>
+    <li><strong>读屏</strong>：天气单元的 contentDescription 为状况名加温度，例如"晴 14°"，这串文字已在界面文字白名单的模式里；日期和时钟按原文字朗读。</li>
+    <li><strong>不显示</strong>：城市名、状况文字、最高 / 最低温（理由见 A6）。</li>
+  </ul>
+
+  <h3>对比度守护</h3>
+  <p class="prose">顶栏右端不在 §06 的遮罩范围里：横向遮罩到 72% 画面宽度就透明了，底部遮罩只盖下半部。海报右上角是亮天空时，Chrome 玻璃 50% 的底色压不住，白字会糊。规则如下，胶囊组用同一个结果，顶栏两块始终一致。</p>
+  <ol class="prose">
+    <li>背景层换图后（§08，焦点停留 260ms），在已解码的背景图上取状态底板覆盖的矩形，分成 12×3 格，取相对亮度最高一格的平均色。</li>
+    <li>依次试不透明度 50%、65%、80%：把 surfaceContainer 按这个不透明度叠在上一步的颜色上，得到底板色；底板里最弱的文字（日期，onSurfaceVariant）对它的对比度达到 4.5:1 就用这一档。三档都不够时用 80%。</li>
+    <li>换档用 effects default 过渡。T3 纯色底板已是 94%，不计算。环境模式不用底板。</li>
+  </ol>
+<pre><code><span class="c">// :core:glass —— 状态底板与胶囊组的不透明度档位</span>
+<span class="k">private val</span> PLATE_ALPHAS = floatArrayOf(<span class="n">0.50f</span>, <span class="n">0.65f</span>, <span class="n">0.80f</span>)
+
+<span class="c">// 按 sRGB 逐通道叠加，与合成器一致；不要用 Compose 的 lerp(Color, Color, Float)，它在 Oklab 中插值</span>
+<span class="k">private fun</span> over(top: Color, alpha: Float, bottom: Color) = Color(
+  red = top.red * alpha + bottom.red * (<span class="n">1</span> - alpha),
+  green = top.green * alpha + bottom.green * (<span class="n">1</span> - alpha),
+  blue = top.blue * alpha + bottom.blue * (<span class="n">1</span> - alpha),
+)
+
+<span class="c">// brightest：底板下方最亮一格的平均色；tint：surfaceContainer；text：onSurfaceVariant</span>
+<span class="k">fun</span> plateAlpha(brightest: Color, tint: Color, text: Color): Float =
+  PLATE_ALPHAS.firstOrNull { a ->
+    ColorUtils.calculateContrast(text.toArgb(), over(tint, a, brightest).toArgb()) >= <span class="n">4.5</span>
+  } ?: PLATE_ALPHAS.last()</code></pre>
+  <p class="small muted prose">原型里"明亮海报"的右上角是太阳附近的天空，守护会取 80%；控制栏下方显示实时计算结果。原型用浏览器的 backdrop-filter 模拟 T1，饱和度增强会让实际观感比计算值略亮。</p>
+</section>
+
+<section id="a3">
+  <div class="sh"><div class="num">A3</div><div><h2>天气图标</h2>
+  <p class="lead">一眼要看的是"冷不冷、下不下雨"，所以图标靠造型区分，颜色只做加强。七种造型，晴和多云各有夜间变体。</p></div></div>
+  <div class="specimen" id="specimen"></div>
+  <div class="tbl"><table>
+    <thead><tr><th>WMO 天气码（Open-Meteo）</th><th>状况名（contentDescription）</th><th>图标</th></tr></thead>
+    <tbody>
+      <tr><td>0、1</td><td>晴</td><td>太阳；夜间为月亮</td></tr>
+      <tr><td>2</td><td>多云</td><td>太阳 + 云；夜间为月亮 + 云</td></tr>
+      <tr><td>3</td><td>阴</td><td>云</td></tr>
+      <tr><td>45、48</td><td>雾</td><td>雾</td></tr>
+      <tr><td>51、53、55</td><td>毛毛雨</td><td>雨</td></tr>
+      <tr><td>56、57、66、67</td><td>冻雨</td><td>雨</td></tr>
+      <tr><td>61 / 63 / 65</td><td>小雨 / 中雨 / 大雨</td><td>雨</td></tr>
+      <tr><td>80、81、82</td><td>阵雨</td><td>雨</td></tr>
+      <tr><td>71、77 / 73 / 75</td><td>小雪 / 中雪 / 大雪</td><td>雪</td></tr>
+      <tr><td>85、86</td><td>阵雪</td><td>雪</td></tr>
+      <tr><td>95</td><td>雷雨</td><td>雷雨</td></tr>
+      <tr><td>96、99</td><td>冰雹</td><td>雷雨</td></tr>
+      <tr><td>其他</td><td>—</td><td>不显示图标，只显示温度</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="prose">
+    <li><strong>昼夜</strong>：§12 的 current 请求增加 <code class="i">is_day</code>；为 0 时晴、多云用月亮。其他状况不分昼夜。</li>
+    <li><strong>造型</strong>：24dp 网格，填充造型（十英尺下比描边好认）。云用 onSurfaceVariant；太阳、月亮、雨滴、雪粒、闪电用状况色。雾只用横线，不带云，和雨从轮廓上就能分开。</li>
+    <li><strong>状况色</strong>：设计色经 MCU <code class="i">Blend.harmonize</code> 向当前主色偏移（最多 15°），再取 HCT 色调 80；高对比焦点框开启或长辈模式时取 90。设计色：太阳 #F5B43C、月亮 #C9D3F2、雨 #5EA2F0、雪 #E3ECFA、闪电 #F7D046。原型使用未经调和的固定色。</li>
+    <li><strong>资源</strong>：9 个 VectorDrawable 放在 <code class="i">core:designsystem</code>，不引入图标库。</li>
+    <li><strong>文字</strong>：16 个状况名与"14°"格式都已在 <code class="i">acceptance/spec/ui_copy.json</code> 中，不新增界面文字。负温用 ASCII 连字符"-3°"，与白名单模式 <code class="i">^-?\d{1,2}°$</code> 一致。</li>
+  </ul>
+<pre><code><span class="c">// :data:weather —— 天气码 → 造型与状况名；文字取自 strings.xml，源码里没有中文</span>
+<span class="k">enum class</span> Sky { Clear, Partly, Overcast, Fog, Rain, Snow, Thunder }
+<span class="k">data class</span> WeatherLook(<span class="k">val</span> sky: Sky, <span class="a">@StringRes</span> <span class="k">val</span> label: Int)
+
+<span class="k">fun</span> lookOf(wmo: Int): WeatherLook? = <span class="k">when</span> (wmo) {
+  <span class="n">0</span>, <span class="n">1</span> -> WeatherLook(Sky.Clear, R.string.wx_clear)
+  <span class="n">2</span> -> WeatherLook(Sky.Partly, R.string.wx_cloudy)
+  <span class="n">3</span> -> WeatherLook(Sky.Overcast, R.string.wx_overcast)
+  <span class="n">45</span>, <span class="n">48</span> -> WeatherLook(Sky.Fog, R.string.wx_fog)
+  <span class="n">51</span>, <span class="n">53</span>, <span class="n">55</span> -> WeatherLook(Sky.Rain, R.string.wx_drizzle)
+  <span class="n">56</span>, <span class="n">57</span>, <span class="n">66</span>, <span class="n">67</span> -> WeatherLook(Sky.Rain, R.string.wx_freezing_rain)
+  <span class="n">61</span> -> WeatherLook(Sky.Rain, R.string.wx_rain_light)
+  <span class="n">63</span> -> WeatherLook(Sky.Rain, R.string.wx_rain_moderate)
+  <span class="n">65</span> -> WeatherLook(Sky.Rain, R.string.wx_rain_heavy)
+  <span class="n">80</span>, <span class="n">81</span>, <span class="n">82</span> -> WeatherLook(Sky.Rain, R.string.wx_showers)
+  <span class="n">71</span>, <span class="n">77</span> -> WeatherLook(Sky.Snow, R.string.wx_snow_light)
+  <span class="n">73</span> -> WeatherLook(Sky.Snow, R.string.wx_snow_moderate)
+  <span class="n">75</span> -> WeatherLook(Sky.Snow, R.string.wx_snow_heavy)
+  <span class="n">85</span>, <span class="n">86</span> -> WeatherLook(Sky.Snow, R.string.wx_snow_showers)
+  <span class="n">95</span> -> WeatherLook(Sky.Thunder, R.string.wx_thunder)
+  <span class="n">96</span>, <span class="n">99</span> -> WeatherLook(Sky.Thunder, R.string.wx_hail)
+  <span class="k">else</span> -> <span class="k">null</span>   <span class="c">// 未知天气码：只显示温度</span>
+}
+<span class="c">// 夜间变体：sky 为 Clear / Partly 且 is_day == 0；图标资源在 core:designsystem 中按 (sky, isDay) 选择</span></code></pre>
+</section>
+
+<section id="a4">
+  <div class="sh"><div class="num">A4</div><div><h2>状态与动效</h2>
+  <p class="lead">没有数据时不占位，有了数据再展开。底板的宽度变化是顶栏里唯一的位移，其余都是淡入淡出。</p></div></div>
+  <div class="tbl"><table>
+    <thead><tr><th>情形</th><th>呈现</th><th>动效（MotionScheme.expressive）</th></tr></thead>
+    <tbody>
+      <tr><td>还没有数据</td><td>首次启动、城市未设置且 IP 推测未完成、接口一直失败时，底板只有日期与时钟；不显示"--°"之类的占位</td><td>—</td></tr>
+      <tr><td>第一次拿到数据</td><td>底板向左展开，天气单元与分隔线淡入；日期与时钟位置不动</td><td>宽度 spatial default；内容 effects default，延后 120ms</td></tr>
+      <tr><td>每小时刷新</td><td>图标交叉淡入；温度直接换数字，不做滚动</td><td>effects default；位数变化时宽度用 spatial fast</td></tr>
+      <tr><td>请求失败</td><td>继续显示上次结果；退避按 §12</td><td>—</td></tr>
+      <tr><td>3 小时没有新数据</td><td>天气单元与分隔线淡出，底板收回到只有日期与时钟（§12 的隐藏规则不变）</td><td>与展开相反</td></tr>
+      <tr><td>跨过零点</td><td>日期与农历随时钟一起更新</td><td>直接替换</td></tr>
+      <tr><td>长辈模式</td><td>尺寸按 A2 的长辈模式列；状况色取色调 90</td><td>同默认</td></tr>
+      <tr><td>儿童模式</td><td>同默认</td><td>同默认</td></tr>
+      <tr><td>快速设置等浮层</td><td>底板随顶栏一起被 38% 遮暗，不单独处理</td><td>—</td></tr>
+      <tr><td>减弱动效（系统动画缩放为 0）</td><td>宽度与透明度直接切换</td><td>无</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="a5">
+  <div class="sh"><div class="num">A5</div><div><h2>环境模式</h2>
+  <p class="lead">主页空闲 10 秒后进入环境模式，顶栏淡出。这时天气从日期行末尾挪到大时钟左侧，和时钟并排。</p></div></div>
+  <div class="tbl num-col"><table>
+    <thead><tr><th>元素</th><th>规格</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>位置</td><td>右下角，右缘 x 912，下缘 y 504（与 v3.4 相同）</td><td>整块右对齐；没有天气时只剩时钟，时钟位置不动</td></tr>
+      <tr><td>天气单元</td><td>图标 44dp；温度 44sp，字重 300，宽度 115，等宽数字</td><td>与大时钟同一基线，间距 28</td></tr>
+      <tr><td>大时钟</td><td>72sp，字重 250，宽度 125</td><td>不变</td></tr>
+      <tr><td>日期行</td><td>20sp，字重 400</td><td>只保留公历日期、星期、农历，形如"11月3日 周二 · 九月廿五"；不再接天气</td></tr>
+      <tr><td>阴影</td><td>文字 0 2 30 rgba(0,0,0,.35)；图标同值的 drop-shadow</td><td>航拍画面上保持可读</td></tr>
+      <tr><td>防烧屏</td><td>每分钟随机偏移最多 24dp</td><td>天气、时钟、日期整块一起移动</td></tr>
+    </tbody>
+  </table></div>
+  <p class="prose">系统屏保（DreamService）复用同一布局。原型把"场景"切到"环境模式"可以看到效果。</p>
+</section>
+
+<section id="a6">
+  <div class="sh"><div class="num">A6</div><div><h2>取舍</h2>
+  <p class="lead">以下做法考虑过，没有采用。实现方按本补充实现，不要自行加回。</p></div></div>
+  <div class="decision"><b>不可聚焦</b><p>顶栏的焦点链保持不变。没有专门的天气页可去，一个聚焦后按 OK 什么也不发生的元素只会让人困惑。最高 / 最低温和更多信息留在"时钟与天气"小组件。</p></div>
+  <div class="decision"><b>天气只放图标和温度</b><p>状况名作为 contentDescription 留给读屏。底板里已经有日期，再放状况文字会和 Tab 抢视线。</p></div>
+  <div class="decision"><b>日期不放在时钟下方</b><p>v3.4 字号表写的是"时钟下方一行"。顶栏只有一行高（y 22–66），两行会让底板比胶囊组高，也会贴近 Hero。改为放在底板里、时钟左侧，与时钟基线对齐，字号仍是 13sp。</p></div>
+  <div class="decision"><b>不加显示开关</b><p>没有数据时底板本来就不占位。若需要"在顶栏显示天气"开关，要在桌面设置加一项，并把这条文字加进界面文字白名单。</p></div>
+  <div class="decision"><b>只用摄氏度</b><p>界面只有简体中文，温度不带单位字母。</p></div>
+</section>
+
+<section id="a7">
+  <div class="sh"><div class="num">A7</div><div><h2>对 v3.4 的修改</h2>
+  <p class="lead">v3.4 原文件不改。下表各条以本补充为准。</p></div></div>
+  <div class="tbl"><table>
+    <thead><tr><th>v3.4 位置</th><th>原文</th><th>改为</th></tr></thead>
+    <tbody>
+      <tr><td>§06 首页结构 · 顶栏</td><td>y 22–66；Tab 高 38、字号 14.5sp；胶囊高 46</td><td>增加：右端状态底板（天气 · 日期与农历 · 时钟），高 46（长辈模式 52），见 A2</td></tr>
+      <tr><td>§07 材质 token · Chrome</td><td>顶栏胶囊、时钟底板；surfaceContainer 50% + primary 6%</td><td>顶栏胶囊、状态底板；不透明度 50% / 65% / 80% 三档，按对比度守护取档</td></tr>
+      <tr><td>§09 字号 · 时钟</td><td>16；环境模式 72</td><td>顶栏 18（长辈模式 22）；环境模式 72</td></tr>
+      <tr><td>§09 字号 · 新增"温度"</td><td>—</td><td>顶栏 18 / 600（长辈模式 22）；环境模式 44 / 300；等宽数字</td></tr>
+      <tr><td>§09 字号 · 日期 · 农历 · 天气</td><td>13；环境模式 20；时钟下方一行</td><td>改为"日期 · 农历"，不含天气：顶栏 13（在状态底板内、时钟左侧，长辈模式 16）；小组件 13；环境模式 20（时钟下方一行）</td></tr>
+      <tr><td>§12 内置时钟与天气 · 首句</td><td>顶栏时钟、环境模式大时钟和"时钟与天气"小组件共用下列数据与规则</td><td>顶栏状态底板、环境模式的时钟与天气单元和"时钟与天气"小组件共用下列数据与规则</td></tr>
+      <tr><td>§12 · 天气数据</td><td>显示当前温度、天气图标和当日最高 / 最低温</td><td>增加：current 请求带 is_day；天气码到状况名与图标的对应见 A3</td></tr>
+      <tr><td>§13 · 时钟</td><td>大时钟（72sp）下方一行显示公历日期、星期、农历与天气</td><td>天气在大时钟左侧（A5）；下方一行显示公历日期、星期、农历</td></tr>
+      <tr><td>交互原型</td><td>顶栏只有时钟；环境模式日期行没有天气</td><td>顶栏与环境模式以本页原型为准；其余部分仍以 v3.4 原型为准</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="a8">
+  <div class="sh"><div class="num">A8</div><div><h2>落地方式与验收</h2>
+  <p class="lead">本补充不改工具包，按功能所属的里程碑落实；已验收的 M1 不受影响。自动检查覆盖不到的部分，由用户对照本页原型确认。</p></div></div>
+  <div class="tbl"><table>
+    <thead><tr><th>里程碑</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td>M1</td><td>不变。顶栏只有时钟</td></tr>
+      <tr><td>M2</td><td>状态底板（Chrome 玻璃）、时钟改为 18sp、公历日期与星期、对比度守护（胶囊组同时生效）</td></tr>
+      <tr><td>M3</td><td>底板里的农历；顶栏天气单元、天气码映射、夜间变体，随 <code class="i">data:weather</code> 一起做</td></tr>
+      <tr><td>M4</td><td>环境模式与屏保：天气移到大时钟左侧，日期行不再接天气</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>与现有验收的关系</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>项</th><th>做法与影响</th></tr></thead>
+    <tbody>
+      <tr><td>S11 界面文字</td><td>不新增文字。"14°""-3°"、"11月3日 周二 · 九月廿五"、读屏文字"晴 14°"都匹配 <code class="i">ui_copy.json</code> 的现有模式</td></tr>
+      <tr><td>测试标签（CONTRACT §2）</td><td>不新增标签。<code class="i">clock</code> 只挂在时钟文字上，不包含日期（D327 读它的文字判断 12 / 24 小时制）；天气单元与日期不挂标签。环境模式时钟仍为 <code class="i">ambient:clock</code>；<code class="i">ambient:date</code> 仍挂在日期行上，天气挪走后这一行只含日期与农历；环境模式天气单元不挂标签</td></tr>
+      <tr><td>状态接口（CONTRACT §3）</td><td>字段不变。<code class="i">weather.visible</code> 表示顶栏天气单元当前是否显示，与真实界面一致</td></tr>
+      <tr><td>D327</td><td>不受影响，理由见"测试标签"</td></tr>
+      <tr><td>D328</td><td>不受影响：仍检查天气请求和"时钟与天气"小组件；顶栏天气单元不在自动检查范围内</td></tr>
+      <tr><td>D401、D403</td><td>不受影响：<code class="i">ambient:clock</code> 仍在，整块随防烧屏偏移一起移动</td></tr>
+      <tr><td>顶栏焦点</td><td>不受影响：各检查从 <code class="i">nav:home</code> 向右找 <code class="i">nav:settings</code>，状态底板不可聚焦</td></tr>
+      <tr><td>布局检查（焦点基线 y 236 等）</td><td>不受影响：顶栏仍在 y 22–66；长辈模式底板高 52，占 y 18–70，仍在 Hero 与信息头上方</td></tr>
+      <tr><td>S15</td><td>本文件放在仓库根目录，按 AGENTS.md 流程第 3 步与其他改动一起提交，否则 S15 会把它列为未提交</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note"><b>实现方另外交付</b>
+    <ol>
+      <li>单元测试，不在 <code class="i">required_tests.json</code> 里，不受 S17 门禁：<code class="i">WeatherLookTest</code>（:data:weather，M3）覆盖 A3 表中的全部天气码、夜间变体与未知码；<code class="i">PlateContrastTest</code>（:core:glass，M2）覆盖白色、中灰、深色背景下的取档结果，以及取档后 onSurfaceVariant 不低于 4.5:1。</li>
+      <li>M2、M3、M4 的 <code class="i">docs/milestones/Mx.md</code> 加一节"补充 A 落实情况"，逐条对照 A2–A5，附截图：顶栏在深色与明亮背景下各一张、有无天气数据各一张，M4 加环境模式一张。</li>
+      <li>本补充与 v3.4 其他部分或工具包冲突、无法实现时，按 AGENTS.md 写 ADR（设计问题）或 <code class="i">docs/acceptance-issues.md</code>（工具包问题），停下等用户裁决。</li>
+    </ol>
+  </div>
+</section>
+
+      <footer class="foot">设计补充 A · 2026-11-03 · 依据 <a href="tv-launcher-design-v3.html">设计方案 v3.4</a> · 用户指示，冲突时优先于 v3.4。原型中的海报、应用与片源均为示意。</footer>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const tv = $('#tv'), stage = $('#stage');
+
+/* ---------- 天气图标（24dp 网格，填充造型） ---------- */
+const CLOUD = 'M6.5 19a4.5 4.5 0 0 1-.9-8.91A6 6 0 0 1 17.2 8.6 5.2 5.2 0 0 1 17.5 19z';
+const MOON = 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z';
+const cloud = t => `<path d="${CLOUD}" transform="${t}" fill="var(--g-cloud)"/>`;
+const G = {
+  clear: `<circle cx="12" cy="12" r="4.6" fill="var(--g-sun)"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.35 5.35l1.55 1.55M17.1 17.1l1.55 1.55M5.35 18.65l1.55-1.55M17.1 6.9l1.55-1.55" stroke="var(--g-sun)" stroke-width="2" stroke-linecap="round"/>`,
+  clearN: `<path d="${MOON}" fill="var(--g-moon)"/>`,
+  partly: `<circle cx="8.5" cy="8.5" r="3.4" fill="var(--g-sun)"/><path d="M3.3 8.5H1.6M8.5 3.3V1.6M4.8 4.8 3.6 3.6M12.2 4.8l1.2-1.2M4.8 12.2l-1.2 1.2" stroke="var(--g-sun)" stroke-width="1.8" stroke-linecap="round"/>${cloud('translate(5.5 6) scale(.74)')}`,
+  partlyN: `<path d="${MOON}" transform="translate(-.6 -.6) scale(.56)" fill="var(--g-moon)"/>${cloud('translate(5.5 6) scale(.74)')}`,
+  overcast: cloud('translate(0 .5)'),
+  fog: `<path d="M4 6.5h12M7 10.5h13M3.5 14.5h13M7.5 18.5h11" stroke="var(--g-cloud)" stroke-width="2.3" stroke-linecap="round"/>`,
+  rain: `${cloud('translate(1.6 -2.2) scale(.86)')}<path d="M8.3 17.2l-1.3 3.4M12.8 17.2l-1.3 3.4M17.3 17.2l-1.3 3.4" stroke="var(--g-rain)" stroke-width="2.2" stroke-linecap="round"/>`,
+  snow: `${cloud('translate(1.6 -2.2) scale(.86)')}<g fill="var(--g-snow)"><circle cx="7.4" cy="17.4" r="1.3"/><circle cx="12" cy="17.4" r="1.3"/><circle cx="16.6" cy="17.4" r="1.3"/><circle cx="9.7" cy="21.2" r="1.3"/><circle cx="14.3" cy="21.2" r="1.3"/></g>`,
+  thunder: `${cloud('translate(1.6 -2.2) scale(.86)')}<path d="M12.9 13.2 9.4 18.6h2.9l-1.1 4.6 4.5-6.6h-3l1.4-3.4z" fill="var(--g-bolt)"/>`
+};
+const svg = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${G[k]}</svg>`;
+const glyphKey = (sky, night) => night && (sky === 'clear' || sky === 'partly') ? sky + 'N' : sky;
+
+const SKY = {
+  clear: { name: '晴', t: 14 }, partly: { name: '多云', t: 12 }, overcast: { name: '阴', t: 10 }, fog: { name: '雾', t: 8 },
+  rain: { name: '小雨', t: 9 }, snow: { name: '小雪', t: -3 }, thunder: { name: '雷雨', t: 22 }
+};
+
+/* 标本 */
+const SPEC = [['clear', '晴', '0、1'], ['clearN', '晴 · 夜间', 'is_day = 0'], ['partly', '多云', '2'], ['partlyN', '多云 · 夜间', 'is_day = 0'],
+  ['overcast', '阴', '3'], ['fog', '雾', '45、48'], ['rain', '雨', '51–67、80–82'], ['snow', '雪', '71–77、85–86'], ['thunder', '雷雨', '95–99']];
+$('#specimen').innerHTML = SPEC.map(([k, n, c]) => `<figure>${svg(k)}<figcaption><b>${n}</b>${c}</figcaption></figure>`).join('');
+document.querySelectorAll('.plate-spec [data-g]').forEach(e => e.innerHTML = svg(e.dataset.g));
+
+/* ---------- 背景（画布绘制的示意海报） ---------- */
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+function paintSea() {
+  const c = mk(960, 540), x = c.getContext('2d', { willReadFrequently: true });
+  let g = x.createLinearGradient(0, 0, 0, 540);
+  g.addColorStop(0, '#1f78a6'); g.addColorStop(.38, '#0b4170'); g.addColorStop(1, '#020f1f');
+  x.fillStyle = g; x.fillRect(0, 0, 960, 540);
+  x.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 9; i++) {
+    const cx = 520 + i * 52, w = 18 + (i % 3) * 14;
+    const rg = x.createLinearGradient(0, 0, 0, 480); rg.addColorStop(0, 'rgba(170,225,255,.16)'); rg.addColorStop(1, 'rgba(170,225,255,0)');
+    x.fillStyle = rg; x.beginPath(); x.moveTo(cx, -10); x.lineTo(cx + w, -10); x.lineTo(cx + w * 4 - 120, 480); x.lineTo(cx - w * 2 - 140, 480); x.closePath(); x.fill();
+  }
+  x.globalCompositeOperation = 'source-over';
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 140; i++) { x.fillStyle = `rgba(200,235,255,${.08 + rnd() * .25})`; x.beginPath(); x.arc(rnd() * 960, rnd() * 540, rnd() * 1.8 + .3, 0, 7); x.fill(); }
+  x.save(); x.translate(690, 300); x.rotate(-.12); x.fillStyle = 'rgba(2,14,28,.82)';
+  x.beginPath(); x.ellipse(0, 0, 190, 46, 0, 0, 7); x.fill();
+  x.beginPath(); x.moveTo(170, -6); x.quadraticCurveTo(250, -60, 290, -40); x.quadraticCurveTo(250, 0, 290, 44); x.quadraticCurveTo(240, 30, 170, 10); x.fill();
+  x.beginPath(); x.moveTo(-30, 30); x.quadraticCurveTo(-10, 90, 50, 110); x.quadraticCurveTo(30, 60, 30, 34); x.fill();
+  x.restore();
+  return c;
+}
+function paintPeak() {
+  const c = mk(960, 540), x = c.getContext('2d', { willReadFrequently: true });
+  let g = x.createLinearGradient(0, 0, 0, 380);
+  g.addColorStop(0, '#8fc4f2'); g.addColorStop(.55, '#d4e9fb'); g.addColorStop(1, '#f5faff');
+  x.fillStyle = g; x.fillRect(0, 0, 960, 540);
+  const sg = x.createRadialGradient(830, 60, 10, 830, 60, 300);
+  sg.addColorStop(0, 'rgba(255,255,255,1)'); sg.addColorStop(.25, 'rgba(255,252,236,.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = sg; x.fillRect(0, 0, 960, 540);
+  const ridge = (base, amp, f, col, seed) => {
+    x.fillStyle = col; x.beginPath(); x.moveTo(0, 540);
+    for (let px = 0; px <= 960; px += 8) {
+      const y = base - amp * (Math.abs(Math.sin(px * f + seed)) * .7 + Math.abs(Math.sin(px * f * 2.3 + seed * 1.7)) * .3);
+      x.lineTo(px, y);
+    }
+    x.lineTo(960, 540); x.closePath(); x.fill();
+  };
+  ridge(330, 120, .006, '#c3d2e3', 1.2);
+  ridge(380, 150, .0045, '#eef3f9', 2.1);
+  ridge(430, 90, .008, '#9fb2c7', .4);
+  ridge(500, 60, .011, '#5c6f86', 3.3);
+  return c;
+}
+const CANVAS = { dark: paintSea(), bright: paintPeak() };
+const BGURL = { dark: CANVAS.dark.toDataURL('image/jpeg', .9), bright: CANVAS.bright.toDataURL('image/jpeg', .9) };
+
+/* ---------- 内容 ---------- */
+const HERO = {
+  dark: { src: '海豚视频 · 精选', badge: 'linear-gradient(135deg,#18c3b4,#0b6f93)', title: '深海之歌', meta: ['2026', '纪录片', '<span class="q">4K</span>', '<span class="q">HDR</span>'],
+    desc: '跟随一头座头鲸穿越南太平洋，记录它在深海里的歌声与迁徙。', amb: ['珊瑚海', '航拍 · 大堡礁外缘 · 4K HDR'] },
+  bright: { src: '星火影院 · 精选', badge: 'linear-gradient(135deg,#ff7a45,#d1214f)', title: '雪线之上', meta: ['2025', '纪录片', '<span class="q">4K</span>'],
+    desc: '四位登山者在阿尔卑斯的冬天，沿雪线走完一条被遗忘的古道。', amb: ['少女峰', '航拍 · 伯尔尼高地 · 4K HDR'] }
+};
+const NEXT = [
+  ['深海之歌', '第 3 集 · 剩 18 分钟', 'linear-gradient(140deg,#1f78a6,#04213d)', .62],
+  ['城市夜行', '剩 42 分钟', 'linear-gradient(140deg,#7b4dff,#1b0f3d)', .3],
+  ['山野厨房', 'S2 E5 · 剩 9 分钟', 'linear-gradient(140deg,#ffad66,#a83a20)', .84],
+  ['极地日记', '剩 51 分钟', 'linear-gradient(140deg,#cfe3f5,#5d7a99)', .18],
+  ['星际旅人', '第 7 集 · 剩 26 分钟', 'linear-gradient(140deg,#e8439a,#2a1229)', .5]
+];
+const IC = {
+  play: '<path d="M9 7v10l8-5z" fill="#fff" stroke="none"/>',
+  spark: '<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M6 18l3-3M15 9l3-3"/>',
+  wave: '<path d="M3 12h2l2-5 3 10 3-12 3 9 2-2h3"/>',
+  prism: '<path d="M12 3 21 19H3z"/>',
+  photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="m6.5 16 4-4.5 3 3 2-2 2.5 3.5"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2"/>',
+  folder: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
+  bag: '<path d="M5 8h14l-1 12H6zM9 8V6.5a3 3 0 0 1 6 0V8"/>',
+  ring: '<circle cx="12" cy="12" r="7.5"/><path d="M12 4.5a7.5 7.5 0 0 1 7.5 7.5"/>'
+};
+const APPS = [
+  ['海豚视频', '#18c3b4', '#0b6f93', 'play'], ['星火影院', '#ff7a45', '#d1214f', 'spark'], ['律动音乐', '#9b5cff', '#e8439a', 'wave'],
+  ['棱镜直播', '#ffd84d', '#f5a00b', 'prism'], ['云相册', '#3ccf74', '#0e8a6b', 'photo'], ['晴空天气', '#59b8ff', '#2e64d8', 'sun'],
+  ['文件管理', '#77797c', '#58595b', 'folder'], ['应用商店', '#5a7dff', '#7b4dff', 'bag'], ['燃动健身', '#ff5d73', '#ff9a3c', 'ring']
+];
+const ico = (k) => `<svg viewBox="0 0 24 24">${IC[k]}</svg>`;
+const grad = a => `linear-gradient(135deg,${a[1]},${a[2]})`;
+
+$('#tvRows').innerHTML =
+  `<div class="row"><div class="row-h">继续观看</div><div class="track">${NEXT.map((n, i) =>
+    `<div class="card w-next${i === 0 ? ' f' : ''}"><div class="art" style="background:${n[2]}"><div class="shade"></div><div class="ttl">${n[0]}</div><div class="pg"><i style="width:${n[3] * 100}%"></i></div></div><div class="lbl">${n[0]}<small>${n[1]}</small></div></div>`).join('')}</div></div>` +
+  `<div class="row"><div class="row-h">你的应用</div><div class="track">${APPS.slice(0, 9).map(a =>
+    `<div class="card aicon"><div class="art" style="background:${grad(a)}">${ico(a[3])}</div></div>`).join('')}</div></div>`;
+$('#appsGrid').innerHTML = APPS.slice(0, 8).map((a, i) =>
+  `<div class="card banner${i === 0 ? ' f' : ''}"><div class="art" style="background:${grad(a)}">${ico(a[3])}</div><div class="lbl">${a[0]}</div></div>`).join('');
+$('#elderGrid').innerHTML = APPS.slice(0, 8).map((a, i) =>
+  `<div class="card tile${i === 0 ? ' f' : ''}"><div class="art" style="background:${grad(a)}">${ico(a[3])}</div><div class="lbl">${a[0]}</div></div>`).join('');
+
+/* ---------- 日期与农历 ---------- */
+const CN_DAY = ['', '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十', '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
+function lunar(d) {
+  try {
+    const p = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', { month: 'long', day: 'numeric' }).formatToParts(d);
+    const m = p.find(x => x.type === 'month'), dd = p.find(x => x.type === 'day');
+    const n = dd && parseInt(dd.value, 10);
+    return m && n >= 1 && n <= 30 ? m.value + CN_DAY[n] : '';
+  } catch (e) { return ''; }
+}
+const pad = n => String(n).padStart(2, '0');
+function dateLine(d) {
+  const l = lunar(d);
+  return `${d.getMonth() + 1}月${d.getDate()}日 周${'日一二三四五六'[d.getDay()]}${l ? ' · ' + l : ''}`;
+}
+
+/* ---------- 状态 ---------- */
+const st = { v: 'a', scene: 'home', bg: 'dark', sky: 'clear', day: 'day', data: 'yes' };
+let lastGlyph = '';
+
+function render() {
+  Object.assign(tv.dataset, { v: st.v, scene: st.scene, bg: st.bg });
+  $('#tvBg').style.backgroundImage = `url(${BGURL[st.bg]})`;
+  const h = HERO[st.bg];
+  $('#heroSrc').textContent = h.src; $('#heroBadge').style.background = h.badge; $('#heroTitle').textContent = h.title;
+  $('#heroMeta').innerHTML = h.meta.join('<span>·</span>'); $('#heroDesc').textContent = h.desc;
+  $('#infoSrc').textContent = '海豚视频'; $('#infoBadge').style.background = HERO.dark.badge; $('#infoTitle').textContent = '深海之歌';
+  $('#infoMeta').innerHTML = '第 3 集<span>·</span>剩 18 分钟<span>·</span><span class="q">4K</span>';
+  $('#infoDesc').textContent = HERO.dark.desc;
+  $('#ambT').textContent = h.amb[0]; $('#ambS').textContent = h.amb[1];
+
+  const has = st.data === 'yes', w = SKY[st.sky], gk = glyphKey(st.sky, st.day === 'night');
+  const tTxt = `${w.t}°`;
+  $('#temp').textContent = tTxt; $('#ambTemp').textContent = tTxt;
+  if (gk !== lastGlyph) {
+    [$('#glyph'), $('#ambGlyph')].forEach(e => { e.innerHTML = svg(gk); e.classList.remove('swap'); void e.offsetWidth; e.classList.add('swap'); });
+    lastGlyph = gk;
+  }
+  $('#plate').classList.toggle('nodata', !has);
+  $('#ambWx').classList.toggle('nodata', !has);
+  $('#wxu').setAttribute('aria-label', has ? `${w.name} ${tTxt}` : '');
+  tick();
+  guard(); setTimeout(guard, 650);
+}
+
+function tick() {
+  const d = new Date(), t = `${pad(d.getHours())}:${pad(d.getMinutes())}`, dl = dateLine(d);
+  const has = st.data === 'yes', w = SKY[st.sky], wx = has ? ` · ${w.name} ${w.t}°` : '';
+  $('#clk').textContent = t; $('#ambClk').textContent = t; $('#clk34t').textContent = t;
+  $('#clk34d').textContent = dl + wx;
+  $('#ambDate').textContent = st.v === '34' ? dl + wx : dl;
+  $('#pdate').textContent = dl;
+  document.querySelectorAll('.plate-spec .clk').forEach(e => e.textContent = t);
+  document.querySelectorAll('.plate-spec [data-date]').forEach(e => e.textContent = dl);
+}
+
+/* ---------- 对比度守护 ---------- */
+const lin = c => { c /= 255; return c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); };
+const lum = ([r, g, b]) => .2126 * lin(r) + .7152 * lin(g) + .0722 * lin(b);
+const ratio = (a, b) => { const la = lum(a), lb = lum(b); return (Math.max(la, lb) + .05) / (Math.min(la, lb) + .05); };
+const TINT = [0x1e, 0x20, 0x24], TEXT = [0xc5, 0xc6, 0xd0]; // 底板里最弱的文字：日期（onSurfaceVariant）
+
+function guard() {
+  const ro = $('#readout');
+  if (st.scene === 'amb') { tv.style.setProperty('--pa', '50%'); ro.innerHTML = '环境模式<br>顶栏淡出，不用底板'; return; }
+  if (st.v === '34') {
+    tv.style.setProperty('--pa', '50%');
+    ro.innerHTML = 'v3.4 原文<br>天气：13sp 灰字，排在日期行末尾<br>无对比度守护，胶囊 <b>50%</b>';
+    return;
+  }
+  const scale = tv.getBoundingClientRect().width / 960 || 1;
+  const tr = tv.getBoundingClientRect(), pr = $('#plate').getBoundingClientRect();
+  const x0 = Math.max(0, Math.round((pr.left - tr.left) / scale)), y0 = Math.max(0, Math.round((pr.top - tr.top) / scale));
+  const w = Math.max(12, Math.round(pr.width / scale)), hgt = Math.max(3, Math.round(pr.height / scale));
+  const data = CANVAS[st.bg].getContext('2d').getImageData(x0, y0, Math.min(w, 960 - x0), Math.min(hgt, 540 - y0));
+  let best = [0, 0, 0], bestL = -1;
+  for (let cy = 0; cy < 3; cy++) for (let cx = 0; cx < 12; cx++) {
+    const sx = Math.floor(cx * data.width / 12), ex = Math.floor((cx + 1) * data.width / 12);
+    const sy = Math.floor(cy * data.height / 3), ey = Math.floor((cy + 1) * data.height / 3);
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let yy = sy; yy < ey; yy++) for (let xx = sx; xx < ex; xx++) { const i = (yy * data.width + xx) * 4; r += data.data[i]; g += data.data[i + 1]; b += data.data[i + 2]; n++; }
+    if (!n) continue;
+    const c = [r / n, g / n, b / n], L = lum(c);
+    if (L > bestL) { bestL = L; best = c; }
+  }
+  let pick = .8, cr = 0;
+  for (const a of [.5, .65, .8]) {
+    const mix = TINT.map((t, i) => t * a + best[i] * (1 - a));
+    cr = ratio(TEXT, mix);
+    if (cr >= 4.5) { pick = a; break; }
+  }
+  if (pick === .8) cr = ratio(TEXT, TINT.map((t, i) => t * .8 + best[i] * .2));
+  tv.style.setProperty('--pa', `${Math.round(pick * 100)}%`);
+  ro.innerHTML = `状态底板下方最亮一格<br>相对亮度 <b>${bestL.toFixed(2)}</b><br>底板不透明度 <b>${Math.round(pick * 100)}%</b><br>日期文字对比度 <b>${cr.toFixed(1)}:1</b>`;
+}
+
+/* ---------- 控件与缩放 ---------- */
+document.querySelectorAll('.insp input[type=radio]').forEach(inp => inp.addEventListener('change', () => { st[inp.name] = inp.value; render(); }));
+function fit() { tv.style.transform = `scale(${stage.clientWidth / 960})`; }
+new ResizeObserver(() => { fit(); guard(); }).observe(stage);
+
+/* 目录编号用 Cookie9 形（与 v3.4 一致） */
+(() => {
+  const pts = [];
+  for (let i = 0; i < 90; i++) { const a = i / 90 * Math.PI * 2, r = 46 + 4 * Math.cos(9 * a); pts.push(`${(50 + r * Math.cos(a)).toFixed(1)}% ${(50 + r * Math.sin(a)).toFixed(1)}%`); }
+  document.documentElement.style.setProperty('--cookie', `polygon(${pts.join(',')})`);
+})();
+
+fit(); render();
+setInterval(tick, 10000);
+})();
+</script>
+</body>
+</html>
