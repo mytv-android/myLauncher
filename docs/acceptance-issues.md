@@ -254,3 +254,63 @@ D413 不应假设夹具的原始名称。可选做法：
 ### 状态
 
 待用户裁决。实现方未修改 `acceptance/` 下的任何文件。
+
+## A-007：D103/D199 把设备上真实应用发布的 Watch Next 当成桌面内容与文案
+
+- 发现于：M4，2026-11-04
+- 检查编号：D103、D199（api34g）
+- 严重性：阻塞 M4 在 api34g 上的设备验收
+
+### 复现
+
+api34g（Television_4K）上装有真实应用 `com.github.mytv.android`，它已经在系统 TvProvider 中发布了 Watch Next。按正式验收顺序执行 D101→D103→…→D199，结果：
+
+```
+[ FAIL] api34g  D103  没有内容来源时：无 Hero、无继续观看和片单，应用行为第一行，焦点在第一个应用  - 没有内容时仍显示 Hero
+[ FAIL] api34g  D199  界面文案：只有白名单内的产品文字，没有提示性文字  - 「4K超高清电影 4K」不在 ui_copy 白名单 @ api34g/001-home-key
+```
+
+### 实测
+
+- D103 的 `ctx.F.cleanup()` 只清理验收夹具，不清除设备上真实应用的 TvProvider 行。D103 的截图状态里 `continue` 行有 1 项 `wn:com.github.mytv.android:1932832475`，Hero 取自该行。这是设计要求的正确行为（继续观看读取系统 TvProvider 的全部来源）。
+- D199 命中的「4K超高清电影 4K」是该 Watch Next 卡片的节目标题。CONTRACT「文案」一节写明“屏幕上属于桌面自身的文字”才受白名单约束，夹具内容、应用名、第三方小组件内部文字不计；`acceptance/mla/launcher.py` 的豁免只覆盖 `app:` 子树与小组件宿主，没有覆盖 `wn:`。
+- 证据：`acceptance/out/20261104-201108-M4-accept/api34g/001-home-key.xml`、`api34g/002-empty-home.state.json`、`api34g/002-empty-home.png`。
+
+### 期望行为
+
+1. D103 在“没有内容来源”的用例前清除系统 TvProvider 的 Watch Next（或把设备上的真实内容应用卸载/停用），否则任何正确读取 Watch Next 的桌面都会失败；
+2. D199 的豁免范围加入 `wn:`（以及频道行里的 `prog:`）子树，或把现有 TvProvider 内容的标题加入白名单。
+
+### 状态
+
+待用户裁决。实现方未修改 `acceptance/` 下的任何文件。
+
+## A-008：prepare() 停用整个原桌面包，连带停用了系统设置
+
+- 发现于：M4，2026-11-04
+- 检查编号：D404（api31g）
+- 严重性：阻塞 M4 在 api31g 上的设备验收（环境相关）
+
+### 复现
+
+api31g 的默认桌面被禁用（`com.google.android.apps.tv.launcherx` 的 `enabled=3`），系统解析到 `com.android.tv.settings/.system.FallbackHome`。此时执行：
+
+```
+python acceptance/run.py device M4 --serial emulator-5562 --name api31g --only D404
+```
+
+D404 在「Wi-Fi 打开系统网络设置」处失败：前台仍是 `com.github.mytv.launcher/.MainActivity`。
+
+### 实测
+
+- 设备日志显示 `openWifiSettings()` 对 `android.settings.WIFI_SETTINGS` 与 `android.settings.SETTINGS` 都抛 `ActivityNotFoundException`；两个 Activity 的 `exported=true`，手动 `am start -a android.settings.WIFI_SETTINGS` 能正常打开 `com.android.tv.settings/.connectivity.NetworkActivity`。
+- prepare() 记录的原桌面是 `com.android.tv.settings/.system.FallbackHome`，于是停用了整个 `com.android.tv.settings` 包；该包同时提供系统设置页，导致检查期间设置页不可解析。teardown 后单独复跑 D404 通过。
+- 对照 api34g：原桌面是 `com.google.android.apps.tv.launcherx`，只停用 launcherx，D404 通过。
+
+### 期望行为
+
+prepare() 应只停用原桌面的 **Activity 组件**（`pm disable-user --user 0 <包名>/<类名>`），而不是整个包；或者在该包同时提供其他系统入口（如 FallbackHome 属于系统设置）时不整包停用。这样才不会连带破坏被检查的系统设置入口。
+
+### 状态
+
+待用户裁决。实现方已在设备上重新启用 launcherx，使后续运行的“原桌面”回到 launcherx；未修改 `acceptance/` 下的任何文件。
