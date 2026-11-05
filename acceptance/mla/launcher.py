@@ -238,6 +238,9 @@ def copy_violations(dumps, extra_ok=()) -> list[str]:
                 continue
             if cp.get("exemptWidgetHostSubtree") and any(re.fullmatch(r"widget:\d+", x.rid or "") for x in chain):
                 continue
+            # Hero 的内容标题/副标题来自外部内容（Watch Next），只有按钮等产品文字在 hero:* 标签下
+            if next((x.rid for x in chain if x.rid), "") == "hero":
+                continue
             for t in (n.text, n.desc):
                 t = (t or "").strip()
                 if not t or t in content:

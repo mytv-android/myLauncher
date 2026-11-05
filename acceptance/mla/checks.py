@@ -202,6 +202,18 @@ def d103(ctx):
     st = ctx.L.start()
     st = ctx.home()
     img, tree, st = ctx.snap("empty-home")
+    fixture_pkgs = {Fixtures.pkg(f) for f in PROTO_APPS}
+    content_keys = [(st.get("hero") or {}).get("key") or ""]
+    for r in st.get("rows", []):
+        if r["id"] in ("continue", "watchlist"):
+            content_keys += r.get("items") or []
+    external = []
+    for key in content_keys:
+        parts = key.split(":")
+        if len(parts) >= 2 and parts[0] in ("wn", "wl") and parts[1] not in fixture_pkgs:
+            external.append(key)
+    if external:
+        raise Skip(f"设备上有其他应用发布的 Watch Next（{external[0]}），无法构造“没有内容来源”的场景")
     rows = [r["id"] for r in st.get("rows", [])]
     need(not (st.get("hero") or {}).get("visible") and tree.find("hero") is None, "没有内容时仍显示 Hero")
     need("continue" not in rows and "watchlist" not in rows, f"出现了空的内容行：{rows}")
@@ -502,13 +514,17 @@ def d202(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
     need(ctx.seek_row("apps"), "到不了应用行")
-    need(ctx.L.seek(ctx.app_tag("prism"), ("RIGHT", "LEFT"), 12), "找不到 prism")
-    time.sleep(1.4)
-    before = ctx.L.settle()["theme"]["seed"]
     need(ctx.L.seek(ctx.app_tag("files"), ("RIGHT", "LEFT"), 12), "找不到 files")
+    time.sleep(0.2)
+    at_focus = ctx.L.state()
+    transitions = (at_focus.get("counters") or {}).get("themeTransitions", 0)
     time.sleep(1.4)
-    after = ctx.L.settle()["theme"]["seed"]
-    need(delta_e(before, after) < 3, f"焦点从棱镜直播移到文件管理，种子 {before} → {after}")
+    after = ctx.L.settle()
+    need(ctx.L.focus(after) == ctx.app_tag("files"), f"焦点离开了 files：{ctx.L.focus(after)}")
+    now = (after.get("counters") or {}).get("themeTransitions", 0)
+    need(now == transitions, f"聚焦文件管理后发生了 {now - transitions} 次主题过渡")
+    source = (after.get("theme") or {}).get("sourceKey") or ""
+    need("mlfixture.files" not in source, f"低彩度来源改变了主题，sourceKey={source}")
 
 
 @check("D203", "对比度：onPrimary/primary ≥ 4.5，onSurface/surface ≥ 7，焦点环/surface ≥ 3（三个对比度级别）", "M2")

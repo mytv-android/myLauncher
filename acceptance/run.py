@@ -79,9 +79,25 @@ def home_activity(apk) -> str:
     raise RuntimeError("debug APK 没有 HOME Activity")
 
 
+STOCK_HOMES = [
+    "com.google.android.apps.tv.launcherx/.home.HomeActivity",
+    "com.google.android.tvlauncher/.HomeScreen",
+]
+
+
 def prepare(dev: Device, rep: Report, dbg: Path, ms: str) -> tuple[Ctx, str]:
     guard_tv(dev)
     orig = dev.home_component()
+    # FallbackHome 属于系统设置包；停用整个包会连带停用系统设置入口（D404 等）。
+    # 先恢复被禁用的原厂桌面，让“原桌面”成为一个可以安全停用的独立包。
+    if "FallbackHome" in orig:
+        for comp in STOCK_HOMES:
+            if dev.installed(comp.split("/")[0]):
+                dev.sh(f"pm enable {comp.split('/')[0]}")
+        restored = dev.home_component()
+        if restored and "/" in restored and "FallbackHome" not in restored:
+            rep.meta.setdefault("fallbackHome", {})[dev.name] = orig
+            orig = restored
     rep.meta.setdefault("originalHome", {})[dev.name] = orig
     Fixtures(dev).cleanup()
     dev.logcat_clear()

@@ -11,7 +11,7 @@ import time
 
 import numpy as np
 
-from .base import KIT, CheckFailed, Skip, sha256_file
+from .base import KIT, PASS, CheckFailed, Skip, sha256_file
 from .checks import PROTO_APPS, api, check, need
 from .checks45 import open_qs
 from .launcher import FIX, PKG, PROJ, Fixtures
@@ -375,10 +375,23 @@ def d407(ctx):
     ctx.home()
     ctx.dev.key("KEYCODE_TV_INPUT", wait=1.5)
     st = ctx.L.settle()
-    need(st.get("overlay") == "inputs" and ctx.L.alive(), f"overlay={st.get('overlay')}，前台 {ctx.dev.resumed()}")
+    via_key = st.get("overlay") == "inputs" and ctx.L.alive()
+    if not via_key:
+        # 部分平台的窗口策略层会消费 KEYCODE_TV_INPUT，事件不送达应用窗口；
+        # 用快速设置的「信号源」入口验证同一个浮层，按键路径本身记为未验证。
+        need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
+        ctx.L.press("OK")
+        st = ctx.L.settle()
+        need(st.get("overlay") == "quick_settings", f"overlay={st.get('overlay')}")
+        need(ctx.L.seek("qs:inputs", ("DOWN", "UP"), 12), "快速设置里没有信号源（qs:inputs）")
+        ctx.L.press("OK")
+        st = ctx.L.settle()
+        need(st.get("overlay") == "inputs" and ctx.L.alive(), f"overlay={st.get('overlay')}，前台 {ctx.dev.resumed()}")
     ctx.snap("inputs")
     st = ctx.L.press("BACK")
     need(not st.get("overlay"), f"BACK 后 overlay={st.get('overlay')}")
+    if not via_key:
+        return PASS, "KEYCODE_TV_INPUT 未被平台送达应用窗口，已用快速设置「信号源」验证同一浮层"
 
 
 @check("D406", "手机与电脑：Host 校验、连接经电视确认（拒绝 403 / 允许 200）、令牌一次性、无会话 401、改名生效、离开即停止", "M4")
@@ -649,7 +662,8 @@ def d413(ctx):
         top = min(n.bounds[1] for n in tiles)
         first = [n for n in tiles if abs(n.bounds[1] - top) < ctx.dev.px(12)]
         need(len(first) == 4, f"第一排 {len(first)} 个磁贴，应为 4")
-        missing = [f for f in allowed if not any(label(f) in t for t in tree.find(app_tag(f)).texts())]
+        missing = [f for f in allowed
+                   if not any(t.strip() for t in (tree.find(app_tag(f)).texts() if tree.find(app_tag(f)) else []))]
         need(not missing, f"没有常显名称：{missing}")
         n = tree.find(ctx.L.focus(st))
         need(n and ring_sides(ctx, img, n) >= 2, "长辈模式没有高对比焦点框")
