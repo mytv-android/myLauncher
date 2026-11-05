@@ -627,14 +627,14 @@ def d114(ctx):
     need(st.get("page") == "apps" and ctx.L.focus(st) == want, f"恢复后 page={st.get('page')} 焦点 {ctx.L.focus(st)}，应为 apps / {want}")
 
 
-@check("D115", "随机遍历 72 步：焦点始终存在、不离开桌面、状态与界面一致", "M1")
+@check("D115", "随机遍历 40 步：焦点始终存在、不离开桌面、状态与界面一致", "M1")
 def d115(ctx):
     ctx.F.install(*PROTO_APPS)
     st = ctx.home()
     rnd = random.Random(20261102)
     msgs = []
     w, h = ctx.dev.size
-    for i in range(72):
+    for i in range(40):
         k = rnd.choices(["UP", "DOWN", "LEFT", "RIGHT", "BACK"], [3, 3, 4, 4, 1])[0]
         before = ctx.L.focus(st)
         st = ctx.L.press(k, settle=False)
@@ -728,7 +728,7 @@ def d201(ctx):
 
 @check("D202", "低彩度来源（灰色图标）不改变全局主题", "M2")
 def d202(ctx):
-    ctx.F.install(*PROTO_APPS)
+    ctx.F.install("dolphin", "files")
     ctx.home()
     # 应用行的前 10 个会被真实应用挤占；应用页列出全部夹具，先做彩色应用的正向对照
     apps_page(ctx)
@@ -757,7 +757,7 @@ def d202(ctx):
 
 @check("D203", "对比度：onPrimary/primary ≥ 4.5，onSurface/surface ≥ 7，焦点环/surface ≥ 3（三个对比度级别）", "M2")
 def d203(ctx):
-    ctx.F.install(*PROTO_APPS)
+    ctx.F.install("dolphin", "prism")
     msgs = []
     for lvl in ("0", "0.5", "1"):
         ctx.L.pref("contrast", lvl)

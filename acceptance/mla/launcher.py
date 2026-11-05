@@ -258,13 +258,29 @@ class Fixtures:
         return self.dir / (e.get("apk") or f"{fid}.apk")
 
     def install(self, *fids, grant=False, force=False):
-        for f in fids:
-            if not force and f in self.installed:
-                continue
-            ok, msg = self.dev.install(self.apk(f), grant=grant)
+        todo = [f for f in fids if force or f not in self.installed]
+        if not todo:
+            return
+        # 单个安装约 7 秒；一次装多个时并发上传，失败的再串行重试一次
+        from concurrent.futures import ThreadPoolExecutor
+
+        failed: list[tuple[str, str]] = []
+
+        def one(fid):
+            ok, msg = self.dev.install(self.apk(fid), grant=grant)
+            return fid, ok, msg
+
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            for fid, ok, msg in pool.map(one, todo):
+                if ok:
+                    self.installed.add(fid)
+                else:
+                    failed.append((fid, msg))
+        for fid, _ in failed:
+            ok, msg = self.dev.install(self.apk(fid), grant=grant)
             if not ok:
-                raise CheckFailed(f"夹具 {f} 安装失败：{msg}")
-            self.installed.add(f)
+                raise CheckFailed(f"夹具 {fid} 安装失败：{msg}")
+            self.installed.add(fid)
 
     def uninstall(self, *fids):
         for f in fids:
