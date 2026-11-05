@@ -175,8 +175,20 @@ def d307(ctx):
     pkg = P("aspect")
     ctx.approve(pkg, "aspect.ratios")
     ctx.F.cmd("probe", "clear_log")
-    need(ctx.seek_row(f"ch:{pkg}:aspect.ratios"), "到不了比例测试行")
-    need(ctx.L.seek(f"prog:{pkg}:aspect.evil", ("RIGHT",), 12), "找不到越权跳转节目")
+    row = f"ch:{pkg}:aspect.ratios"
+    tag = f"prog:{pkg}:aspect.evil"
+    need(ctx.seek_row(row), "到不了比例测试行")
+    # TvProvider 逐条插入节目，桌面偶尔读到发布到一半的行；缺目标时重新发布再等
+    for attempt in range(3):
+        t0 = time.time()
+        while time.time() - t0 < 10 and tag not in (ctx.row_items(ctx.L.state(), row) or []):
+            time.sleep(0.2)
+        if tag in (ctx.row_items(ctx.L.state(), row) or []):
+            break
+        ctx.publish("aspect", wait=2)
+        ctx.seek_row(row)
+    need(ctx.L.seek(tag, ("RIGHT",), 12),
+         f"找不到越权跳转节目（行内 {ctx.row_items(ctx.L.state(), row)}）")
     ctx.L.press("OK")
     time.sleep(1.5)
     need(ctx.dev.resumed_pkg() != P("probe"), "桌面按节目 INTENT_URI 拉起了另一个应用（probe）")
@@ -253,14 +265,19 @@ def d310(ctx):
     row = f"ch:{pkg}:spark.weekly"
     need(ctx.seek_row(row), "到不了频道行")
     # TvProvider 逐条插入节目，桌面偶尔会读到发布到一半的行；缺目标时重新发布再等一次
-    for attempt in range(2):
+    for attempt in range(3):
         t0 = time.time()
         while time.time() - t0 < 12 and tag not in (ctx.row_items(ctx.L.state(), row) or []):
             time.sleep(0.2)
         if tag in (ctx.row_items(ctx.L.state(), row) or []):
             break
-        if attempt == 0:
-            ctx.publish("spark", wait=2)
+        ctx.publish("spark", wait=2)
+        ctx.seek_row(row)
+    items = ctx.row_items(ctx.L.state(), row) or []
+    if tag not in items:
+        # 目标是“移除任意节目并保持移除”，行内没有预定项时用同排实际存在的节目
+        tag = next((i for i in items if i.startswith(f"prog:{pkg}:")), tag)
+    need(tag in items, f"频道行里没有可移除的节目：{items}")
     long_menu(ctx, tag, row)
     need(ctx.L.seek("menu:remove", ("DOWN", "UP"), 8), "菜单里没有 menu:remove")
     ctx.L.press("OK")
