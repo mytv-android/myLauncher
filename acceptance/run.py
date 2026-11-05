@@ -14,16 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from mla.base import (ADB, APKSIGNER, FAIL, KIT, PASS, SKIP, Report, Result, kit_freeze, kit_verify, run, spec)  # noqa: E402
+from mla.base import (ADB, APKSIGNER, FAIL, KIT, PASS, SKIP, Report, Result, kit_freeze, kit_verify, ms_le, run, spec)  # noqa: E402
 from mla import checks, checks0, checks3, checks33, checks45  # noqa: E402,F401  注册检查
-from mla.checks import Ctx, run_device  # noqa: E402
+from mla.checks import Ctx, add_copy_result, run_device  # noqa: E402
 from mla.device import Device  # noqa: E402
 from mla.launcher import FIX, PKG, Fixtures, Launcher  # noqa: E402
 from mla.static import A, build, comp_name, filters, manifest, static_checks  # noqa: E402
@@ -45,6 +48,24 @@ def running_emulators() -> dict:
     return res
 
 
+def kill_stale_avd(avd: str):
+    """清掉同 AVD 但 adb 不可见的 qemu 进程（上次运行崩溃残留，会占住 AVD 导致新实例起不来）。"""
+    if os.name != "nt":
+        return
+    ps = ("Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'qemu-system*' "
+          f"-and $_.CommandLine -like '*-avd {avd} *' }} | ForEach-Object {{ $_.ProcessId }}")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
+                             capture_output=True, text=True, timeout=30).stdout
+    except Exception:
+        return
+    for line in out.split():
+        if line.strip().isdigit():
+            print(f"清理残留的 {avd} 进程（PID {line.strip()}）", flush=True)
+            subprocess.run(["taskkill", "/T", "/F", "/PID", line.strip()],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def acquire(name, window) -> Device:
     d = MATRIX["devices"][name]
     serial = running_emulators().get(d["avd"])
@@ -52,11 +73,96 @@ def acquire(name, window) -> Device:
         dev = Device(serial, name)
         print(f"使用已运行的 {d['avd']}（{serial}）")
     else:
+        kill_stale_avd(d["avd"])
         print(f"启动模拟器 {d['avd']} …", flush=True)
         dev = Device.boot(d["avd"], name, window=window)
     if dev.api != d["api"]:
         raise RuntimeError(f"{name}：期望 API {d['api']}，实际 {dev.api}")
+    dev.device_id = name
     return dev
+
+
+_PORT_LOCK = threading.Lock()
+_PORT_USED: set[int] = set()
+
+
+def alloc_port() -> int:
+    with _PORT_LOCK:
+        for p in range(5562, 5600, 2):
+            if p in _PORT_USED:
+                continue
+            import socket
+            try:
+                with socket.socket() as s:
+                    s.bind(("127.0.0.1", p))
+                with socket.socket() as s:
+                    s.bind(("127.0.0.1", p + 1))
+            except OSError:
+                continue
+            _PORT_USED.add(p)
+            return p
+    raise RuntimeError("没有空闲的模拟器端口")
+
+
+def running_serials(avd: str) -> list[str]:
+    rc, out, _ = run([str(ADB), "devices"], timeout=20)
+    serials = []
+    for l in out.splitlines():
+        m = re.match(r"(emulator-\d+)\s+device", l)
+        if not m or m.group(1) == "emulator-5554":
+            continue
+        rc, o, _ = run([str(ADB), "-s", m.group(1), "emu", "avd", "name"], timeout=15)
+        if o.strip().splitlines() and o.strip().splitlines()[0].strip() == avd:
+            serials.append(m.group(1))
+    return serials
+
+
+def acquire_group(name, count, window) -> list[Device]:
+    """同一 AVD 并行启动多个实例（每台跑一部分检查），用于把单设备墙钟压进预算。"""
+    if count <= 1:
+        return [acquire(name, window)]
+    d = MATRIX["devices"][name]
+    # 同一 AVD 的所有实例必须都是 -read-only；先关掉已运行的非 read-only 实例。
+    old = running_serials(d["avd"])
+    for serial in old:
+        print(f"关闭已运行的 {d['avd']}（{serial}），改用 read-only 并行实例")
+        run([str(ADB), "-s", serial, "emu", "kill"], timeout=30)
+    if old:
+        time.sleep(4)
+    kill_stale_avd(d["avd"])
+    devs: list[Device | None] = [None] * count
+    errs: list[BaseException] = []
+
+    def boot_one(i: int):
+        tag = f"{name}#{chr(97 + i)}"
+        last = None
+        for attempt in range(2):
+            try:
+                print(f"启动模拟器 {d['avd']} 作为 {tag} …", flush=True)
+                dev = Device.boot(d["avd"], tag, window=window, port=alloc_port(), readonly=True)
+                if dev.api != d["api"]:
+                    dev.kill()
+                    raise RuntimeError(f"{tag}：期望 API {d['api']}，实际 {dev.api}")
+                dev.device_id = name
+                devs[i] = dev
+                return
+            except BaseException as e:
+                last = e
+                print(f"{tag} 启动失败（第 {attempt + 1} 次）：{e}", flush=True)
+                time.sleep(2)
+        errs.append(last)
+
+    ths = [threading.Thread(target=boot_one, args=(i,)) for i in range(count)]
+    for t in ths:
+        t.start()
+    for t in ths:
+        t.join()
+    if errs:
+        for dev in devs:
+            if dev and dev.emulator_started:
+                dev.kill()
+        raise errs[0]
+    return [d for d in devs if d]
 
 
 def guard_tv(dev: Device):
@@ -85,7 +191,7 @@ STOCK_HOMES = [
 ]
 
 
-def prepare(dev: Device, rep: Report, dbg: Path, ms: str) -> tuple[Ctx, str]:
+def prepare(dev: Device, rep: Report, dbg: Path, ms: str, need_probe=True) -> tuple[Ctx, str]:
     guard_tv(dev)
     orig = dev.home_component()
     # FallbackHome 属于系统设置包；停用整个包会连带停用系统设置入口（D404 等）。
@@ -100,6 +206,11 @@ def prepare(dev: Device, rep: Report, dbg: Path, ms: str) -> tuple[Ctx, str]:
             orig = restored
     rep.meta.setdefault("originalHome", {})[dev.name] = orig
     Fixtures(dev).cleanup()
+    # Play Store 会在后台自更新，更新时间把它顶进“最近更新”应用行、挤掉夹具，导致行内检查不稳定
+    dev.disabled_update_apps = []
+    if dev.installed("com.android.vending"):
+        dev.sh("pm disable-user --user 0 com.android.vending")
+        dev.disabled_update_apps.append("com.android.vending")
     dev.logcat_clear()
     if ms == "M0":
         ctx = Ctx(dev, rep, "", ms)
@@ -122,12 +233,14 @@ def prepare(dev: Device, rep: Report, dbg: Path, ms: str) -> tuple[Ctx, str]:
         ctx = Ctx(dev, rep, comp, ms)
         ctx.flags["launcherCert"] = apk_cert(dbg)
         ctx.flags["originalHome"] = orig
+        dev.state_forward = dev.forward_state()
+        ctx.L.http = dev.state_forward
         ctx.L.start()
         ctx.L.pref("onboarding_done", "true")
         ctx.L.pref("ambient_idle_s", "0")
         ctx.L.stop()
         ctx.L.start()
-        if ms >= "M3":
+        if ms >= "M3" and need_probe:
             ctx.F.install("probe")
             ctx.F.cmd("probe", "probe_handlers")
             h = ctx.F.wait("probe", lambda e: e.get("event") == "handlers", 15) or {}
@@ -143,7 +256,14 @@ def prepare(dev: Device, rep: Report, dbg: Path, ms: str) -> tuple[Ctx, str]:
 
 def teardown(dev: Device, orig: str):
     try:
+        port = getattr(dev, "state_forward", None)
+        if port:
+            dev.adb("forward", "--remove", f"tcp:{port}")
+            dev.state_forward = None
         Fixtures(dev).cleanup()
+        for pkg in getattr(dev, "disabled_update_apps", []):
+            dev.sh(f"pm enable --user 0 {pkg}")
+        dev.disabled_update_apps = []
         dev.uninstall(PKG)
         for cmd in ("cmd connectivity airplane-mode disable", "svc wifi enable", "svc data enable"):
             dev.sh(cmd)
@@ -160,13 +280,91 @@ def teardown(dev: Device, orig: str):
 
 
 def run_on(dev: Device, rep: Report, dbg: Path, ms: str, only=None):
-    t0 = time.time()
     ctx, orig = prepare(dev, rep, dbg, ms)
     try:
         run_device(ctx, only=only)
     finally:
         teardown(dev, orig)
-    rep.meta.setdefault("deviceSeconds", {})[dev.name] = round(time.time() - t0)
+
+
+def check_groups(ms: str) -> list[set]:
+    """按 matrix.json 的 partitions 把本里程碑适用的设备检查分组（依赖关系保持在同一组）。"""
+    parts = MATRIX.get("partitions") or []
+    groups: dict[int, set] = {}
+    for c in checks.REG:
+        if not ms_le(c["ms"], ms):
+            continue
+        if c["until"] and not ms_le(ms, c["until"]):
+            continue
+        cid = c["id"]
+        if cid == "D199":
+            continue
+        key = next((i for i, g in enumerate(parts) if cid in g), 0)
+        groups.setdefault(key, set()).add(cid)
+    return [groups[k] for k in sorted(groups) if groups[k]]
+
+
+def plan_groups(ms: str, want: int) -> list[set]:
+    groups = check_groups(ms)
+    if want <= 1 or len(groups) <= 1:
+        return []
+    if len(groups) > want:
+        groups = groups[:want - 1] + [set().union(*groups[want - 1:])]
+    return groups
+
+
+def run_group(devs: list[Device], rep: Report, dbg: Path, ms: str, only=None, groups=None):
+    if len(devs) == 1:
+        run_on(devs[0], rep, dbg, ms, only)
+        return
+    ctxs: list = [None] * len(devs)
+    origs: list = [None] * len(devs)
+    errs: list = []
+
+    def prep(i):
+        try:
+            g = groups[i] if groups and i < len(groups) else None
+            ctxs[i], origs[i] = prepare(devs[i], rep, dbg, ms, need_probe=g is None or "D316" in g)
+        except BaseException as e:
+            errs.append(e)
+
+    ths = [threading.Thread(target=prep, args=(i,)) for i in range(len(devs))]
+    for t in ths:
+        t.start()
+    for t in ths:
+        t.join()
+    if errs:
+        for i, ctx in enumerate(ctxs):
+            if ctx is not None:
+                teardown(devs[i], origs[i])
+        raise errs[0]
+    def run_part(i):
+        try:
+            run_device(ctxs[i], only=groups[i] if groups and i < len(groups) else None, copy=False)
+        except BaseException as e:
+            rep.add(Result("D000", "设备检查", FAIL, devs[i].device_id,
+                           f"{devs[i].name}: {type(e).__name__}: {e}"))
+
+    ths = [threading.Thread(target=run_part, args=(i,)) for i in range(len(devs))]
+    for t in ths:
+        t.start()
+    for t in ths:
+        t.join()
+    expect = set()
+    for c in checks.REG:
+        if not ms_le(c["ms"], ms) or (c["until"] and not ms_le(ms, c["until"])) or c["id"] == "D199":
+            continue
+        expect.add(c["id"])
+    seen = {r.id for r in rep.results if r.device == devs[0].device_id}
+    missing = sorted(expect - seen)
+    if missing:
+        rep.add(Result("D000", "设备检查缺失", FAIL, devs[0].device_id, f"未执行：{missing}"))
+    add_copy_result(rep, devs[0].device_id, [d for ctx in ctxs for d in ctx.L.dumps])
+    ths = [threading.Thread(target=teardown, args=(devs[i], origs[i])) for i in range(len(devs))]
+    for t in ths:
+        t.start()
+    for t in ths:
+        t.join()
 
 
 # ------------------------------------------------------------------ 命令
@@ -202,17 +400,33 @@ def cmd_accept(a):
     else:
         names = a.devices.split(",") if a.devices else MATRIX["milestones"][a.milestone]
         only = set(a.only.split(",")) if a.only else None
+        budget = int(MATRIX.get("deviceBudgetSeconds", 600))
+        want = int(MATRIX.get("instancesPerDevice", 1)) if (only is None and a.milestone != "M0") else 1
+        groups = plan_groups(a.milestone, want)
+        instances = len(groups) if groups else 1
         for name in names:
-            dev = None
+            devs: list[Device] = []
+            t_dev = time.time()
             try:
-                dev = acquire(name, a.window)
-                run_on(dev, rep, info["debug"], a.milestone, only)
+                devs = acquire_group(name, instances, a.window)
+                run_group(devs, rep, info["debug"], a.milestone, only, groups)
             except Exception as e:
                 rep.add(Result("D000", "设备准备", FAIL, name, f"{type(e).__name__}: {e}"))
             finally:
-                if dev and dev.emulator_started and not a.keep:
-                    dev.kill()
-                    time.sleep(5)
+                if not a.keep:
+                    ths = [threading.Thread(target=d.kill) for d in devs if d.emulator_started]
+                    for t in ths:
+                        t.start()
+                    for t in ths:
+                        t.join()
+                    if ths:
+                        time.sleep(2)
+                elapsed = round(time.time() - t_dev)
+                rep.meta.setdefault("deviceSeconds", {})[name] = elapsed
+                print(f"{name} 用时 {elapsed}s（预算 {budget}s）", flush=True)
+                if only is None and elapsed > budget:
+                    rep.add(Result("D000", f"设备用时超过 {budget} 秒", FAIL, name,
+                                   f"本机用时 {elapsed}s，超过每台模拟器 {budget}s 的测试预算"))
     out = rep.write()
     print(f"\n结论：{rep.verdict()} {json.dumps(rep.counts(), ensure_ascii=False)}\n报告：{out}")
     return 0 if rep.verdict() == "通过" else 1
@@ -240,7 +454,9 @@ def cmd_device(a):
     if exp and dev.api != exp:
         print(f"{a.name} 应为 API {exp}，{a.serial} 是 API {dev.api}")
         return 2
+    t0 = time.time()
     run_on(dev, rep, dbg, a.milestone, set(a.only.split(",")) if a.only else None)
+    rep.meta["deviceSeconds"] = {a.name: round(time.time() - t0)}
     out = rep.write()
     print(f"\n结论：{rep.verdict()}\n报告：{out}")
     return 0 if rep.verdict() == "通过" else 1

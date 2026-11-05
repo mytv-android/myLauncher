@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import re
 import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from .base import KIT, CheckFailed, spec
@@ -21,14 +23,39 @@ class Launcher:
         self.uri = f"content://{AUTH}/state"
         self.shots = 0
         self.dumps: list[tuple[str, UiTree]] = []
+        self.http = None
+        self._last_ok = 0.0
+        self._alive_at = 0.0
+        self._alive_ok = False
 
     # ---------------------------------------------------- 状态接口
-    def state(self) -> dict:
-        rows = self.dev.content_query(self.uri, col="json")
-        if not rows:
-            raise CheckFailed("状态接口没有返回（契约 §3）")
+    def _http(self, path: str):
+        if not self.http:
+            return None
         try:
-            st = json.loads(rows[0])
+            with urllib.request.urlopen(f"http://127.0.0.1:{self.http}{path}", timeout=2) as r:
+                return r.read().decode("utf-8", "replace")
+        except Exception:
+            return None
+
+    def state(self) -> dict:
+        raw = None
+        if self.http:
+            t0 = time.time()
+            while time.time() - t0 < 1.2:
+                raw = self._http("/state")
+                if raw:
+                    break
+                time.sleep(0.04)
+            if raw is None and not self.dev.pid(PKG):
+                raise CheckFailed("状态接口没有返回（契约 §3）")
+        if raw is None:
+            rows = self.dev.content_query(self.uri, col="json")
+            if not rows:
+                raise CheckFailed("状态接口没有返回（契约 §3）")
+            raw = rows[0]
+        try:
+            st = json.loads(raw)
         except json.JSONDecodeError as e:
             raise CheckFailed(f"状态接口返回的不是单行 JSON：{e}")
         if st.get("contract") != 1:
@@ -36,6 +63,13 @@ class Launcher:
         return st
 
     def call(self, method, arg=None) -> str:
+        if self.http:
+            q = {"method": method}
+            if arg is not None:
+                q["arg"] = arg
+            raw = self._http("/call?" + urllib.parse.urlencode(q))
+            if raw is not None:
+                return raw
         return self.dev.content_call(f"content://{AUTH}", method, arg)
 
     def pref(self, k, v):
@@ -45,7 +79,7 @@ class Launcher:
         st = st or self.state()
         return (st.get("focus") or {}).get("tag") or ""
 
-    def settle(self, timeout=2.5) -> dict:
+    def settle(self, timeout=1.5) -> dict:
         t0, last, same = time.time(), None, 0
         st = self.state()
         while time.time() - t0 < timeout:
@@ -53,43 +87,97 @@ class Launcher:
             busy = (st.get("theme") or {}).get("transitioning")
             if tag == last and not busy:
                 same += 1
-                if same >= 2:
+                if same >= 1:
                     return st
             else:
                 same = 0
             last = tag
-            time.sleep(0.15)
+            time.sleep(0.04)
             st = self.state()
         return st
 
     def press(self, k, long=False, settle=True) -> dict | None:
-        self.dev.key(k, long=long, wait=0.05 if settle else 0.25)
         if k == "OK":
-            time.sleep(0.6)
+            gap = 0.6 - (time.time() - self._last_ok)      # 契约 §5：两次 OK 之间至少 600ms
+            if gap > 0:
+                time.sleep(gap)
+        self.dev.key(k, long=long, wait=0.03 if settle else 0.08)
+        if k == "OK":
+            self._last_ok = time.time()
         return self.settle() if settle else None
+
+    def alive_fast(self, force=False) -> bool:
+        now = time.time()
+        if force or now - self._alive_at > 0.5:
+            self._alive_ok = self.dev.resumed_pkg() == PKG
+            self._alive_at = now
+        return self._alive_ok
+
+    def _wait_focus_change(self, before, timeout=1.2) -> dict:
+        t0, st = time.time(), None
+        while time.time() - t0 < timeout:
+            time.sleep(0.02)
+            st = self.state()
+            if self.focus(st) != before:
+                return st
+        return st or self.state()
 
     def seek(self, target, dirs=("DOWN",), max_steps=16, match=None) -> bool:
         """沿给定方向按键直到焦点标签等于 target（或 match(tag) 为真）。"""
         ok = (lambda t: match(t)) if match else (lambda t: t == target)
+        st = self.state()
         for d in dirs:
-            prev = None
+            prev, stuck = None, 0
             for _ in range(max_steps):
-                cur = self.focus()
+                cur = self.focus(st)
                 if ok(cur):
                     return True
                 if cur == prev:
-                    break
-                prev = cur
-                self.press(d)
-            if ok(self.focus()):
+                    # 负载下按键可能晚于等待窗口才生效，再按一次；连续三次不动才认为到边界
+                    stuck += 1
+                    if stuck > 2:
+                        break
+                else:
+                    stuck = 0
+                    prev = cur
+                self.dev.key(d, wait=0.02)
+                st = self._wait_focus_change(cur)
+            if ok(self.focus(st)):
                 return True
-        return False
+        time.sleep(0.25)
+        return ok(self.focus(self.state()))
+
+    def seek_state(self, pred, dirs=("DOWN",), max_steps=25) -> bool:
+        """按状态接口的判定条件找焦点（例如按 rowId 找行）。"""
+        st = self.state()
+        for d in dirs:
+            prev, stuck = None, 0
+            for _ in range(max_steps):
+                if pred(st):
+                    return True
+                tag = self.focus(st)
+                if tag == prev:
+                    stuck += 1
+                    if stuck > 2:
+                        break
+                else:
+                    stuck = 0
+                    prev = tag
+                self.dev.key(d, wait=0.02)
+                st = self._wait_focus_change(tag)
+            if pred(st):
+                return True
+        time.sleep(0.25)
+        return pred(self.state())
 
     # ---------------------------------------------------- 生命周期
     def start(self):
-        self.dev.sh(f"am start -W -n {self.comp}", timeout=60)
-        time.sleep(1.5)
-        return self.settle(4)
+        # 显式组件启动会把桌面放进 standard 任务，随后 HOME 再建一个 home 任务实例，
+        # 进程里出现两个 Activity，无障碍树可能取到已停止的那个。统一用 HOME 意图冷启动。
+        self.dev.sh(f"am force-stop {PKG}")
+        self.dev.sh("am start -W -a android.intent.action.MAIN -c android.intent.category.HOME", timeout=60)
+        time.sleep(0.3)
+        return self.settle(3)
 
     def stop(self):
         self.dev.sh(f"am force-stop {PKG}")
@@ -105,6 +193,7 @@ class Launcher:
         """截图 + 无障碍树 + 状态，存入报告目录，返回 (img, tree, state, [证据路径])。"""
         self.shots += 1
         base = f"{self.dev.name}/{self.shots:03d}-{name}"
+        self.last_base = base
         img = self.dev.screencap()
         p = self.rep.path(base + ".png")
         img.save(p)
@@ -165,8 +254,10 @@ class Fixtures:
         e = self.index.get(fid) or {}
         return self.dir / (e.get("apk") or f"{fid}.apk")
 
-    def install(self, *fids, grant=False):
+    def install(self, *fids, grant=False, force=False):
         for f in fids:
+            if not force and f in self.installed:
+                continue
             ok, msg = self.dev.install(self.apk(f), grant=grant)
             if not ok:
                 raise CheckFailed(f"夹具 {f} 安装失败：{msg}")
@@ -196,7 +287,7 @@ class Fixtures:
             for e in self.log(fid):
                 if pred(e):
                     return e
-            time.sleep(0.7)
+            time.sleep(0.15)
         return None
 
     def cleanup(self):

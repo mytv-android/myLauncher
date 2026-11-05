@@ -337,3 +337,36 @@ prepare() 不应在停用原桌面时连带停用同一包里的其他系统入�
 - 改为在 `acceptance/run.py` 的 `prepare()` 里做环境归一化：当前桌面是 `FallbackHome` 时，先启用已安装的原厂桌面（`com.google.android.apps.tv.launcherx/.home.HomeActivity` 或 `com.google.android.tvlauncher/.HomeScreen`），重新解析出的原桌面即为独立包，再按原逻辑停用该包。报告 meta 增加 `fallbackHome` 记录归一化前的桌面。
 - 已随 A-004 同一次重新冻结（根哈希 `1d454045…`，压缩包 SHA-256 `6316fc24…`）。
 - 验证：在 api31g 上把 launcherx 置为禁用、桌面回到 FallbackHome 后运行 D404/D103/D202/D406/D413，D404 通过（prepare 自动恢复 launcherx 并正常切换桌面），其余检查无回归（`acceptance/out/20261105-084541-M4-device-api31g/`）。
+
+## A-009：按“每台模拟器 10 分钟”重做测试执行层
+
+- 发现于：M4，2026-11-05
+- 检查编号：全部设备检查（耗时问题）；D403（浸泡窗口）
+- 严重性：阻塞验收节奏（单设备 61–118 分钟）
+- 用户指示：每台模拟器的测试限定在 10 分钟以内，严格按此重新设计测试（2026-11-05）
+
+### 原因
+
+- `content query` 每次约 0.96 秒（设备端每次冷启 app_process）。`settle()` 每次按键至少 3 次状态查询，`seek()` 每步 4–5 次，D115 的 120 步随机遍历单独就接近 500 秒。
+- `uiautomator dump` 每次约 2 秒；检查里有大量未被断言使用的 dump 与 `sleep`。
+- `Fixtures.install()` 在每个检查开头重复安装 10 个夹具，即使已经安装。
+- D403 的 3 分钟浸泡是工具包自定的窗口，设计稿与 CONTRACT 没有规定 3 分钟。
+
+### 修改（工具包 + debug 构建）
+
+1. debug 状态接口增加仅绑定 `127.0.0.1:8765` 的 HTTP 传输（同一份 `StateHub.json()`；`GET /state`、`GET /call?method=&arg=`），ContentProvider 保留。CONTRACT §3 已同步。release 构建不含该代码。
+2. `Launcher.state()` 走 HTTP（约 15ms），`settle()` 以 40ms 轮询、两次稳定即返回；`seek()`/`seek_state()` 每步一次状态查询；`press()` 统一保证两次 OK 间隔 600ms（契约 §5）。
+3. `Fixtures.install()` 跳过已安装夹具；`publish` 先全部广播再逐项校验。
+4. 删除冗余等待与未被断言的 dump；D304 收齐全部比例后提前结束；D115 只在 BACK 后查前台、每 30 步取一次证据。
+5. D403 改为 60 秒窗口（0/30/60 秒三次时钟位置采样），标题同步改为“60 秒”。时钟每分钟漂移一次，60 秒窗口仍能覆盖一次漂移。
+6. `run.py` 记录每台设备的 `deviceSeconds`（含启动与回收），超过 `spec/matrix.json` 的 `deviceBudgetSeconds`（600）时新增 D000 FAIL，避免超时静默通过。
+7. 启动桌面统一用 HOME 隐式意图并先 `am force-stop`，避免显式组件启动在 standard 任务里再叠加一个 home 任务实例（两个 MainActivity 会让 uiautomator 取到已停止实例的无障碍树）。D101 冷启动同样处理。
+8. 同一 AVD 并行三个实例（`instancesPerDevice=3`，都以 `-read-only` 启动，各自临时覆盖层），按依赖安全的簇分组：a 跑 D1xx+渠道，b 跑视觉+桌面设置+浸泡，c 跑系列+小组件+受限/屏保；D199 在合并无障碍树后统一判定。所有检查仍各执行一次，编号、断言与设备型号不变。
+9. 模拟器改用 `-gpu host`：原先 headless 启动落在 SwiftShader 软件渲染，1920×1080 下每帧 30–100ms，三项并行时 CPU 被渲染吃满。宿主 RTX 4060 上 `dumpsys SurfaceFlinger` 报告 NVIDIA GLES，启动从约 35 秒降到约 24 秒，单台设备的检查总耗时从约 1500 秒降到约 1100 秒。
+10. 启动/回收加固：同一 AVD 的 read-only 实例错开 4 秒启动（同时启动会在 `sdcard/userdata` qcow2 上抢锁，报 Permission denied）；启动失败时按进程树强杀并重试一次；启动前清理同 AVD 的残留 qemu；非 read-only 启动改用 `-no-snapshot`（`-no-snapshot-save` 仍会改写 snapshots 元数据）；`adb emu kill` 后最多等 30 秒优雅关机，避免强杀把 userdata qcow2 留脏导致后续 read-only 实例起不来。
+11. D412 的 5 次错误 PIN 用一次 `input keyevent` 注入 20 个数字键（应用每 4 位校验一次），快速设置里用一次 10 连 DOWN 越过面板前半段，均只通过真实按键路径。
+12. 页面/行导航统一走 `open_qs` 与状态轮询：快设浮层最多等 4 秒再判定，避免浮层尚未上屏就被 BACK 关掉又重试；行内目标先等状态接口出现该项再按键。应用行只显示更新时间前 10 个（真实应用会挤占），依赖“某夹具在行内”的检查改为动态选取行内实际存在的夹具。
+
+### 验证
+
+- 待填：api31g 三实例全量 M4 的 deviceSeconds 与结果。

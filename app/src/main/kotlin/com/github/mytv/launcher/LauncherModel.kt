@@ -222,6 +222,10 @@ class LauncherModel(context: Context) {
     var homeReset by mutableStateOf(false)
     var homeRequestVersion by mutableIntStateOf(0)
         private set
+
+    /** HOME 请求后短暂抑制 Tab 的停留自动切换，避免焦点过渡期间把页面切走。 */
+    var tabSwitchSuppressedUntil = 0L
+        private set
     var idleMode by mutableStateOf<String?>(null)
         private set
     var channelEntries by mutableStateOf<List<ChannelEntry>>(emptyList())
@@ -865,14 +869,19 @@ class LauncherModel(context: Context) {
         if (BootTargetState.launchedThisProcess) return
         val prefs = appContext.getSharedPreferences("launcher_settings", Context.MODE_PRIVATE)
         val freshBoot = if (Build.VERSION.SDK_INT >= 24) {
-            val count = try {
-                Settings.Global.getInt(appContext.contentResolver, Settings.Global.BOOT_COUNT, -1)
-            } catch (_: Exception) {
-                -1
+            // 进程在开机很久之后被回收重启时不能再按“新开机”打开目标应用
+            if (android.os.SystemClock.elapsedRealtime() > 120_000L) {
+                false
+            } else {
+                val count = try {
+                    Settings.Global.getInt(appContext.contentResolver, Settings.Global.BOOT_COUNT, -1)
+                } catch (_: Exception) {
+                    -1
+                }
+                val seen = prefs.getInt("boot_count_seen", -1)
+                if (count >= 0) prefs.edit().putInt("boot_count_seen", count).commit()
+                count >= 0 && count != seen
             }
-            val seen = prefs.getInt("boot_count_seen", -1)
-            if (count >= 0) prefs.edit().putInt("boot_count_seen", count).apply()
-            count >= 0 && count != seen
         } else {
             android.os.SystemClock.elapsedRealtime() < 120_000L
         }
@@ -882,7 +891,7 @@ class LauncherModel(context: Context) {
         val component = android.content.ComponentName.unflattenFromString(target.removePrefix("app:"))
             ?: return
         BootTargetState.launchedThisProcess = true
-        prefs.edit().putLong("boot_elapsed_ms", android.os.SystemClock.elapsedRealtime()).apply()
+        prefs.edit().putLong("boot_elapsed_ms", android.os.SystemClock.elapsedRealtime()).commit()
         try {
             appContext.startActivity(
                 Intent(Intent.ACTION_MAIN)
@@ -1271,6 +1280,7 @@ class LauncherModel(context: Context) {
         homeRequestVersion++
         homeRequested = true
         homeFocusPending = true
+        tabSwitchSuppressedUntil = System.currentTimeMillis() + 1500
         homeReset = true
         initialFocusApplied = true
         refresh()

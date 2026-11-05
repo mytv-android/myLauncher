@@ -102,7 +102,8 @@ class WeatherRepository(
                 .putString(KEY_READING_CITY, reading.city)
                 .putLong(KEY_UPDATED_AT, reading.updatedAtMillis)
         }
-        editor.apply()
+        // commit，而不是 apply：请求时间必须落盘，进程被强制结束重启后仍要遵守「每小时最多一次」
+        editor.commit()
     }
 
     private class HttpWeatherFetcher(private val prefs: SharedPreferences) : WeatherFetcher {

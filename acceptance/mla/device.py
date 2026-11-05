@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import re
 import socket
+import tempfile
+import threading
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -16,6 +19,8 @@ from .base import ADB, EMULATOR, run
 
 KEYS = {"UP": "KEYCODE_DPAD_UP", "DOWN": "KEYCODE_DPAD_DOWN", "LEFT": "KEYCODE_DPAD_LEFT", "RIGHT": "KEYCODE_DPAD_RIGHT",
         "OK": "KEYCODE_DPAD_CENTER", "BACK": "KEYCODE_BACK", "HOME": "KEYCODE_HOME", "MENU": "KEYCODE_MENU"}
+
+_LAUNCH_LOCK = threading.Lock()
 
 
 # ================================================================ 无障碍树
@@ -190,6 +195,14 @@ class Device:
         rc, out, err = self.adb("shell", cmd, timeout=timeout)
         return out.replace("\r\n", "\n")
 
+    def forward_state(self, remote=8765):
+        """把设备的 debug 状态 HTTP 端口映射到本机随机端口，返回本机端口。"""
+        with socket.socket() as s:
+            s.bind(("127.0.0.1", 0))
+            port = s.getsockname()[1]
+        rc, _, _ = self.adb("forward", f"tcp:{port}", f"tcp:{remote}")
+        return port if rc == 0 else None
+
     def prop(self, k):
         return self.sh(f"getprop {k}").strip()
 
@@ -295,16 +308,20 @@ class Device:
         return self.home_component().split("/")[0] == pkg
 
     # ---- 界面
-    def dump(self, tries=4) -> UiTree:
+    def dump(self, tries=3) -> UiTree:
         last = ""
         for i in range(tries):
-            self.sh("rm -f /data/local/tmp/mla_ui.xml")
-            out = self.sh("uiautomator dump /data/local/tmp/mla_ui.xml", timeout=40)
+            rc, out, err = self.adb("exec-out", "uiautomator dump /dev/tty", timeout=40)
+            xml = out if isinstance(out, str) else out.decode("utf-8", "replace")
+            a, b = xml.find("<?xml"), xml.rfind("</hierarchy>")
+            if a >= 0 and b > a:
+                return UiTree(xml[a:b + len("</hierarchy>")])
+            self.sh("uiautomator dump /data/local/tmp/mla_ui.xml >/dev/null 2>&1")
             xml = self.sh("cat /data/local/tmp/mla_ui.xml", timeout=30)
             if xml.lstrip().startswith("<?xml") or xml.lstrip().startswith("<hierarchy"):
                 return UiTree(xml[xml.index("<"):])
-            last = out.strip()
-            time.sleep(1.0 + i)
+            last = (xml or out or "").strip()[:200]
+            time.sleep(0.4 + i * 0.6)
         raise RuntimeError(f"uiautomator dump 失败：{last}")
 
     def screencap(self) -> Image.Image:
@@ -314,10 +331,12 @@ class Device:
     def logcat_clear(self):
         self.adb("logcat", "-c")
 
-    def crashes(self, pkg) -> list[str]:
+    def crashes(self, pkg, full=False) -> list[str]:
         rc, out, err = self.adb("logcat", "-d", "-b", "crash", "-v", "brief", timeout=30)
-        rc2, out2, _ = self.adb("logcat", "-d", "-s", "AndroidRuntime:E", "ActivityManager:W", "-v", "brief", timeout=30)
-        lines = (out + "\n" + out2).splitlines()
+        lines = out.splitlines()
+        if full:
+            rc2, out2, _ = self.adb("logcat", "-d", "-s", "AndroidRuntime:E", "ActivityManager:W", "-v", "brief", timeout=30)
+            lines += out2.splitlines()
         hits = []
         for i, l in enumerate(lines):
             if ("FATAL EXCEPTION" in l or "ANR in" in l) and any(pkg in x for x in lines[i:i + 4]):
@@ -354,28 +373,70 @@ class Device:
         raise RuntimeError("没有空闲的模拟器端口")
 
     @classmethod
-    def boot(cls, avd: str, name: str, window=False, timeout=600) -> "Device":
+    def boot(cls, avd: str, name: str, window=False, timeout=240, port=None, readonly=False) -> "Device":
         import subprocess
-        port = cls.free_port()
-        args = [str(EMULATOR), "-avd", avd, "-port", str(port), "-no-snapshot-save", "-no-boot-anim", "-no-audio"]
+        port = port or cls.free_port()
+        args = [str(EMULATOR), "-avd", avd, "-port", str(port), "-no-boot-anim", "-no-audio",
+                "-gpu", "host"]
+        if readonly:
+            # 同一 AVD 并行运行要求所有实例都用 -read-only（各自临时覆盖层）
+            args += ["-read-only", "-no-snapshot"]
+        else:
+            # -no-snapshot 而不是 -no-snapshot-save：后者仍会改写 snapshots/ 下的元数据
+            args.append("-no-snapshot")
         if not window:
             args.append("-no-window")
-        subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+        log = Path(tempfile.gettempdir()) / f"mla-emulator-{port}.log"
+        logf = open(log, "w", encoding="utf-8", errors="replace")
+        if readonly:
+            # 同一 AVD 的多个 read-only 实例同时启动会在 sdcard/userdata qcow2 的创建上互相抢锁，
+            # 错开几秒让第一个实例先建好临时覆盖层。
+            with _LAUNCH_LOCK:
+                p = subprocess.Popen(args, stdout=logf, stderr=subprocess.STDOUT,
+                                     creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+                time.sleep(4)
+        else:
+            p = subprocess.Popen(args, stdout=logf, stderr=subprocess.STDOUT,
+                                 creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
         d = cls(f"emulator-{port}", name)
         d.emulator_started = True
-        t0 = time.time()
-        while time.time() - t0 < timeout:
-            rc, out, _ = run([str(ADB), "-s", d.serial, "shell", "getprop sys.boot_completed"], timeout=15)
-            if out.strip() == "1":
-                time.sleep(8)
-                d.sh("input keyevent KEYCODE_WAKEUP")
-                d.sh("settings put global window_animation_scale 1; settings put global transition_animation_scale 1; settings put global animator_duration_scale 1")
-                d.sh("svc power stayon true")
-                return d
-            time.sleep(4)
-        raise RuntimeError(f"{avd} 启动超时")
+        d.proc = p
+        try:
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                if p.poll() is not None:
+                    logf.flush()
+                    tail = log.read_text(encoding="utf-8", errors="replace")[-800:]
+                    raise RuntimeError(f"{avd} 启动失败：模拟器进程已退出（{p.returncode}）\n{tail}")
+                rc, out, _ = run([str(ADB), "-s", d.serial, "shell", "getprop sys.boot_completed"], timeout=15)
+                if out.strip() == "1":
+                    time.sleep(3)
+                    d.sh("input keyevent KEYCODE_WAKEUP")
+                    d.sh("settings put global window_animation_scale 1; settings put global transition_animation_scale 1; settings put global animator_duration_scale 1")
+                    d.sh("svc power stayon true")
+                    return d
+                time.sleep(4)
+            raise RuntimeError(f"{avd} 启动超时")
+        except BaseException:
+            # 启动失败时进程句柄不会交给调用方，必须在这里清理，否则残留 qemu 会占住 AVD
+            d.kill()
+            raise
 
     def kill(self):
         if self.emulator_started:
             self.adb("emu", "kill", timeout=30)
+            p = getattr(self, "proc", None)
+            if p is not None:
+                # 模拟器收到 kill 后最多需要 20 秒优雅关机；过早强杀会让 userdata qcow2 留下脏位，
+                # 之后同 AVD 的 read-only 多实例会因拿不到写锁而起不来。
+                for _ in range(60):
+                    if p.poll() is not None:
+                        return
+                    time.sleep(0.5)
+                # 模拟器无响应时 adb emu kill 不生效，按进程树强杀，避免残留进程占住 AVD
+                if os.name == "nt":
+                    import subprocess
+                    subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)],
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                else:
+                    p.kill()

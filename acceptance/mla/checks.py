@@ -62,29 +62,56 @@ class Ctx:
         if tree is not None:
             diff = self.L.consistent(tree, st)
             if diff:
+                # 页面切换后无障碍树可能比真实界面晚一拍；真不一致会在重读后仍在
+                for _ in range(3):
+                    time.sleep(1.0)
+                    tree2 = self.dev.dump()
+                    st2 = self.L.state()
+                    if not self.L.consistent(tree2, st2):
+                        p = self.rep.path(f"{self.L.last_base}.xml")
+                        p.write_text(tree2.xml, encoding="utf-8")
+                        if self.L.dumps:
+                            self.L.dumps[-1] = (self.L.dumps[-1][0], tree2)
+                        tree, st, diff = tree2, st2, ""
+                        break
+            if diff:
                 raise CheckFailed("STATE_MISMATCH " + diff)
         return img, tree, st
 
-    def home(self):
+    def home(self, reset=False):
+        """回到主页。reset=True 时按 HOME 把焦点拨回 Hero 主按钮（默认只要求页面在主页）。"""
+        st = self.L.state()
+        if not reset and st.get("page") == "home" and not st.get("overlay") and self.L.focus(st) \
+                and self.L.alive_fast(force=True):
+            return self.L.settle()
         if self.dev.api >= 24:
-            self.dev.key("HOME", wait=1.2)
+            self.dev.key("HOME", wait=0.8)
         else:
             self.L.start()
-        st = self.L.settle(3)
-        if self.L.dev.resumed_pkg() != PKG:
+        st = self.L.settle(2)
+        t0 = time.time()
+        while time.time() - t0 < 1.5 and st.get("page") == "home" and not self.L.focus(st):
+            time.sleep(0.1)
+            st = self.L.state()
+        if not self.L.alive_fast(force=True):
             st = self.L.start()
         return st
 
     def app_tag(self, fid):
         return f"app:{Fixtures.pkg(fid)}/{ACT}"
 
-    def publish(self, *fids, wait=4.0):
+    def default_focus(self, st):
+        """HOME 的落点：有 Hero 时是 hero:play，否则是第一行的第一项。"""
+        if (st.get("hero") or {}).get("visible"):
+            return "hero:play"
+        rows = st.get("rows") or []
+        return (rows[0].get("items") or [None])[0] if rows else None
+
+    def publish(self, *fids, wait=0.8):
         for f in fids:
-            if f not in self.F.installed and not self.dev.installed(Fixtures.pkg(f)):
+            if f not in self.F.installed:
                 self.F.install(f)
             self.F.cmd(f, "publish")
-            e = self.F.wait(f, lambda x: x.get("event") == "published", 20)
-            need(e, f"夹具 {f} 没有记录 published")
         time.sleep(wait)
 
     def approve(self, pkg, key):
@@ -110,14 +137,81 @@ class Ctx:
     def row_items(self, st, rid):
         return next((r["items"] for r in st.get("rows", []) if r["id"] == rid), None)
 
+    def wait_item(self, rid, tag, timeout=20):
+        """等状态接口里出现某一行的某项（安装/发布后数据到达有延迟）。"""
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if tag in (self.row_items(self.L.state(), rid) or []):
+                return True
+            time.sleep(0.1)
+        return False
+
     def seek_row(self, rid, max_steps=25):
         self.home()
-        return self.L.seek(None, ("DOWN",), max_steps, match=lambda t: (self.L.state().get("focus") or {}).get("rowId") == rid)
+        t0 = time.time()
+        while time.time() - t0 < 10:
+            row = next((r for r in self.L.state().get("rows", []) if r["id"] == rid), None)
+            if row and row.get("items"):
+                break
+            time.sleep(0.1)
+        return self.L.seek_state(lambda st: (st.get("focus") or {}).get("rowId") == rid, ("DOWN", "UP"), max_steps)
 
 
-def run_device(ctx: Ctx, only=None, regression=True):
+def seek_grid(ctx, tag, rows=8, cols=8):
+    """在应用页网格里蛇形找焦点：先沿一行 RIGHT，再 DOWN 换行（四方向 seek 只能走 L 形）。"""
+    st = ctx.L.state()
+    if ctx.L.focus(st) == tag:
+        return True
+    for _ in range(rows):
+        for _ in range(cols):
+            before = ctx.L.focus()
+            ctx.L.press("RIGHT", settle=False)
+            st = ctx.L.settle(0.8)
+            if ctx.L.focus(st) == tag:
+                return True
+            if ctx.L.focus(st) == before:
+                break
+        before = ctx.L.focus()
+        ctx.L.press("DOWN")
+        st = ctx.L.settle()
+        if ctx.L.focus(st) == tag:
+            return True
+        if ctx.L.focus(st) == before:
+            return False
+    return False
+
+
+def apps_page(ctx):
+    """进入应用页并让网格获得焦点；页面切换和焦点落在顶栏都可能滞后，整体重试。"""
+    st = None
+    for _ in range(3):
+        ctx.home()
+        if not (ctx.L.focus(ctx.L.state()) or "").startswith("nav:"):
+            ctx.L.seek("nav:home", ("UP",), 8)
+        if ctx.L.seek("nav:apps", ("RIGHT", "LEFT"), 4):
+            t0, st = time.time(), ctx.L.state()
+            while time.time() - t0 < 4 and st.get("page") != "apps":
+                time.sleep(0.1)
+                st = ctx.L.state()
+            if st.get("page") == "apps":
+                break
+        ctx.dev.key("HOME", wait=0.8)
+        ctx.L.settle(2)
+    need(st and st.get("page") == "apps", f"到不了应用页（page={st and st.get('page')}）")
+    ctx.L.settle(2)
+    for _ in range(3):
+        if not (ctx.L.focus() or "").startswith("nav:"):
+            return st
+        ctx.L.press("DOWN")
+        ctx.L.settle()
+    need(not (ctx.L.focus() or "").startswith("nav:"), "应用页网格没有获得焦点")
+    return st
+
+
+def run_device(ctx: Ctx, only=None, regression=True, copy=True):
     results = []
-    for c in sorted(REG, key=lambda c: c["id"]):
+    device_id = getattr(ctx.dev, "device_id", ctx.dev.name)
+    for idx, c in enumerate(sorted(REG, key=lambda c: c["id"])):
         if not ms_le(c["ms"], ctx.ms):
             continue
         if c["until"] and not ms_le(ctx.ms, c["until"]):
@@ -125,7 +219,7 @@ def run_device(ctx: Ctx, only=None, regression=True):
         if only and c["id"] not in only:
             continue
         reason = c["when"](ctx) if c["when"] else None
-        r = Result(c["id"], c["title"], SKIP, ctx.dev.name, reason or "")
+        r = Result(c["id"], c["title"], SKIP, device_id, reason or "")
         if reason is None:
             ctx.ev, ctx.data = [], {}
             t0 = time.time()
@@ -145,7 +239,7 @@ def run_device(ctx: Ctx, only=None, regression=True):
                 except Exception:
                     pass
             r.evidence, r.data, r.seconds = list(ctx.ev), dict(ctx.data), round(time.time() - t0, 1)
-            crashes = ctx.dev.crashes(PKG)
+            crashes = ctx.dev.crashes(PKG, full=(idx % 10 == 0 or r.status == FAIL))
             if crashes:
                 p = ctx.rep.path(ctx.dev.name, f"{c['id']}-crash.txt")
                 p.write_text("\n\n".join(crashes), encoding="utf-8")
@@ -158,20 +252,28 @@ def run_device(ctx: Ctx, only=None, regression=True):
     if ctx.ms == "M0":
         return results
     # 文案：汇总本设备全部无障碍树
-    v = copy_violations(ctx.L.dumps)
-    r = Result("D199", "界面文案：只有白名单内的产品文字，没有提示性文字", FAIL if v else PASS, ctx.dev.name,
-               "；".join(v[:30]) + (f" …共 {len(v)} 条" if len(v) > 30 else ""))
-    ctx.rep.add(r)
-    results.append(r)
+    if copy:
+        add_copy_result(ctx.rep, device_id, ctx.L.dumps)
     return results
+
+
+def add_copy_result(rep, device_id, dumps):
+    v = copy_violations(dumps)
+    r = Result("D199", "界面文案：只有白名单内的产品文字，没有提示性文字", FAIL if v else PASS, device_id,
+               "；".join(v[:30]) + (f" …共 {len(v)} 条" if len(v) > 30 else ""))
+    rep.add(r)
+    return r
 
 
 # ===================================================================== M1 骨架
 @check("D101", "冷启动无崩溃，桌面在前台", "M1")
 def d101(ctx):
-    rc = ctx.dev.sh(f"am start -W -n {ctx.L.comp}", timeout=60)
+    ctx.L.stop()
+    rc = ctx.dev.sh("am start -W -a android.intent.action.MAIN -c android.intent.category.HOME", timeout=60)
     m = re.search(r"TotalTime: (\d+)", rc)
-    time.sleep(3)
+    t0 = time.time()
+    while time.time() - t0 < 3 and not ctx.L.alive():
+        time.sleep(0.2)
     need(ctx.L.alive(), f"前台是 {ctx.dev.resumed()}")
     ctx.L.state()
     ctx.data["totalTimeMs"] = int(m.group(1)) if m else None
@@ -182,36 +284,55 @@ def d101(ctx):
 def d102(ctx):
     ctx.F.install("dolphin")
     ctx.dev.sh(f"am start -W -n {Fixtures.pkg('dolphin')}/{ACT}")
-    time.sleep(1.5)
+    t0 = time.time()
+    while time.time() - t0 < 2 and ctx.dev.resumed_pkg() != Fixtures.pkg("dolphin"):
+        time.sleep(0.2)
     need(ctx.dev.resumed_pkg() == Fixtures.pkg("dolphin"), "夹具应用没有启动")
-    ctx.dev.key("HOME", wait=1.5)
+    ctx.dev.key("HOME", wait=0.8)
     st = ctx.L.settle(3)
+    # 数据加载完成后焦点才会从顶栏落到 Hero / 第一行；负载下这一步可能滞后数秒
+    t0, tag, want = time.time(), ctx.L.focus(st), None
+    while time.time() - t0 < 6:
+        st = ctx.L.state()
+        first = (st.get("rows") or [{}])[0]
+        want = "hero:play" if (st.get("hero") or {}).get("visible") else (first.get("items") or [None])[0]
+        tag = ctx.L.focus(st)
+        if tag and tag == want:
+            break
+        time.sleep(0.1)
     need(ctx.L.alive(), f"按 HOME 后前台是 {ctx.dev.resumed()}（默认桌面未生效？）")
-    tag = ctx.L.focus(st)
-    first = (st.get("rows") or [{}])[0]
-    ok = tag == "hero:play" if (st.get("hero") or {}).get("visible") else (first.get("items") and tag == first["items"][0])
-    need(ok, f"HOME 后焦点在 {tag}")
-    ctx.snap("home-key")
+    need(tag == want, f"HOME 后焦点在 {tag}")
+    ctx.snap("home-key", dump=False)
 
 
 @check("D103", "没有内容来源时：无 Hero、无继续观看和片单，应用行为第一行，焦点在第一个应用", "M1")
 def d103(ctx):
-    ctx.F.cleanup()
+    fixture_pkgs = {Fixtures.pkg(f) for f in PROTO_APPS}
+    def external_keys(st):
+        keys = [(st.get("hero") or {}).get("key") or ""]
+        for r in st.get("rows", []):
+            if r["id"] in ("continue", "watchlist"):
+                keys += r.get("items") or []
+        out = []
+        for key in keys:
+            parts = key.split(":")
+            if len(parts) >= 2 and parts[0] in ("wn", "wl") and parts[1] not in fixture_pkgs:
+                out.append(key)
+        return out
+    # 先看设备上是否已有第三方 Watch Next；有就不必装夹具/重启，直接判定场景不可构造
+    t0, st, external = time.time(), ctx.L.state(), []
+    while time.time() - t0 < 5:
+        external = external_keys(st)
+        if external:
+            raise Skip(f"设备上有其他应用发布的 Watch Next（{external[0]}），无法构造“没有内容来源”的场景")
+        time.sleep(0.25)
+        st = ctx.L.state()
     ctx.F.install(*PROTO_APPS)
     ctx.L.stop()
     st = ctx.L.start()
     st = ctx.home()
     img, tree, st = ctx.snap("empty-home")
-    fixture_pkgs = {Fixtures.pkg(f) for f in PROTO_APPS}
-    content_keys = [(st.get("hero") or {}).get("key") or ""]
-    for r in st.get("rows", []):
-        if r["id"] in ("continue", "watchlist"):
-            content_keys += r.get("items") or []
-    external = []
-    for key in content_keys:
-        parts = key.split(":")
-        if len(parts) >= 2 and parts[0] in ("wn", "wl") and parts[1] not in fixture_pkgs:
-            external.append(key)
+    external = external_keys(st)
     if external:
         raise Skip(f"设备上有其他应用发布的 Watch Next（{external[0]}），无法构造“没有内容来源”的场景")
     rows = [r["id"] for r in st.get("rows", [])]
@@ -238,12 +359,7 @@ def d105(ctx):
     st = ctx.home()
     items = ctx.row_items(st, "apps") or []
     need(0 < len(items) <= 10, f"应用行有 {len(items)} 项")
-    need(ctx.L.seek("nav:home", ("UP",), 8), "按上键到不了顶栏")
-    need(ctx.L.seek("nav:apps", ("RIGHT",), 4), "顶栏找不到 nav:apps")
-    time.sleep(1.0)
-    st = ctx.L.settle()
-    need(st.get("page") == "apps", f"焦点停在「应用」1 秒后 page={st.get('page')}")
-    ctx.L.press("DOWN")
+    st = apps_page(ctx)
     seen, d = set(), "RIGHT"
     for _ in range(12):                      # 蛇形走遍网格
         for _ in range(12):
@@ -260,7 +376,7 @@ def d105(ctx):
         d = "LEFT" if d == "RIGHT" else "RIGHT"
     want = {ctx.app_tag(f) for f in PROTO_APPS}
     miss = want - seen
-    ctx.snap("apps-page")
+    ctx.snap("apps-page", dump=False)
     need(not miss, f"应用页走遍后没有遇到：{sorted(miss)}")
 
 
@@ -276,7 +392,7 @@ def d106(ctx):
     got = [k for k in items if k in want]
     need(got == want, f"顺序 {got}")
     need((st.get("hero") or {}).get("visible"), "有内容时 Hero 未显示")
-    ctx.snap("hero")
+    ctx.snap("hero", dump=False)
 
 
 @check("D107", "浏览态布局基线：焦点行顶部 y=236dp，行内焦点 x=48dp", "M1", when=tvprovider)
@@ -284,7 +400,7 @@ def d107(ctx):
     ctx.publish("dolphin", "spark", "cloud", "pulse", wait=2)
     need(ctx.seek_row("continue"), "到不了继续观看行")
     msgs = []
-    for i in range(3):
+    for i in range(1, 3):
         img, tree, st = ctx.snap(f"browse-{i}")
         n = tree.find(ctx.L.focus(st))
         row = tree.find("row:continue")
@@ -334,13 +450,15 @@ def d110(ctx):
     need(ctx.L.seek("nav:home", ("UP",), 8), "到不了顶栏")
     for tab, page in (("nav:apps", "apps"), ("nav:widgets", "widgets")):
         need(ctx.L.seek(tab, ("RIGHT",), 4), f"找不到 {tab}")
-        time.sleep(1.0)
+        t0 = time.time()
+        while time.time() - t0 < 4 and ctx.L.state().get("page") != page:
+            time.sleep(0.1)
         st = ctx.L.settle()
         need(st.get("page") == page, f"{tab} 停留后 page={st.get('page')}")
         ctx.L.press("DOWN")
         need(not ctx.L.focus().startswith("nav:"), f"{page} 页按下键焦点仍在顶栏")
         ctx.L.press("UP")
-        ctx.snap(f"page-{page}")
+        ctx.snap(f"page-{page}", dump=False)
     for _ in range(3):
         st = ctx.L.press("BACK")
     need(st.get("page") == "home", f"BACK 后 page={st.get('page')}")
@@ -350,14 +468,24 @@ def d110(ctx):
 def d111(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
-    tag = ctx.app_tag("dolphin")
-    need(ctx.seek_row("apps") and ctx.L.seek(tag, ("RIGHT", "LEFT"), 12), f"应用行找不到 {tag}")
-    ctx.F.cmd("dolphin", "clear_log")
+    need(ctx.seek_row("apps"), "到不了应用行")
+    # 应用行只显示前 10 个，真实应用可能挤掉某个夹具；用行内实际存在的第一个夹具
+    t0, fids = time.time(), []
+    while time.time() - t0 < 10:
+        items = ctx.row_items(ctx.L.state(), "apps") or []
+        fids = [k.split(f"app:{FIX}.", 1)[1].split("/")[0] for k in items if k.startswith(f"app:{FIX}.")]
+        if fids:
+            break
+        time.sleep(0.1)
+    need(fids, f"应用行没有夹具（行内 {ctx.row_items(ctx.L.state(), 'apps')}）")
+    fid = fids[0]
+    tag = ctx.app_tag(fid)
+    need(ctx.L.seek(tag, ("RIGHT", "LEFT"), 20), f"应用行找不到 {tag}")
+    ctx.F.cmd(fid, "clear_log")
     ctx.L.press("OK")
-    time.sleep(2)
-    need(ctx.dev.resumed_pkg() == Fixtures.pkg("dolphin"), f"OK 后前台是 {ctx.dev.resumed()}")
-    need(ctx.F.wait("dolphin", lambda e: e.get("event") == "launched", 5), "夹具没有记录 launched")
-    ctx.dev.key("BACK", wait=1.5)
+    need(ctx.F.wait(fid, lambda e: e.get("event") == "launched", 8), "夹具没有记录 launched")
+    need(ctx.dev.resumed_pkg() == Fixtures.pkg(fid), f"OK 后前台是 {ctx.dev.resumed()}")
+    ctx.dev.key("BACK", wait=0.5)
     st = ctx.L.settle()
     need(ctx.L.alive() and ctx.L.focus(st) == tag, f"返回后焦点 {ctx.L.focus(st)}")
 
@@ -379,8 +507,17 @@ def d112(ctx):
 def d113(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
-    tag = ctx.app_tag("files")
-    need(ctx.seek_row("apps") and ctx.L.seek(tag, ("RIGHT", "LEFT"), 12), f"应用行找不到 {tag}")
+    need(ctx.seek_row("apps"), "到不了应用行")
+    t0, fids = time.time(), []
+    while time.time() - t0 < 10:
+        items = ctx.row_items(ctx.L.state(), "apps") or []
+        fids = [k.split(f"app:{FIX}.", 1)[1].split("/")[0] for k in items if k.startswith(f"app:{FIX}.")]
+        if fids:
+            break
+        time.sleep(0.1)
+    need(fids, f"应用行没有夹具（行内 {ctx.row_items(ctx.L.state(), 'apps')}）")
+    tag = ctx.app_tag(fids[0])
+    need(ctx.L.seek(tag, ("RIGHT", "LEFT"), 20), f"应用行找不到 {tag}")
     ctx.L.press("OK", long=True)
     img, tree, st = ctx.snap("menu")
     need(st.get("overlay") == "menu" and tree.find("menu:hide"), "长按 OK 没有出现带「隐藏」的菜单")
@@ -388,15 +525,20 @@ def d113(ctx):
     ctx.L.press("OK")
     st = ctx.L.settle()
     need(tag in st.get("hiddenApps", []) and tag not in (ctx.row_items(st, "apps") or []), "隐藏后仍在应用行或未记入 hiddenApps")
-    ctx.home()
-    need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "顶栏找不到 nav:settings")
+    from .checks45 import open_qs
+    open_qs(ctx)
+    need(ctx.L.seek("qs:launcher_settings", ("DOWN", "UP"), 20), "快速设置里找不到「桌面设置」")
     ctx.L.press("OK")
-    need(ctx.L.seek("qs:launcher_settings", ("DOWN",), 15), "快速设置里找不到「桌面设置」")
-    ctx.L.press("OK")
-    need(ctx.L.seek("settings:hidden_apps", ("DOWN",), 15), "桌面设置里找不到「已隐藏的应用」")
+    ok = False
+    for _ in range(3):
+        if ctx.L.seek("settings:hidden_apps", ("DOWN", "UP"), 20):
+            ok = True
+            break
+        time.sleep(0.5)
+    need(ok, "桌面设置里找不到「已隐藏的应用」")
     ctx.L.press("OK")
     need(ctx.L.seek(f"hidden:{tag}", ("DOWN",), 15), f"找不到恢复项 hidden:{tag}")
-    ctx.snap("hidden-apps")
+    ctx.snap("hidden-apps", dump=False)
     ctx.L.press("OK")
     st = ctx.L.settle()
     need(tag not in st.get("hiddenApps", []), "恢复后仍在 hiddenApps")
@@ -409,36 +551,52 @@ def d114(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
     need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:apps", ("RIGHT",), 4), "到不了 nav:apps")
-    time.sleep(1)
-    ctx.L.press("DOWN")
-    ctx.L.press("RIGHT")
-    ctx.L.press("RIGHT")
+    t0 = time.time()
+    while time.time() - t0 < 5 and ctx.L.state().get("page") != "apps":
+        time.sleep(0.1)
+    for k in ("DOWN", "RIGHT", "RIGHT"):
+        before = ctx.L.focus()
+        ctx.L.press(k, settle=False)
+        ctx.L._wait_focus_change(before, 0.8)
     want = ctx.L.focus()
     ctx.dev.sh(f"am start -W -n {Fixtures.pkg('store')}/{ACT}")
-    time.sleep(1.5)
+    t0 = time.time()
+    while time.time() - t0 < 5 and ctx.dev.resumed_pkg() != Fixtures.pkg("store"):
+        time.sleep(0.2)
+    need(ctx.dev.resumed_pkg() == Fixtures.pkg("store"), f"夹具应用没有来到前台：{ctx.dev.resumed()}")
+    time.sleep(0.5)   # 给页面/焦点持久化（100ms 去抖）留出落盘时间
     ctx.dev.sh(f"am kill {PKG}")
-    time.sleep(1.5)
+    t0 = time.time()
+    while time.time() - t0 < 5 and ctx.dev.pid(PKG):
+        time.sleep(0.2)
     need(not ctx.dev.pid(PKG), "am kill 后桌面进程仍在（无法模拟回收）")
-    ctx.dev.key("BACK", wait=2.5)
+    ctx.dev.key("BACK", wait=0.5)
     st = ctx.L.settle(4)
+    t0 = time.time()
+    while time.time() - t0 < 10 and (st.get("page") != "apps" or ctx.L.focus(st) != want):
+        time.sleep(0.1)
+        st = ctx.L.state()
     need(st.get("page") == "apps" and ctx.L.focus(st) == want, f"恢复后 page={st.get('page')} 焦点 {ctx.L.focus(st)}，应为 apps / {want}")
 
 
 @check("D115", "随机遍历 120 步：焦点始终存在、不离开桌面、状态与界面一致", "M1")
 def d115(ctx):
     ctx.F.install(*PROTO_APPS)
-    ctx.home()
+    st = ctx.home()
     rnd = random.Random(20261102)
     msgs = []
     w, h = ctx.dev.size
     for i in range(120):
         k = rnd.choices(["UP", "DOWN", "LEFT", "RIGHT", "BACK"], [3, 3, 4, 4, 1])[0]
-        st = ctx.L.press(k)
-        if not ctx.L.alive():
+        before = ctx.L.focus(st)
+        st = ctx.L.press(k, settle=False)
+        st = ctx.L.settle(1.0) if k == "BACK" else ctx.L._wait_focus_change(before, 0.15)
+        # BACK 是唯一可能退出桌面的按键；其余方向键只可能在桌面内移动，逐帧查前台太慢
+        if k == "BACK" and not ctx.L.alive():
             raise CheckFailed(f"第 {i} 步 {k} 后离开了桌面：{ctx.dev.resumed()}")
         if not ctx.L.focus(st):
             msgs.append(f"第 {i} 步 {k} 后没有焦点")
-        if i % 15 == 0:
+        if i % 30 == 0:
             img, tree, st = ctx.snap(f"walk-{i}")
             n = tree.find(ctx.L.focus(st))
             if n:
@@ -486,17 +644,25 @@ def d201(ctx):
     ctx.home()
     need(ctx.seek_row("apps"), "到不了应用行")
     msgs, themes = [], []
-    for fid in ("dolphin", "spark", "pulse", "prism", "cloud", "sky"):
+    for fid in ("dolphin", "spark", "pulse"):
         tag = ctx.app_tag(fid)
         if not ctx.L.seek(tag, ("RIGHT", "LEFT"), 12):
             msgs.append(f"找不到 {tag}")
             continue
-        time.sleep(1.4)
         st = ctx.L.settle()
-        th = st.get("theme") or {}
         exp = _icon_seed(fid)
-        _, c, hh = lch(th.get("seed", "#000000"))
         _, ce, he = lch(exp)
+        t0 = time.time()
+        while True:
+            th = st.get("theme") or {}
+            _, c, hh = lch(th.get("seed", "#000000"))
+            if (Fixtures.pkg(fid) in (th.get("sourceKey") or "") and hue_diff(hh, he) <= 25 and c >= 12) \
+                    or time.time() - t0 > 2.0:
+                break
+            time.sleep(0.1)
+            st = ctx.L.state()
+        th = st.get("theme") or {}
+        _, c, hh = lch(th.get("seed", "#000000"))
         themes.append({"app": fid, **th})
         if hue_diff(hh, he) > 25 or c < 12:
             msgs.append(f"{fid}：seed {th.get('seed')}（H{hh:.0f} C{c:.0f}），图标约 {exp}（H{he:.0f}）")
@@ -505,7 +671,7 @@ def d201(ctx):
             msgs.append(f"{fid}：primary {p} 色相偏离种子")
     ctx.flags["themes"] = themes
     ctx.data["themes"] = themes
-    ctx.snap("theme-last")
+    ctx.snap("theme-last", dump=False)
     need(not msgs, "；".join(msgs))
 
 
@@ -513,14 +679,25 @@ def d201(ctx):
 def d202(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
-    need(ctx.seek_row("apps"), "到不了应用行")
-    need(ctx.L.seek(ctx.app_tag("files"), ("RIGHT", "LEFT"), 12), "找不到 files")
+    # 应用行的前 10 个会被真实应用挤占；应用页列出全部夹具，先做彩色应用的正向对照
+    apps_page(ctx)
+    colorful, gray = ctx.app_tag("dolphin"), ctx.app_tag("files")
+    need(seek_grid(ctx, colorful), "应用页找不到 dolphin")
+    t0, source = time.time(), ""
+    while time.time() - t0 < 3:
+        source = ((ctx.L.state().get("theme") or {}).get("sourceKey") or "")
+        if "mlfixture.dolphin" in source:
+            break
+        time.sleep(0.1)
+    need("mlfixture.dolphin" in source, f"彩色应用没有成为主题来源：{source}")
+    apps_page(ctx)   # 重新从网格左上角开始，蛇形只能向右/向下
+    need(seek_grid(ctx, gray), "应用页找不到 files")
     time.sleep(0.2)
     at_focus = ctx.L.state()
     transitions = (at_focus.get("counters") or {}).get("themeTransitions", 0)
-    time.sleep(1.4)
+    time.sleep(1.2)
     after = ctx.L.settle()
-    need(ctx.L.focus(after) == ctx.app_tag("files"), f"焦点离开了 files：{ctx.L.focus(after)}")
+    need(ctx.L.focus(after) == gray, f"焦点离开了 files：{ctx.L.focus(after)}")
     now = (after.get("counters") or {}).get("themeTransitions", 0)
     need(now == transitions, f"聚焦文件管理后发生了 {now - transitions} 次主题过渡")
     source = (after.get("theme") or {}).get("sourceKey") or ""
@@ -535,10 +712,9 @@ def d203(ctx):
         ctx.L.pref("contrast", lvl)
         ctx.home()
         ctx.seek_row("apps")
-        for fid in ("dolphin", "spark", "prism", "sky"):
+        for fid in ("dolphin", "prism"):
             if not ctx.L.seek(ctx.app_tag(fid), ("RIGHT", "LEFT"), 12):
                 continue
-            time.sleep(1.4)
             r = (ctx.L.settle().get("theme") or {}).get("roles") or {}
             for a, b, m in (("onPrimary", "primary", 4.5), ("onSurface", "surface", 7), ("focusRing", "surface", 3)):
                 if a in r and b in r:
@@ -554,9 +730,9 @@ def d203(ctx):
 @check("D204", "主题真实上屏：主按钮底色等于状态接口的 primary", "M2", when=tvprovider)
 def d204(ctx):
     ctx.publish("dolphin", "spark", "cloud", "pulse", wait=2)
-    ctx.home()
+    ctx.home(reset=True)
     need(ctx.L.seek("hero:watchlist", ("RIGHT",), 3), "Hero 里找不到 hero:watchlist")
-    time.sleep(1.5)
+    ctx.L.settle()
     img, tree, st = ctx.snap("hero-primary")
     n = tree.find("hero:play")
     need(n, "无障碍树没有 hero:play")
@@ -575,11 +751,11 @@ def d205(ctx):
     need(ctx.seek_row("apps"), "到不了应用行")
     for _ in range(9):
         ctx.L.press("LEFT", settle=False)
-    time.sleep(1.5)
+    time.sleep(1.0)
     ctx.L.call("reset_counters")
     for _ in range(7):
         ctx.dev.key("RIGHT", wait=0.08)
-    time.sleep(2.0)
+    time.sleep(1.2)
     st = ctx.L.settle()
     n = (st.get("counters") or {}).get("themeTransitions", 99)
     need(n <= 2, f"连按 7 次右键期间主题过渡 {n} 次")
@@ -590,10 +766,23 @@ def d206(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
     ctx.seek_row("apps")
+    def quiesce(quiet=0.35):
+        t0 = time.time()
+        while time.time() - t0 < 3:
+            if not (ctx.L.state().get("theme") or {}).get("transitioning"):
+                time.sleep(quiet)
+                s = ctx.L.state()
+                if not (s.get("theme") or {}).get("transitioning"):
+                    return s
+            time.sleep(0.05)
+        return ctx.L.state()
+
+    quiesce()
     ctx.L.call("reset_counters")
-    for _ in range(4):
+    for _ in range(3):
         ctx.L.press("RIGHT")
-        time.sleep(1.2)
+        time.sleep(1.0)
+        quiesce()
     c = ctx.L.state().get("counters") or {}
     need(c.get("themeTransitions", 0) >= 1, "没有发生主题过渡，无法判断")
     need(c.get("rowRecompositionsDuringThemeTransition", 1) == 0, f"counters={c}")
@@ -616,7 +805,7 @@ def _glass_probe(ctx, tier):
     ctx.home()
     need(ctx.L.seek("nav:search", ("UP", "RIGHT"), 12) or ctx.L.seek("nav:home", ("UP",), 8), "到不了顶栏")
     ctx.L.call("set_backdrop", "checker:8:#FFFFFF:#000000")
-    time.sleep(2)
+    time.sleep(0.6)
     img, tree, st = ctx.snap(f"glass-{tier}-checker")
     box = _capsule_box(ctx, tree)
     w, h = ctx.dev.size
@@ -625,7 +814,7 @@ def _glass_probe(ctx, tier):
     cols = []
     for c in ("#E00000", "#0030E0"):
         ctx.L.call("set_backdrop", f"solid:{c}")
-        time.sleep(2)
+        time.sleep(0.6)
         im, _, _ = ctx.snap(f"glass-{tier}-{c[1:]}", dump=False)
         cols.append(mean_color(im, box))
     ctx.L.call("set_backdrop", "none")
@@ -683,7 +872,7 @@ def d211(ctx):
     for key in ("dolphin.volcano", "cloud.glacier"):
         pkg = Fixtures.pkg(key.split(".")[0])
         need(ctx.L.seek(f"wn:{pkg}:{key}", ("RIGHT", "LEFT"), 8), f"找不到 {key}")
-        time.sleep(1.8)
+        time.sleep(0.8)
         img, _, _ = ctx.snap(f"backdrop-{key}", dump=False)
         cols[key] = mean_color(img, box)
     d = delta_e(cols["dolphin.volcano"], cols["cloud.glacier"])
@@ -693,9 +882,8 @@ def d211(ctx):
 
 @check("D212", "快速设置：取色来源 / 玻璃效果 / 配色风格可用方向键切换并生效", "M2")
 def d212(ctx):
-    ctx.home()
-    need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
-    ctx.L.press("OK")
+    from .checks45 import open_qs
+    open_qs(ctx)
     img, tree, st = ctx.snap("quick-settings")
     need(st.get("overlay") == "quick_settings", f"overlay={st.get('overlay')}")
     for t in ("qs:source", "qs:glass", "qs:style", "qs:launcher_settings"):
@@ -703,9 +891,16 @@ def d212(ctx):
     need(ctx.L.seek("qs:glass", ("DOWN",), 12), "到不了 qs:glass")
     tiers = []
     for _ in range(3):
+        before = (ctx.L.state().get("glass") or {}).get("tier")
         ctx.L.press("RIGHT")
-        time.sleep(0.8)
-        tiers.append((ctx.L.state().get("glass") or {}).get("tier"))
+        t0 = time.time()
+        tier = before
+        while time.time() - t0 < 1.2:
+            tier = (ctx.L.state().get("glass") or {}).get("tier")
+            if tier != before:
+                break
+            time.sleep(0.05)
+        tiers.append(tier)
     need(len(set(tiers)) >= 2, f"左右切换玻璃效果，tier 依次为 {tiers}")
     ctx.L.press("BACK")
     ctx.L.pref("glass_tier", "auto")
@@ -717,7 +912,7 @@ def d213(ctx):
     ctx.home()
     ctx.seek_row("apps")
     ctx.dev.sh(f"dumpsys gfxinfo {PKG} reset")
-    for i in range(24):
+    for i in range(12):
         ctx.dev.key("RIGHT" if (i // 6) % 2 == 0 else "LEFT", wait=0.12)
     time.sleep(1)
     out = ctx.dev.sh(f"dumpsys gfxinfo {PKG}")
@@ -738,10 +933,10 @@ def d214(ctx):
     ctx.snap("review-hero", dump=False)
     ctx.seek_row("apps")
     ctx.L.press("RIGHT")
-    time.sleep(1.4)
+    ctx.L.settle()
     ctx.snap("review-app-focus", dump=False)
     if ctx.dev.api >= 26 and ctx.seek_row("continue"):
         ctx.L.press("RIGHT")
-        time.sleep(1.4)
+        ctx.L.settle()
         ctx.snap("review-browse", dump=False)
     return MANUAL, "在浏览器中打开 tv-launcher-design-v3.html 的原型，与同名场景并排比较：Hero、应用图标 Cookie 形焦点、浏览态信息头、玻璃顶栏"

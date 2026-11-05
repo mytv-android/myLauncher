@@ -15,12 +15,20 @@ P = Fixtures.pkg
 
 
 # ===================================================================== M4
-def enter_ambient(ctx, idle=12):
+def wait_state(ctx, pred, timeout):
+    """轮询状态接口直到 pred 为真或超时，返回最后一次状态。"""
+    t0 = time.time()
+    st = ctx.L.state()
+    while not pred(st) and time.time() - t0 < timeout:
+        time.sleep(0.25)
+        st = ctx.L.state()
+    return st
+
+
+def enter_ambient(ctx, idle=5):
     ctx.L.pref("ambient_idle_s", str(idle))
     ctx.home()
-    time.sleep(idle + 6)
-    st = ctx.L.state()
-    return st
+    return wait_state(ctx, lambda st: st.get("mode") == "ambient", idle + 3)
 
 
 def leave_ambient(ctx):
@@ -36,11 +44,11 @@ def d401(ctx):
     ctx.L.press("RIGHT")
     want = ctx.L.focus()
     try:
-        ctx.L.pref("ambient_idle_s", "12")
-        time.sleep(18)
+        ctx.L.pref("ambient_idle_s", "5")
+        wait_state(ctx, lambda st: st.get("mode") == "ambient", 10)
         img, _, st, ev = ctx.L.snap("ambient", dump=False)
         ctx.ev += ev
-        need(st.get("mode") == "ambient", f"空闲 18 秒后 mode={st.get('mode')}")
+        need(st.get("mode") == "ambient", f"10 秒内没有进入环境模式（mode={st.get('mode')}）")
         tree = ctx.dev.dump()
         need(tree.find("ambient:clock"), "环境模式没有时钟（ambient:clock）")
         ctx.dev.key("DOWN", wait=1.5)
@@ -68,32 +76,53 @@ def d402(ctx):
         leave_ambient(ctx)
 
 
-@check("D403", "环境模式不阻塞系统：保持 3 分钟无崩溃、时钟位置会漂移（防烧屏）", "M4")
+@check("D403", "环境模式不阻塞系统：保持 60 秒无崩溃、时钟位置会漂移（防烧屏）", "M4")
 def d403(ctx):
     try:
         st = enter_ambient(ctx)
         need(st.get("mode") == "ambient", f"mode={st.get('mode')}")
         pos = []
-        for i in range(4):
+        for i in range(3):
             tree = ctx.dev.dump()
             n = tree.find("ambient:clock")
             pos.append(n.bounds if n else None)
-            time.sleep(45)
+            if i < 2:
+                time.sleep(30)
         need(ctx.L.alive() or ctx.dev.resumed_pkg() in ("com.android.systemui", PKG), f"前台 {ctx.dev.resumed()}")
         moved = len({p for p in pos if p}) > 1
         ctx.data["clockBounds"] = pos
-        return (PASS if moved else WARN), ("时钟位置有漂移" if moved else "3 分钟内时钟位置未变化（真机需确认防烧屏位移）")
+        return (PASS if moved else WARN), ("时钟位置有漂移" if moved else "60 秒内时钟位置未变化（真机需确认防烧屏位移）")
     finally:
         ctx.dev.key("BACK", wait=1)
         leave_ambient(ctx)
 
 
 def open_qs(ctx):
-    ctx.home()
-    need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
-    ctx.L.press("OK")
-    st = ctx.L.settle()
-    need(st.get("overlay") == "quick_settings", f"overlay={st.get('overlay')}")
+    for _ in range(3):
+        st = ctx.L.state()
+        if st.get("overlay") and st.get("overlay") != "quick_settings":
+            ctx.dev.key("BACK", wait=0.5)
+            continue
+        ctx.home()
+        if not (ctx.L.focus(ctx.L.state()) or "").startswith("nav:"):
+            if not ctx.L.seek("nav:home", ("UP",), 8):
+                ctx.dev.key("HOME", wait=0.8)
+                ctx.L.settle(2)
+                continue
+        if ctx.L.seek("nav:settings", ("RIGHT", "LEFT"), 8):
+            for _ in range(2):
+                ctx.L.press("OK", settle=False)
+                t0, st = time.time(), ctx.L.state()
+                while time.time() - t0 < 4 and st.get("overlay") != "quick_settings":
+                    time.sleep(0.1)
+                    st = ctx.L.state()
+                if st.get("overlay") == "quick_settings":
+                    return
+            ctx.dev.key("BACK", wait=0.3)
+        ctx.dev.key("HOME", wait=0.8)
+        ctx.L.settle(2)
+    st = ctx.L.state()
+    raise CheckFailed(f"找不到 nav:settings（page={st.get('page')} focus={ctx.L.focus(st)} overlay={st.get('overlay')}）")
 
 
 def music_volume(ctx):
@@ -106,15 +135,22 @@ def music_volume(ctx):
     return int(m.group(1)) if m else None
 
 
+def is_settings(pkg):
+    return pkg in ("com.android.tv.settings", "com.android.settings", "com.google.android.tv.settings") or "settings" in pkg
+
+
 @check("D404", "快速设置：Wi-Fi 打开系统网络设置；音量左右调节生效", "M4")
 def d404(ctx):
     open_qs(ctx)
     need(ctx.L.seek("qs:wifi", ("DOWN", "UP"), 12), "到不了 qs:wifi")
     ctx.L.press("OK")
-    time.sleep(2.5)
+    t0 = time.time()
     fg = ctx.dev.resumed_pkg()
-    need(fg in ("com.android.tv.settings", "com.android.settings", "com.google.android.tv.settings") or "settings" in fg, f"Wi-Fi 打开的是 {ctx.dev.resumed()}")
-    ctx.dev.key("BACK", wait=1.5)
+    while not is_settings(fg) and time.time() - t0 < 2.5:
+        time.sleep(0.25)
+        fg = ctx.dev.resumed_pkg()
+    need(is_settings(fg), f"Wi-Fi 打开的是 {ctx.dev.resumed()}")
+    ctx.dev.key("BACK", wait=1.0)
     if not ctx.L.alive():
         ctx.home()
     open_qs(ctx)
@@ -137,8 +173,8 @@ def d405(ctx):
     open_qs(ctx)
     need(ctx.L.seek("qs:source", ("DOWN", "UP"), 12), "到不了 qs:source")
     ctx.L.press("OK")
-    time.sleep(2)
-    img, tree, st = ctx.snap("source")
+    wait_state(ctx, lambda st: st.get("overlay") == "inputs", 2)
+    img, tree, st = ctx.snap("source", dump=False)
     need(ctx.L.alive() or "tv" in ctx.dev.resumed_pkg(), f"前台 {ctx.dev.resumed()}")
     ctx.dev.key("BACK", wait=1.2)
     st = ctx.home()

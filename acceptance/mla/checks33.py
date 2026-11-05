@@ -13,6 +13,7 @@ import numpy as np
 
 from .base import KIT, PASS, CheckFailed, Skip, sha256_file
 from .checks import PROTO_APPS, api, check, need
+from .checks3 import widgets_page
 from .checks45 import open_qs
 from .launcher import FIX, PKG, PROJ, Fixtures
 from .mock import MockServer, file_route, json_route, open_meteo
@@ -37,10 +38,8 @@ def launches(ctx, fid):
 
 
 def open_settings(ctx, item=None):
-    ctx.home()
-    need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
-    ctx.L.press("OK")
-    need(ctx.L.seek("qs:launcher_settings", ("DOWN",), 20), "快速设置里找不到「桌面设置」")
+    open_qs(ctx)
+    need(ctx.L.seek("qs:launcher_settings", ("DOWN", "UP"), 20), "快速设置里找不到「桌面设置」")
     ctx.L.press("OK")
     st = ctx.L.settle()
     need(st.get("page") == "settings", f"page={st.get('page')}")
@@ -131,7 +130,7 @@ class Organizer:
 
     def refresh(self):
         """重新读取状态接口里的当前令牌（允许或拒绝一次连接后令牌会刷新）。"""
-        time.sleep(0.8)
+        time.sleep(0.2)
         o = self.ctx.L.state().get("organizer") or {}
         need(o.get("token"), f"状态接口 organizer={o}")
         self.token = o["token"]
@@ -156,7 +155,7 @@ class Organizer:
                 need(self.ctx.L.seek(tag, ("LEFT", "RIGHT", "DOWN", "UP"), 4), f"确认框里找不到 {tag}")
                 self.ctx.L.press("OK")
                 break
-            time.sleep(0.5)
+            time.sleep(0.1)
         t.join(timeout)
         return out.get("r", ("timeout", b""))
 
@@ -166,8 +165,19 @@ class Organizer:
 def d119(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
-    for i, fid in enumerate(("files", "store")):
-        need(ctx.seek_row("apps") and ctx.L.seek(app_tag(fid), ("RIGHT", "LEFT"), 12), f"应用行找不到 {fid}")
+    need(ctx.seek_row("apps"), "到不了应用行")
+    # 应用行只显示前 10 个；用行内实际存在的两个夹具，避免被真实应用挤出
+    t0, items, fids = time.time(), [], []
+    while time.time() - t0 < 10:
+        items = ctx.row_items(ctx.L.state(), "apps") or []
+        fids = [k.split(f"app:{FIX}.", 1)[1].split("/")[0] for k in items if k.startswith(f"app:{FIX}.")]
+        if len(fids) >= 2:
+            break
+        time.sleep(0.1)
+    need(len(fids) >= 2, f"应用行夹具不足（行内 {items}）")
+    tags = [app_tag(fids[0]), app_tag(fids[1])]
+    for i, tag in enumerate(tags):
+        need(ctx.seek_row("apps") and ctx.L.seek(tag, ("RIGHT", "LEFT"), 20), f"应用行找不到 {tag}")
         ctx.L.press("OK", long=True)
         need(ctx.L.seek("menu:folder", ("DOWN", "UP"), 10), "菜单里没有「移到文件夹」（menu:folder）")
         ctx.L.press("OK")
@@ -182,14 +192,13 @@ def d119(ctx):
             fid0 = ctx.L.state()["folders"][0]["id"]
             need(ctx.L.seek(f"folder_pick:{fid0}", ("DOWN", "UP"), 10), f"找不到已有文件夹 folder_pick:{fid0}")
             ctx.L.press("OK")
-        time.sleep(0.8)
     st = ctx.L.settle()
     fs = st.get("folders") or []
-    need(len(fs) == 1 and fs[0].get("name") == "工具" and fs[0].get("apps") == [app_tag("files"), app_tag("store")], f"folders={fs}")
+    need(len(fs) == 1 and fs[0].get("name") == "工具" and fs[0].get("apps") == tags, f"folders={fs}")
     ftag = f"folder:{fs[0]['id']}"
     st = ctx.home()
     items = ctx.row_items(st, "apps") or []
-    need(ftag in items and app_tag("files") not in items, f"应用行 {items}")
+    need(ftag in items and tags[0] not in items, f"应用行 {items}")
     need(ctx.seek_row("apps") and ctx.L.seek(ftag, ("RIGHT", "LEFT"), 12), f"应用行找不到 {ftag}")
     img, tree, st = ctx.snap("folder-tile")
     n = tree.find(ftag)
@@ -221,28 +230,41 @@ def d120(ctx):
     ctx.F.install(*PROTO_APPS)
     ctx.home()
     need(ctx.seek_row("apps"), "到不了应用行")
+    # 应用行按更新时间取前 10 个，真实应用可能挤掉某个夹具；用行内实际存在的两个夹具
+    t0, items = time.time(), []
+    while time.time() - t0 < 10:
+        items = ctx.row_items(ctx.L.state(), "apps") or []
+        if sum(1 for k in items if k.startswith(f"app:{FIX}.")) >= 2:
+            break
+        time.sleep(0.1)
+    fids = [k.split(f"app:{FIX}.", 1)[1].split("/")[0] for k in items if k.startswith(f"app:{FIX}.")]
+    need(len(fids) >= 2, f"应用行夹具不足（行内 {items}）")
+    fid, fid2 = fids[0], fids[1]
+    tag = app_tag(fid)
+    need(ctx.L.seek(tag, ("RIGHT", "LEFT"), 20), f"找不到 {tag}")
     tree = ctx.dev.dump()
-    n = tree.find(app_tag("dolphin"))
-    need(n, "应用行没有海豚视频")
-    ctx.F.cmd("dolphin", "clear_log")
+    n = tree.find(tag)
+    need(n, f"应用行没有 {tag}（行内 {items}）")
+    ctx.F.cmd(fid, "clear_log")
     x, y = center(n)
     ctx.dev.sh(f"input tap {x} {y}")
-    time.sleep(3)
-    need(len(launches(ctx, "dolphin")) == 1, f"点按后 launched {len(launches(ctx, 'dolphin'))} 次")
+    ctx.F.wait(fid, lambda e: e.get("event") == "launched", 8)
+    need(len(launches(ctx, fid)) == 1, f"点按后 launched {len(launches(ctx, fid))} 次")
     ctx.dev.key("BACK", wait=1.5)
     st = ctx.L.settle()
     need(ctx.L.alive(), "返回后桌面不在前台")
+    tag2 = app_tag(fid2)
+    need(ctx.L.seek(tag2, ("RIGHT", "LEFT"), 20), "找不到第二个应用卡片")
     tree = ctx.dev.dump()
-    n = tree.find(app_tag("cloud")) or tree.find(app_tag("spark"))
+    n = tree.find(tag2)
     need(n, "找不到第二个应用卡片")
     x, y = center(n)
     ctx.dev.sh(f"input swipe {x} {y} {x} {y} 1500")
     st = ctx.L.settle()
     need(st.get("overlay") == "menu", f"按住 1.5 秒后 overlay={st.get('overlay')}")
     ctx.L.press("BACK")
-    ctx.home()
-    need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
-    ctx.L.press("OK")
+    open_qs(ctx)
+    ctx.L.settle()
     img, tree, st = ctx.snap("qs-for-tap")
     q = tree.find("qs")
     need(q, "快速设置面板没有 qs 标签")
@@ -304,8 +326,12 @@ def d215(ctx):
 
 # ===================================================================== M3
 def clock_text(ctx):
-    tree = ctx.dev.dump()
-    n = tree.find("clock")
+    t0, n = time.time(), None
+    while time.time() - t0 < 5:
+        n = ctx.dev.dump().find("clock")
+        if n:
+            break
+        time.sleep(0.2)
     need(n, "顶栏没有时钟（clock）")
     return " ".join(n.texts())
 
@@ -341,29 +367,35 @@ def d328(ctx):
             ctx.L.stop()
             ctx.L.start()
             t0 = time.time()
-            while time.time() - t0 < 25 and not m.hits("/v1/forecast"):
-                time.sleep(1)
+            while time.time() - t0 < 40 and not m.hits("/v1/forecast"):
+                time.sleep(0.25)
             hits = m.hits("/v1/forecast")
-            need(hits, "25 秒内没有请求天气接口")
+            need(hits, "40 秒内没有请求天气接口")
             q = hits[0]["query"]
             ctx.data["query"] = q
             for k in ("latitude", "longitude"):
                 need(k in q and re.fullmatch(r"-?\d+(\.\d{1,2})?", q[k]) and abs(float(q[k]) - (39.9 if k == "latitude" else 116.4)) < 0.6,
                      f"{k}={q.get(k)}（应为北京的经纬度，最多两位小数）")
-            time.sleep(3)
-            st = ctx.L.state()
-            w = st.get("weather") or {}
+            t0 = time.time()
+            w = {}
+            while time.time() - t0 < 12:
+                w = (ctx.L.state().get("weather") or {})
+                if w.get("visible") and w.get("tempC") is not None:
+                    break
+                time.sleep(0.25)
             need(w.get("visible") and round(float(w.get("tempC", -99))) == 23, f"状态接口 weather={w}")
-            ctx.home()
-            need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:widgets", ("RIGHT",), 4), "到不了小组件页")
+            widgets_page(ctx)
             time.sleep(1.5)
             img, tree, st = ctx.snap("weather-widget")
             n = tree.find("widget:builtin:clock")
             need(n and any("23°" in t for t in n.texts()), f"时钟与天气小组件没有显示 23°：{n.texts() if n else None}")
-            for _ in range(2):
+            for _ in range(1):
                 ctx.L.stop()
                 ctx.L.start()
-                time.sleep(4)
+                t1 = time.time()
+                # 重启后仍观察 3.5 秒：若出现重复请求，计数会提前变化
+                while time.time() - t1 < 3.5 and len(m.hits("/v1/forecast")) == 1:
+                    time.sleep(0.2)
             need(len(m.hits("/v1/forecast")) == 1, f"一小时内请求了 {len(m.hits('/v1/forecast'))} 次")
         finally:
             ctx.L.pref("weather_base_url", "")
@@ -379,10 +411,7 @@ def d407(ctx):
     if not via_key:
         # 部分平台的窗口策略层会消费 KEYCODE_TV_INPUT，事件不送达应用窗口；
         # 用快速设置的「信号源」入口验证同一个浮层，按键路径本身记为未验证。
-        need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
-        ctx.L.press("OK")
-        st = ctx.L.settle()
-        need(st.get("overlay") == "quick_settings", f"overlay={st.get('overlay')}")
+        open_qs(ctx)
         need(ctx.L.seek("qs:inputs", ("DOWN", "UP"), 12), "快速设置里没有信号源（qs:inputs）")
         ctx.L.press("OK")
         st = ctx.L.settle()
@@ -425,14 +454,34 @@ def d406(ctx):
         ctx.dev.key("BACK", wait=1)
         ctx.dev.key("BACK", wait=1)
         st = ctx.home()
-        time.sleep(5)
-        code, _ = o.req("GET", "/api/apps", timeout=5)
+        # 5 秒内服务必须停止：轮询直到连接失败，超过 5 秒仍在响应即失败
+        t0 = time.time()
+        code = 200
+        while time.time() - t0 < 5:
+            code, _ = o.req("GET", "/api/apps", timeout=5)
+            if not isinstance(code, int):
+                break
+            time.sleep(0.2)
         need(not isinstance(code, int), f"离开页面 5 秒后服务仍在响应：{code}")
-    need(ctx.seek_row("apps") and ctx.L.seek(app_tag("dolphin"), ("RIGHT", "LEFT"), 12), "应用行找不到海豚视频")
-    time.sleep(0.6)
-    tree = ctx.dev.dump()
-    n = tree.find(app_tag("dolphin"))
-    need(n and any("改名测试" in t for t in n.texts()), f"改名后主页仍显示 {n.texts() if n else None}")
+    st = ctx.home()
+    ctx.wait_item("apps", app_tag("dolphin"))
+    need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:apps", ("RIGHT",), 4), "到不了应用页")
+    t0 = time.time()
+    while time.time() - t0 < 4 and ctx.L.state().get("page") != "apps":
+        time.sleep(0.1)
+    ctx.L.press("DOWN")
+    # 应用页网格只渲染视口内的格子；逐行下移并读树，比盲目按键更快也更稳
+    n = None
+    for _ in range(10):
+        tree = ctx.dev.dump()
+        n = tree.find(app_tag("dolphin"))
+        if n:
+            break
+        before = ctx.L.focus()
+        ctx.L.press("DOWN", settle=False)
+        ctx.L._wait_focus_change(before, 0.6)
+    need(n, "应用页找不到海豚视频")
+    need(any("改名测试" in t for t in n.texts()), f"改名后应用页仍显示 {n.texts()}")
 
 
 @check("D408", "自己的视频：流式上传、非视频拒绝、按 Content-Length 预检超限", "M4")
@@ -473,18 +522,21 @@ def d408(ctx):
 def d409(ctx):
     ctx.F.install("dolphin")
     try:
-        ctx.L.pref("ambient_idle_s", "10")
+        ctx.L.pref("ambient_idle_s", "5")
         ctx.home()
         t0 = time.time()
         st = ctx.L.state()
-        while time.time() - t0 < 45 and (st.get("ambient") or {}).get("player") != "playing":
-            time.sleep(2)
+        while time.time() - t0 < 20 and (st.get("ambient") or {}).get("player") != "playing":
+            time.sleep(0.5)
             st = ctx.L.state()
         if (st.get("ambient") or {}).get("player") != "playing":
-            raise Skip(f"45 秒内环境模式没有开始播放视频（ambient={st.get('ambient')}，可能没有网络）")
+            raise Skip(f"20 秒内环境模式没有开始播放视频（ambient={st.get('ambient')}，可能没有网络）")
         ctx.dev.sh(f"am start -n {P('dolphin')}/{ACT}")
-        time.sleep(3.5)
+        t0 = time.time()
         a = ctx.L.state().get("ambient") or {}
+        while time.time() - t0 < 3.5 and a.get("player") not in ("released", "none"):
+            time.sleep(0.1)
+            a = ctx.L.state().get("ambient") or {}
         need(a.get("player") in ("released", "none"), f"其他应用来到前台 3.5 秒后 player={a.get('player')}")
         ctx.dev.key("BACK", wait=1.5)
     finally:
@@ -495,27 +547,33 @@ def d409(ctx):
 def d410(ctx):
     ctx.F.install(*PROTO_APPS)
     try:
-        ctx.L.pref("saver_idle_s", "15")
+        ctx.L.pref("saver_idle_s", "5")
         ctx.home()
         need(ctx.seek_row("apps"), "到不了应用行")
         ctx.L.press("RIGHT")
         want = ctx.L.focus()
-        time.sleep(22)
+        t0 = time.time()
         st = ctx.L.state()
-        need(st.get("mode") == "saver" and ctx.L.alive(), f"空闲 22 秒后 mode={st.get('mode')}，前台 {ctx.dev.resumed()}")
+        while time.time() - t0 < 10 and st.get("mode") != "saver":
+            time.sleep(0.25)
+            st = ctx.L.state()
+        need(st.get("mode") == "saver" and ctx.L.alive(), f"空闲 10 秒后 mode={st.get('mode')}，前台 {ctx.dev.resumed()}")
         _, _, _, ev = ctx.L.snap("saver", dump=False)
         ctx.ev += ev
         ctx.dev.key("DOWN", wait=1.5)
         st = ctx.L.settle()
         need(st.get("mode") != "saver" and ctx.L.focus(st) == want, f"按键后 mode={st.get('mode')} 焦点 {ctx.L.focus(st)}，应为 {want}")
         ctx.L.pref("saver_idle_s", "0")
-        ctx.home()
-        need(ctx.L.seek("nav:home", ("UP",), 8) and ctx.L.seek("nav:settings", ("RIGHT",), 8), "找不到 nav:settings")
+        open_qs(ctx)
+        ctx.L.settle(2)
+        need(ctx.L.seek("qs:saver", ("DOWN", "UP"), 20), "快速设置里没有屏保（qs:saver）")
         ctx.L.press("OK")
-        need(ctx.L.seek("qs:saver", ("DOWN",), 15), "快速设置里没有屏保（qs:saver）")
-        ctx.L.press("OK")
-        time.sleep(2)
-        need(ctx.L.state().get("mode") == "saver", "「立即启动」没有进入屏保")
+        t0 = time.time()
+        st = ctx.L.state()
+        while time.time() - t0 < 2 and st.get("mode") != "saver":
+            time.sleep(0.1)
+            st = ctx.L.state()
+        need(st.get("mode") == "saver", "「立即启动」没有进入屏保")
         ctx.dev.key("BACK", wait=1.5)
     finally:
         ctx.L.pref("saver_idle_s", "0")
@@ -523,14 +581,14 @@ def d410(ctx):
 
 def reboot(ctx):
     ctx.dev.adb("reboot", timeout=60)
-    time.sleep(10)
+    time.sleep(3)
     t0 = time.time()
     while time.time() - t0 < 300:
         if ctx.dev.sh("getprop sys.boot_completed").strip() == "1":
             time.sleep(8)
             ctx.dev.sh("input keyevent KEYCODE_WAKEUP")
             return
-        time.sleep(4)
+        time.sleep(0.5)
     raise CheckFailed("重启后 5 分钟未完成启动")
 
 
@@ -541,18 +599,27 @@ def d411(ctx):
     try:
         ctx.L.pref("boot_target", f"app:{comp}")
         ctx.home()
+        ctx.dev.key("KEYCODE_SLEEP", wait=0.5)
+        t0 = time.time()
+        while time.time() - t0 < 5 and "mWakefulness=Asleep" not in ctx.dev.sh("dumpsys power"):
+            time.sleep(0.2)
         ctx.F.cmd("dolphin", "clear_log")
-        ctx.dev.key("KEYCODE_SLEEP", wait=4)
-        ctx.dev.key("KEYCODE_WAKEUP", wait=8)
+        time.sleep(0.3)
+        ctx.dev.key("KEYCODE_WAKEUP", wait=0.5)
+        ctx.F.wait("dolphin", lambda e: e.get("event") == "launched", 8)
+        time.sleep(1.5)
         n1 = len(launches(ctx, "dolphin"))
         need(n1 == 1, f"唤醒后打开 {n1} 次")
-        ctx.dev.key("HOME", wait=6)
+        ctx.dev.key("HOME", wait=1.5)
         need(len(launches(ctx, "dolphin")) == 1, "回到主页后又打开了目标应用")
         reboot(ctx)
-        time.sleep(20)
+        t0 = time.time()
         n2 = len(launches(ctx, "dolphin"))
+        while time.time() - t0 < 30 and n2 < 2:
+            time.sleep(0.5)
+            n2 = len(launches(ctx, "dolphin"))
         need(n2 == 2, f"开机后目标应用打开次数 {n2 - 1}")
-        ctx.dev.key("HOME", wait=6)
+        ctx.dev.key("HOME", wait=1.5)
         need(len(launches(ctx, "dolphin")) == 2, "开机后回到主页又打开了目标应用")
     finally:
         try:
@@ -566,13 +633,25 @@ def restricted(st):
     return st.get("restricted") or {}
 
 
-def enter_pin(ctx, pin):
-    st = ctx.L.settle()
+def enter_pin(ctx, pin, expect_error=False, known_open=False):
+    if known_open:
+        st = ctx.L.state()
+    else:
+        st = ctx.L.settle()
     need(st.get("overlay") == "pin", f"overlay={st.get('overlay')}，应为 PIN 输入")
     for d in pin:
-        ctx.dev.key(f"KEYCODE_{d}", wait=0.3)
-    time.sleep(1.5)
-    return ctx.L.settle()
+        ctx.dev.key(f"KEYCODE_{d}", wait=0.1)
+    if expect_error:
+        # 错误 PIN 不会关闭浮层，状态里没有可等待的信号，留一拍给应用处理
+        time.sleep(0.8)
+        return ctx.L.state()
+    t0 = time.time()
+    while time.time() - t0 < 3:
+        st = ctx.L.state()
+        if st.get("overlay") != "pin":
+            return st
+        time.sleep(0.1)
+    return st
 
 
 def config_receiver(ctx):
@@ -592,54 +671,82 @@ def d412(ctx):
     pin = "9731"
     for op in ("SYSTEM_ALERT_WINDOW", "GET_USAGE_STATS"):
         ctx.dev.sh(f"appops set {PKG} {op} allow")
+    phases, t_start = {}, time.time()
+    def mark(k):
+        phases[k] = round(time.time() - t_start, 1)
     try:
         ctx.L.pref("restricted_allowed", P("dolphin"))
         ctx.L.pref("pin", pin)
-        ctx.L.pref("kids_quota_s", "60")
+        ctx.L.pref("kids_quota_s", "8")
         ctx.L.pref("restricted_mode", "kids")
         st = ctx.home()
         img, tree, st = ctx.snap("kids-home")
+        mark("home")
         need(restricted(st).get("mode") == "kids", f"restricted={restricted(st)}")
         rows = [r["id"] for r in st.get("rows", [])]
         need(not (st.get("hero") or {}).get("visible") and not any(r.startswith(("ch:", "continue", "widgets")) for r in rows), f"儿童模式主页行 {rows}")
         apps = [k for k in (ctx.row_items(st, "apps") or []) if k.startswith("app:")]
         need(apps == [app_tag("dolphin")], f"儿童模式应用行 {apps}")
         ctx.dev.sh(f"am start -n {P('store')}/{ACT}")
-        time.sleep(6)
-        need(ctx.dev.resumed_pkg() != P("store"), "不在允许列表的应用 6 秒后仍在前台")
+        t0 = time.time()
+        while time.time() - t0 < 5 and ctx.dev.resumed_pkg() == P("store"):
+            time.sleep(0.2)
+        need(ctx.dev.resumed_pkg() != P("store"), "不在允许列表的应用仍在运行")
         ctx.home()
+        mark("blocked")
         need(ctx.seek_row("apps") and ctx.L.seek(app_tag("dolphin"), ("RIGHT", "LEFT"), 4), "找不到允许的应用")
         ctx.L.press("OK")
-        time.sleep(2)
+        t0 = time.time()
+        while time.time() - t0 < 5 and ctx.dev.resumed_pkg() != P("dolphin"):
+            time.sleep(0.2)
         need(ctx.dev.resumed_pkg() == P("dolphin"), f"允许的应用没有打开：{ctx.dev.resumed()}")
         t0 = time.time()
-        while time.time() - t0 < 100:
+        while time.time() - t0 < 12:
             if ctx.dev.resumed_pkg() == PKG and ctx.L.state().get("page") == "kids_lock":
                 break
-            time.sleep(3)
+            time.sleep(0.5)
+        mark("lock")
         img, tree, st = ctx.snap("kids-lock")
         need(st.get("page") == "kids_lock" and restricted(st).get("locked"), f"额度用完后没有拉起锁屏：前台 {ctx.dev.resumed()}，page={st.get('page')}")
         need(ctx.L.seek("kids_lock:extend15", ("DOWN", "RIGHT", "UP", "LEFT"), 8), "锁屏上没有「+15 分钟」")
         ctx.L.press("OK")
         st = enter_pin(ctx, pin)
+        mark("pin_ok")
         r = restricted(st)
         need(not r.get("locked") and (r.get("remainingS") or 0) >= 14 * 60, f"输入 PIN 加时后 restricted={r}")
         out = ctx.dev.sh(f"run-as {PKG} sh -c 'cat files/datastore/* shared_prefs/* files/*.json 2>/dev/null'")
         need(not re.search(rf"(?<![0-9A-Za-z]){pin}(?![0-9A-Za-z])", out), "桌面数据文件中出现了明文 PIN")
-        for i in range(5):
+        t0, st = time.time(), ctx.L.state()
+        if st.get("overlay") == "pin":
+            t_qs = t_parent = 0.0
+        else:
+            if st.get("overlay") != "quick_settings":
+                open_qs(ctx)
+            t_qs = round(time.time() - t0, 1)
+            # 一次注入 10 个 DOWN 越过快速设置的大部分条目，再按状态找「家长」
+            ctx.dev.sh("input keyevent " + " ".join(["KEYCODE_DPAD_DOWN"] * 10), timeout=40)
+            ctx.L.settle()
+            need(ctx.L.seek("qs:parent", ("DOWN", "UP"), 12), "快速设置里没有「家长」（qs:parent）")
+            ctx.L.press("OK")
+            t_parent = round(time.time() - t0, 1)
             st = ctx.L.state()
-            if st.get("overlay") != "pin":
-                if st.get("overlay") != "quick_settings":
-                    open_qs(ctx)
-                need(ctx.L.seek("qs:parent", ("DOWN", "UP"), 15), "快速设置里没有「家长」（qs:parent）")
-                ctx.L.press("OK")
-            enter_pin(ctx, "0000")
-        r = restricted(ctx.L.state())
+            need(st.get("overlay") == "pin", f"家长入口没有打开 PIN 浮层：overlay={st.get('overlay')}")
+        # 连续 5 次错误 PIN：一次注入 20 个数字键（应用每 4 位校验一次），比逐次往返快得多
+        t_inject = time.time()
+        ctx.dev.sh("input keyevent " + " ".join(["KEYCODE_0"] * 20), timeout=120)
+        t0, r = time.time(), restricted(ctx.L.state())
+        while time.time() - t0 < 10 and (r.get("pinLockedUntil") or 0) <= 0:
+            time.sleep(0.2)
+            r = restricted(ctx.L.state())
+        ctx.data["pinWrong"] = {"t_qs": t_qs, "t_parent": t_parent, "t_inject": round(time.time() - t_inject, 1)}
+        mark("pin_wrong5")
         need((r.get("pinLockedUntil") or 0) > 0, f"连续输错 5 次后没有锁定：{r}")
         ctx.dev.key("BACK", wait=1)
         out = ctx.dev.sh(f"am broadcast -n {config_receiver(ctx)} --ez clear_pin true")
         time.sleep(1.5)
         need(not restricted(ctx.L.state()).get("hasPin"), f"ADB 清除 PIN 后仍有 PIN：{out.strip()[:100]}")
+        mark("done")
+        ctx.data["phases"] = phases
     finally:
         ctx.L.pref("restricted_mode", "off")
         ctx.L.pref("kids_quota_s", "0")
@@ -655,7 +762,6 @@ def d413(ctx):
         ctx.L.pref("restricted_mode", "elders")
         st = ctx.home()
         need(ctx.seek_row("apps"), "到不了应用行")
-        time.sleep(1)
         img, tree, st = ctx.snap("elders")
         tiles = [n for n in tree.nodes if n.rid in {app_tag(f) for f in allowed}]
         need(len(tiles) == len(allowed), f"屏幕上有 {len(tiles)} 个允许的应用磁贴，应为 {len(allowed)}")

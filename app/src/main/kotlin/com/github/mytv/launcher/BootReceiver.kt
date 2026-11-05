@@ -25,7 +25,7 @@ class BootReceiver : BroadcastReceiver() {
         if (!target.startsWith("app:")) return
         val component = ComponentName.unflattenFromString(appTarget) ?: return
         BootTargetState.launchedThisProcess = true
-        prefs.edit().putLong("boot_elapsed_ms", android.os.SystemClock.elapsedRealtime()).apply()
+        prefs.edit().putLong("boot_elapsed_ms", android.os.SystemClock.elapsedRealtime()).commit()
         val launch = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_LAUNCHER)
             .setComponent(component)

@@ -139,8 +139,11 @@ fun LauncherRoot(model: LauncherModel) {
             else -> return@LaunchedEffect
         }
         delay(320)
+        val suppressed = model.tabSwitchSuppressedUntil - System.currentTimeMillis()
+        if (suppressed > 0) delay(suppressed + 30)
         if (model.initialFocusApplied && model.userActionVersion > 0 && focus.pendingTag == null &&
-            focus.current?.tag == tag && model.overlay == null && model.page != target
+            focus.current?.tag == tag && model.overlay == null && model.page != target &&
+            System.currentTimeMillis() >= model.tabSwitchSuppressedUntil
         ) {
             model.switchPage(target)
         }

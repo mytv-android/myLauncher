@@ -107,8 +107,21 @@ class SeriesRepository(private val context: Context) {
     }
 
     fun approve(packageName: String, key: String) {
-        val provider = _providers.value.firstOrNull { it.packageName == packageName } ?: return
-        scope.launch { bridge.approve(provider, key) }
+        // 新装应用的 Provider 可能还没被 discover 到；不能静默丢弃 approve 回传
+        retryApprove(packageName, key, 6)
+    }
+
+    private fun retryApprove(packageName: String, key: String, attempts: Int) {
+        val provider = _providers.value.firstOrNull { it.packageName == packageName }
+        if (provider != null) {
+            scope.launch { bridge.approve(provider, key) }
+            return
+        }
+        if (attempts <= 0) return
+        scope.launch {
+            delay(500)
+            retryApprove(packageName, key, attempts - 1)
+        }
     }
 
     fun hide(packageName: String, key: String) {

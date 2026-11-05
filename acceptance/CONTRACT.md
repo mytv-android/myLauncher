@@ -69,6 +69,7 @@
 ## 3. 只读状态接口（仅 standardDebug）
 
 - `ContentProvider`，authority `com.github.mytv.launcher.acceptance`，`android:exported="true"`，`android:readPermission="android.permission.DUMP"`
+- 同一份状态另经仅绑定 `127.0.0.1` 的 HTTP 提供（debug 构建，端口 8765）：`GET /state` 返回同一份单行 JSON；`GET /call?method=<命令>&arg=<参数>` 等价于 §4 的 `content call`。验收经 `adb forward` 访问，两路输出必须一致
 - 放在 `app/src/debug/`（或 `standardDebug`）源集里，release 构建中不得存在（验收会检查清单和 dex）
 - `content query --uri content://com.github.mytv.launcher.acceptance/state` 返回 1 行 1 列 `json`，值为**单行** JSON：
 

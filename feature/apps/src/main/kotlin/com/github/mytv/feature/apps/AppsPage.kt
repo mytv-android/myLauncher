@@ -2,6 +2,8 @@ package com.github.mytv.feature.apps
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,7 +67,12 @@ fun AppsPage(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(start = RowLeft, top = 92.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = RowLeft, top = 72.dp, bottom = 27.dp),
+        ) {
             Text(
                 text = stringResource(DsR.string.page_apps_title),
                 color = Color.White,
@@ -73,8 +80,8 @@ fun AppsPage(
                 fontWeight = FontWeight.SemiBold,
             )
             Column(
-                modifier = Modifier.padding(top = 26.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(top = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 for (rowStart in items.indices step 5) {
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
