@@ -302,11 +302,17 @@ class Device:
 
     def set_home(self, component: str) -> bool:
         pkg = component.split("/")[0]
-        if self.api >= 29:
-            self.sh(f"cmd role add-role-holder --user 0 android.app.role.HOME {pkg}")
-        if self.api >= 24:
-            self.sh(f"cmd package set-home-activity --user 0 {component}")
-        return self.home_component().split("/")[0] == pkg
+        for attempt in range(4):
+            if self.api >= 29:
+                self.sh(f"cmd role add-role-holder --user 0 android.app.role.HOME {pkg}")
+            if self.api >= 24:
+                self.sh(f"cmd package set-home-activity --user 0 {component}")
+            # 默认桌面的解析结果可能滞后一拍（尤其刚安装/刚恢复原厂桌面），多等几次
+            for _ in range(5):
+                if self.home_component().split("/")[0] == pkg:
+                    return True
+                time.sleep(0.4)
+        return False
 
     # ---- 界面
     def dump(self, tries=3) -> UiTree:
@@ -330,8 +336,15 @@ class Device:
         raise RuntimeError(f"uiautomator dump 失败：{last}")
 
     def screencap(self) -> Image.Image:
-        rc, out, err = self.adb("exec-out", "screencap", "-p", binary=True, timeout=60)
-        return Image.open(io.BytesIO(out)).convert("RGB")
+        last = None
+        for _ in range(3):
+            rc, out, err = self.adb("exec-out", "screencap", "-p", binary=True, timeout=60)
+            try:
+                return Image.open(io.BytesIO(out)).convert("RGB")
+            except Exception as e:
+                last = e
+                time.sleep(0.5)
+        raise last
 
     def logcat_clear(self):
         self.adb("logcat", "-c")

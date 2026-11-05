@@ -646,6 +646,8 @@ def d324(ctx):
     w0 = next(w for w in ctx.L.state()["widgets"] if w["id"] == wid)
     st = {}
     for _ in range(3):
+        if ctx.L.focus() != f"widget:{wid}":
+            ctx.L.seek(f"widget:{wid}", ("RIGHT", "LEFT", "DOWN", "UP"), 12)
         ctx.L.press("OK", long=True)
         st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
         if st.get("overlay") == "menu":
@@ -660,6 +662,8 @@ def d324(ctx):
     w1 = next(w for w in ctx.L.state()["widgets"] if w["id"] == wid)
     need((w1["x"], w1["y"]) != (w0["x"], w0["y"]), f"移动后位置未变 {w0['x'], w0['y']}")
     for _ in range(3):
+        if ctx.L.focus() != f"widget:{wid}":
+            ctx.L.seek(f"widget:{wid}", ("RIGHT", "LEFT", "DOWN", "UP"), 12)
         ctx.L.press("OK", long=True)
         st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
         if st.get("overlay") == "menu":

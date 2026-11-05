@@ -36,21 +36,36 @@ class WeatherRepository(
     /** Applies the hourly, backoff and daily rules; a no-op when nothing is due. */
     suspend fun refresh(): WeatherState = mutex.withLock {
         withContext(Dispatchers.IO) {
-            val baseUrl = prefs.getString(KEY_BASE_URL, null)?.trim().orEmpty()
-            var loadState = loadState()
-            if (prefs.getString(KEY_LAST_BASE_URL, null) != baseUrl) {
-                prefs.edit().putString(KEY_LAST_BASE_URL, baseUrl).apply()
-                loadState = loadState.copy(
-                    lastForecastAtMillis = 0L,
-                    consecutiveFailures = 0,
-                    lastFailureAtMillis = 0L,
-                )
+            // 桌面与屏保进程内各有一个仓库实例，互斥锁保不住跨实例；用落盘的时间戳把请求串行化，
+            // 5 秒内已经有人发过请求就不再重复（每小时最多一次的规则本身也不允许这么密）
+            val now = clock()
+            val started = prefs.getLong(KEY_REQUEST_AT, 0L)
+            val owner = prefs.getInt(KEY_REQUEST_PID, 0)
+            val mine = android.os.Process.myPid()
+            // 只在“另一个仍然活着的进程”刚发过请求时跳过；进程被强杀留下的标记不影响重启后的刷新
+            val living = owner != 0 && owner != mine &&
+                java.io.File("/proc/" + owner).exists()
+            if (living && started > 0L && now - started in 0L..5_000L) return@withContext _state.value
+            prefs.edit().putLong(KEY_REQUEST_AT, now).putInt(KEY_REQUEST_PID, mine).commit()
+            try {
+                val baseUrl = prefs.getString(KEY_BASE_URL, null)?.trim().orEmpty()
+                var loadState = loadState()
+                if (prefs.getString(KEY_LAST_BASE_URL, null) != baseUrl) {
+                    prefs.edit().putString(KEY_LAST_BASE_URL, baseUrl).apply()
+                    loadState = loadState.copy(
+                        lastForecastAtMillis = 0L,
+                        consecutiveFailures = 0,
+                        lastFailureAtMillis = 0L,
+                    )
+                }
+                val updated = policy.refresh(loadState, prefs.getString(KEY_CITY, null))
+                saveState(updated)
+                val weather = policy.weatherState(updated)
+                _state.value = weather
+                weather
+            } finally {
+                prefs.edit().putLong(KEY_REQUEST_AT, 0L).apply()
             }
-            val updated = policy.refresh(loadState, prefs.getString(KEY_CITY, null))
-            saveState(updated)
-            val weather = policy.weatherState(updated)
-            _state.value = weather
-            weather
         }
     }
 
@@ -197,6 +212,8 @@ class WeatherRepository(
         const val IP_URL = "https://ipwho.is/"
         const val TIMEOUT_MS = 10_000
 
+        const val KEY_REQUEST_AT = "weather_request_at"
+        const val KEY_REQUEST_PID = "weather_request_pid"
         const val KEY_LAST_FORECAST_AT = "weather_last_forecast_at"
         const val KEY_FAILURES = "weather_failure_count"
         const val KEY_LAST_FAILURE_AT = "weather_last_failure_at"
