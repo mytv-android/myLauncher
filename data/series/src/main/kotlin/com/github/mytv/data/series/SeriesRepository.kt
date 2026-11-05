@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class SeriesRepository(private val context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -24,13 +26,17 @@ class SeriesRepository(private val context: Context) {
     val previewPrograms: StateFlow<List<BridgeProgram>> = _previewPrograms.asStateFlow()
     private val _watchNext = MutableStateFlow<List<BridgeWatchNext>>(emptyList())
     val watchNext: StateFlow<List<BridgeWatchNext>> = _watchNext.asStateFlow()
-    private val initialized = HashSet<String>()
+    private val prefs = context.getSharedPreferences("series_state", Context.MODE_PRIVATE)
+    private val initLock = Mutex()
     // Provider 还没被发现时先把 approve 记住，发现后补发（新装应用在慢设备上可能晚好几秒）
     private val pendingApprovals = java.util.Collections.synchronizedSet(HashSet<Pair<String, String>>())
 
     private val callback = object : LauncherApps.Callback() {
         override fun onPackageRemoved(packageName: String, user: android.os.UserHandle?) {
-            refresh()
+            scope.launch {
+                initLock.withLock { prefs.edit().remove("i|$packageName").apply() }
+                refresh()
+            }
         }
 
         override fun onPackageAdded(packageName: String, user: android.os.UserHandle?) {
@@ -72,9 +78,32 @@ class SeriesRepository(private val context: Context) {
             delay(3_000L)
             val discovered = bridge.discover()
             if (discovered.isEmpty()) continue
-            if (discovered.all { it.packageName in initialized }) continue
-            refresh()
+            if (ensureInitialized(discovered)) refresh()
         }
+    }
+
+    private fun installStamp(packageName: String): Long = try {
+        context.packageManager.getPackageInfo(packageName, 0).lastUpdateTime
+    } catch (_: Exception) {
+        -1L
+    }
+
+    /** hello → init，每个安装版本只调一次（跨进程重启也生效）；init 失败时下一轮重试。 */
+    private suspend fun ensureInitialized(discovered: List<SeriesProvider>): Boolean = initLock.withLock {
+        var fresh = false
+        for (provider in discovered) {
+            val key = "i|${provider.packageName}"
+            val stamp = installStamp(provider.packageName)
+            if (stamp <= 0L || prefs.getLong(key, -1L) == stamp) continue
+            // 先记下版本再调用：另一个实例并发初始化同一应用时不会重复 init
+            prefs.edit().putLong(key, stamp).apply()
+            if (bridge.hello(provider) == null || bridge.init(provider) == null) {
+                prefs.edit().remove(key).apply()
+                continue
+            }
+            fresh = true
+        }
+        fresh
     }
 
     fun refresh() {
@@ -82,13 +111,11 @@ class SeriesRepository(private val context: Context) {
             val discovered = bridge.discover()
             _providers.value = discovered
             flushPendingApprovals(discovered)
+            ensureInitialized(discovered)
             val ch = ArrayList<BridgeChannel>()
             val pr = ArrayList<BridgeProgram>()
             val wn = ArrayList<BridgeWatchNext>()
             for (provider in discovered) {
-                val hello = bridge.hello(provider)
-                val init = if (hello != null) bridge.init(provider) else null
-                if (hello != null && init != null) initialized += provider.packageName
                 ch += bridge.channels(provider)
                 pr += bridge.previewPrograms(provider)
                 wn += bridge.watchNext(provider)
@@ -102,9 +129,16 @@ class SeriesRepository(private val context: Context) {
     private fun handlePackageChanged(packageName: String) {
         if (!SeriesTrust.isTrusted(context, packageName)) return
         scope.launch {
-            val provider = bridge.discover().firstOrNull { it.packageName == packageName } ?: return@launch
-            bridge.hello(provider)
-            bridge.init(provider)
+            initLock.withLock {
+                val key = "i|$packageName"
+                val stamp = installStamp(packageName)
+                if (stamp <= 0L || prefs.getLong(key, -1L) == stamp) return@withLock
+                prefs.edit().putLong(key, stamp).apply()
+                val provider = bridge.discover().firstOrNull { it.packageName == packageName }
+                if (provider == null || bridge.hello(provider) == null || bridge.init(provider) == null) {
+                    prefs.edit().remove(key).apply()
+                }
+            }
             refresh()
         }
     }

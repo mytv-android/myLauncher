@@ -327,9 +327,17 @@ def d312(ctx):
     tag = f"prog:{pkg}:series.p1"
     row = f"ch:{pkg}:series.main"
     need(ctx.seek_row(row), "到不了系列频道行")
-    t0 = time.time()
-    while time.time() - t0 < 8 and tag not in (ctx.row_items(ctx.L.state(), row) or []):
-        time.sleep(0.1)
+    # 节目逐条写入，桌面可能先读到只有一条的行；重新发布并等目标出现
+    for attempt in range(3):
+        t0 = time.time()
+        while time.time() - t0 < 8 and tag not in (ctx.row_items(ctx.L.state(), row) or []):
+            time.sleep(0.1)
+        if tag in (ctx.row_items(ctx.L.state(), row) or []):
+            break
+        ctx.publish("series", wait=2)
+        ctx.seek_row(row)
+    need(tag in (ctx.row_items(ctx.L.state(), row) or []),
+         f"系列频道行缺少 {tag}：{ctx.row_items(ctx.L.state(), row)}")
     long_menu(ctx, tag, row)
     need(ctx.L.seek("menu:remove", ("DOWN", "UP"), 8), "菜单里没有 menu:remove")
     ctx.L.press("OK")
