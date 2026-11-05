@@ -778,7 +778,7 @@ class LauncherModel(context: Context) {
         } catch (_: Exception) {
             emptyList()
         }
-        tvInputs.firstOrNull()?.let { focusLater("input:${it.id}") }
+        tvInputs.firstOrNull()?.let { focusLater("input:${it.id}") } ?: focusLater("inputs")
     }
 
     fun launchInput(input: android.media.tv.TvInputInfo) {

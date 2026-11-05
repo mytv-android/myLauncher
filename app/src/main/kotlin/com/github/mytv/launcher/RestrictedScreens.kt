@@ -141,44 +141,64 @@ fun InputsOverlay(
             .background(Color(0xB3000000))
             .pointerInput(Unit) { detectTapGestures { onDismiss() } },
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .width(560.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(Color(0xFF232127))
-                .pointerInput(Unit) { detectTapGestures { } }
-                .padding(24.dp)
-                .testTag("inputs"),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(DsR.string.inputs_title),
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            for ((index, input) in inputs.withIndex()) {
-                val shape = RoundedCornerShape(14.dp)
-                TvFocusable(
-                    tag = "input:${input.id}",
-                    enabled = enabled,
-                    shape = shape,
-                    onClick = { onPick(input) },
-                ) { focused ->
-                    Text(
-                        text = input.id,
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .width(512.dp)
-                            .height(54.dp)
-                            .clip(shape)
-                            .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
-                            .launcherFocusRing(focused, shape)
-                            .padding(16.dp),
-                    )
-                }
+        if (inputs.isEmpty()) {
+            TvFocusable(
+                tag = "inputs",
+                enabled = enabled,
+                onClick = onDismiss,
+                modifier = Modifier.align(Alignment.Center),
+            ) { _ ->
+                InputsPanel(inputs, enabled, onPick, tag = null)
+            }
+        } else {
+            InputsPanel(inputs, enabled, onPick, tag = "inputs")
+        }
+    }
+}
+
+@Composable
+private fun InputsPanel(
+    inputs: List<android.media.tv.TvInputInfo>,
+    enabled: Boolean,
+    onPick: (android.media.tv.TvInputInfo) -> Unit,
+    tag: String?,
+) {
+    Column(
+        modifier = Modifier
+            .width(560.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Color(0xFF232127))
+            .pointerInput(Unit) { detectTapGestures { } }
+            .padding(24.dp)
+            .then(if (tag != null) Modifier.testTag(tag) else Modifier),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(DsR.string.inputs_title),
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        for (input in inputs) {
+            val shape = RoundedCornerShape(14.dp)
+            TvFocusable(
+                tag = "input:${input.id}",
+                enabled = enabled,
+                shape = shape,
+                onClick = { onPick(input) },
+            ) { focused ->
+                Text(
+                    text = input.id,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .width(512.dp)
+                        .height(54.dp)
+                        .clip(shape)
+                        .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
+                        .launcherFocusRing(focused, shape)
+                        .padding(16.dp),
+                )
             }
         }
     }

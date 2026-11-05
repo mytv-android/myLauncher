@@ -170,7 +170,11 @@ before #F7AC19, after #468AE9
 
 ### 状态
 
-待用户裁决。实现方未修改 `acceptance/` 下的任何文件。
+已由用户裁决（2026-11-05）：授权修改工具包。
+
+- 修改 `acceptance/mla/checks.py` 的 D202：先移动到「文件管理」，记录聚焦瞬间的 `counters.themeTransitions`；稳定 1.4 秒后要求过渡次数不增加、`theme.sourceKey` 不是 `files`。不再与路径起点的种子比较。
+- 与 A-005、A-006、A-007、A-008 同一次重新冻结：根哈希 `1d454045d27f76d39702da04addc78347239118d70c16efe01eb18000efa9695`；压缩包 `C:\PythonProject\myLauncher-acceptance.zip`，SHA-256 `6316fc24ce7f90de09329e7be04e53e11f89f10e66d226abdebb5f41de700f56`。
+- 验证：api31g 上 D202 PASS（`acceptance/out/20261105-084541-M4-device-api31g/`）。
 
 ## A-005：api31g 上 `KEYCODE_TV_INPUT` 不会送达到应用窗口
 
@@ -209,7 +213,12 @@ D407 期望桌面显示信号源浮层（`overlay=inputs`）。实测浮层不�
 
 ### 状态
 
-待用户裁决。实现方已实现该按键的正常分发路径（在事件能到达应用时生效），但本机平台不把该键送达应用窗口，D407 无法通过。
+已由用户裁决（2026-11-05）：授权修改工具包。
+
+- 修改 `acceptance/mla/checks33.py` 的 D407：先按原方式发送 `KEYCODE_TV_INPUT`；浮层没有打开时，改用快速设置的「信号源」（`qs:inputs`）打开同一个 `inputs` 浮层并验证 BACK 关闭，结论附带说明「KEYCODE_TV_INPUT 未被平台送达应用窗口」。按键分发路径仍由产品实现（`MainActivity.dispatchKeyEvent`），在能送达按键的设备上走原路径。
+- 验证过程中发现并修复了一个产品缺陷：没有信号源时 `inputs` 浮层内没有可聚焦节点，状态接口焦点仍是已消失的 `qs:inputs`，快照会触发 STATE_MISMATCH。产品改为空列表时让浮层容器本身以 `inputs` 标签可聚焦，打开时把焦点放上去；D405 与 D407 均通过。
+- 已随 A-004 同一次重新冻结（根哈希 `1d454045…`，压缩包 SHA-256 `6316fc24…`）。
+- 验证：api31g 上 D405/D407 PASS（`acceptance/out/20261105-090013-M4-device-api31g/`）。
 
 ## A-006：D406 改名后 D413 仍要求夹具原始名称
 
@@ -253,7 +262,11 @@ D413 不应假设夹具的原始名称。可选做法：
 
 ### 状态
 
-待用户裁决。实现方未修改 `acceptance/` 下的任何文件。
+已由用户裁决（2026-11-05）：授权修改工具包。
+
+- 修改 `acceptance/mla/checks33.py` 的 D413：不再与夹具原始名称比对，只要每个允许应用的磁贴里存在非空名称文字即通过（设计只要求「名称常显」）。
+- 已随 A-004 同一次重新冻结（根哈希 `1d454045…`，压缩包 SHA-256 `6316fc24…`）。
+- 验证：api31g 上 D413 PASS（`acceptance/out/20261105-084541-M4-device-api31g/`）；用改名后的旧证据 `074-elders.xml`（海豚视频显示为「改名测试」）离线核对，新判据不再报缺失。
 
 ## A-007：D103/D199 把设备上真实应用发布的 Watch Next 当成桌面内容与文案
 
@@ -283,7 +296,12 @@ api34g（Television_4K）上装有真实应用 `com.github.mytv.android`，它�
 
 ### 状态
 
-待用户裁决。实现方未修改 `acceptance/` 下的任何文件。
+已由用户裁决（2026-11-05）：授权修改工具包。
+
+- 修改 `acceptance/mla/checks.py` 的 D103：开场检测系统 TvProvider 中是否有夹具之外的应用发布的 Watch Next；存在时以 `Skip("设备上有其他应用发布的 Watch Next…")` 结束，不再误判。
+- 修改 `acceptance/mla/launcher.py` 的 `copy_violations()`：Hero 内容根（最近的非空标签为 `hero`）下的文字都是外部内容（标题、副标题、元数据），整体豁免；`hero:play` 等按钮仍按白名单检查。`wn:`、`prog:` 等子树原本已在 `exemptTagPrefixes` 中。
+- 已随 A-004 同一次重新冻结（根哈希 `1d454045…`，压缩包 SHA-256 `6316fc24…`）。
+- 验证：api31g 上 D103/D199 PASS（`acceptance/out/20261105-084541-M4-device-api31g/`）；用正式验收里的 `api34g/001-home-key.xml`、`002-empty-home.xml` 离线复核，`copy_violations()` 不再报违规。
 
 ## A-008：prepare() 停用整个原桌面包，连带停用了系统设置
 
@@ -309,8 +327,13 @@ D404 在「Wi-Fi 打开系统网络设置」处失败：前台仍是 `com.github
 
 ### 期望行为
 
-prepare() 应只停用原桌面的 **Activity 组件**（`pm disable-user --user 0 <包名>/<类名>`），而不是整个包；或者在该包同时提供其他系统入口（如 FallbackHome 属于系统设置）时不整包停用。这样才不会连带破坏被检查的系统设置入口。
+prepare() 不应在停用原桌面时连带停用同一包里的其他系统入口（如 FallbackHome 属于系统设置）。
 
 ### 状态
 
-待用户裁决。实现方已在设备上重新启用 launcherx，使后续运行的“原桌面”回到 launcherx；未修改 `acceptance/` 下的任何文件。
+已由用户裁决（2026-11-05）：授权修改工具包。
+
+- 先尝试只停用原桌面的 Activity 组件，但 Android 12 的 shell 不允许修改组件状态：`SecurityException: Shell cannot change component state for … to 3`。该方案不可行。
+- 改为在 `acceptance/run.py` 的 `prepare()` 里做环境归一化：当前桌面是 `FallbackHome` 时，先启用已安装的原厂桌面（`com.google.android.apps.tv.launcherx/.home.HomeActivity` 或 `com.google.android.tvlauncher/.HomeScreen`），重新解析出的原桌面即为独立包，再按原逻辑停用该包。报告 meta 增加 `fallbackHome` 记录归一化前的桌面。
+- 已随 A-004 同一次重新冻结（根哈希 `1d454045…`，压缩包 SHA-256 `6316fc24…`）。
+- 验证：在 api31g 上把 launcherx 置为禁用、桌面回到 FallbackHome 后运行 D404/D103/D202/D406/D413，D404 通过（prepare 自动恢复 launcherx 并正常切换桌面），其余检查无回归（`acceptance/out/20261105-084541-M4-device-api31g/`）。
