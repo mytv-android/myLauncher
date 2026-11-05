@@ -652,6 +652,27 @@ def d323(ctx):
     need(any(w["id"] == int(r["appWidgetId"]) for w in st.get("widgets", [])), "桌面没有放置该小组件")
 
 
+def widget_menu(ctx, wid):
+    """在小组件页把焦点放回该小组件并长按打开菜单；页面被 BACK 带离时重新进入。"""
+    for _ in range(4):
+        st = ctx.L.state()
+        if st.get("overlay") == "menu":
+            return True
+        if st.get("page") != "widgets":
+            widgets_page(ctx)
+            ctx.L.press("DOWN")
+        if ctx.L.focus() != f"widget:{wid}":
+            ctx.L.seek(f"widget:{wid}", ("RIGHT", "LEFT", "DOWN", "UP"), 24)
+        ctx.L.press("OK", long=True)
+        st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
+        if st.get("overlay") == "menu":
+            return True
+        if st.get("overlay"):
+            ctx.dev.key("BACK", wait=0.3)
+        time.sleep(0.3)
+    return False
+
+
 @check("D324", "移动与调整大小：方向键移动占位框，OK 确认", "M3")
 def d324(ctx):
     wid = ctx.flags.get("skyWidget") or next((w["id"] for w in ctx.L.state().get("widgets", []) if "WeatherWidget" in w["provider"]), None)
@@ -661,32 +682,14 @@ def d324(ctx):
     ctx.L.press("DOWN")
     need(ctx.L.seek(f"widget:{wid}", ("RIGHT", "DOWN", "LEFT", "UP"), 24), f"找不到 widget:{wid}")
     w0 = next(w for w in ctx.L.state()["widgets"] if w["id"] == wid)
-    st = {}
-    for _ in range(3):
-        if ctx.L.focus() != f"widget:{wid}":
-            ctx.L.seek(f"widget:{wid}", ("RIGHT", "LEFT", "DOWN", "UP"), 12)
-        ctx.L.press("OK", long=True)
-        st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
-        if st.get("overlay") == "menu":
-            break
-        ctx.dev.key("BACK", wait=0.3)
-        time.sleep(0.4)
-    need(st.get("overlay") == "menu", f"长按没有打开菜单（overlay={st.get('overlay')}）")
+    need(widget_menu(ctx, wid), "长按没有打开菜单")
     need(ctx.L.seek("menu:move", ("DOWN", "UP"), 8), "菜单没有 menu:move")
     ctx.L.press("OK")
     ctx.L.press("DOWN")
     ctx.L.press("OK")
     w1 = next(w for w in ctx.L.state()["widgets"] if w["id"] == wid)
     need((w1["x"], w1["y"]) != (w0["x"], w0["y"]), f"移动后位置未变 {w0['x'], w0['y']}")
-    for _ in range(3):
-        if ctx.L.focus() != f"widget:{wid}":
-            ctx.L.seek(f"widget:{wid}", ("RIGHT", "LEFT", "DOWN", "UP"), 12)
-        ctx.L.press("OK", long=True)
-        st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
-        if st.get("overlay") == "menu":
-            break
-        ctx.dev.key("BACK", wait=0.3)
-        time.sleep(0.4)
+    need(widget_menu(ctx, wid), "长按没有打开菜单（调整大小前）")
     need(ctx.L.seek("menu:resize", ("DOWN", "UP"), 8),
          f"菜单没有 menu:resize（overlay={ctx.L.state().get('overlay')} 焦点 {ctx.L.focus()}）")
     ctx.L.press("OK")
