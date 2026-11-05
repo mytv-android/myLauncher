@@ -13,11 +13,16 @@ import com.github.mytv.data.series.SeriesRepository
 import com.github.mytv.data.series.SeriesTrust
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicInteger
 
 class ChannelRepository(
     private val context: Context,
@@ -33,6 +38,9 @@ class ChannelRepository(
     val programs: StateFlow<Map<String, List<ChannelProgram>>> = _programs.asStateFlow()
     private val _loaded = MutableStateFlow(false)
     val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
+    private val rebuildSeq = AtomicInteger()
+    private val rebuildLock = Mutex()
+    private var rebuildJob: Job? = null
 
     private val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
@@ -54,19 +62,32 @@ class ChannelRepository(
         }
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
         scope.launch {
-            series.channels.collect { rebuild() }
+            series.channels.collect { refresh() }
         }
         scope.launch {
-            series.previewPrograms.collect { rebuild() }
+            series.previewPrograms.collect { refresh() }
         }
         refresh()
     }
 
+    /**
+     * 发布会逐条删除、插入节目，一行节目会触发多次通知。
+     * 合并短时间内的多次刷新，只提交最后一次读取的结果，
+     * 避免较早的读取（正好落在删除与插入之间）较晚完成，把只剩一条节目的旧行写回去。
+     */
     fun refresh() {
-        scope.launch { rebuild() }
+        val seq = rebuildSeq.incrementAndGet()
+        rebuildJob?.cancel()
+        rebuildJob = scope.launch {
+            delay(120)
+            rebuildLock.withLock {
+                if (seq != rebuildSeq.get()) return@withLock
+                rebuild(seq)
+            }
+        }
     }
 
-    private fun rebuild() {
+    private fun rebuild(seq: Int) {
         val channels = ArrayList<ChannelEntry>()
         val programs = LinkedHashMap<String, ArrayList<ChannelProgram>>()
         val seriesPkgs = HashSet<String>()
@@ -95,6 +116,7 @@ class ChannelRepository(
                     .thenByDescending { it.lastEngagementTimeMillis },
             )
         }
+        if (seq != rebuildSeq.get()) return
         _channels.value = sorted
         _programs.value = orderedPrograms
         _approvals.value = approvals

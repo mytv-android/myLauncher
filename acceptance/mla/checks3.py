@@ -12,6 +12,20 @@ P = Fixtures.pkg
 RATIOS = {"16:9": 16 / 9, "3:2": 1.5, "4:3": 4 / 3, "1:1": 1.0, "2:3": 2 / 3, "movie": 1 / 1.441}
 
 
+def _series_diag(ctx, pkg):
+    """系列行缺项时的现场：桌面移除标记与 TvProvider 里的节目行。"""
+    try:
+        pref = ctx.dev.sh(f"run-as {PKG} sh -c 'cat shared_prefs/channel_state.xml'")
+        removed = [ln.strip() for ln in pref.splitlines() if "series" in ln and "r|" in ln]
+        rows = ctx.dev.sh(
+            "content query --uri content://android.media.tv/preview_program "
+            "--projection internal_provider_id:channel_id:package_name")
+        ids = [ln.strip() for ln in rows.splitlines() if pkg in ln]
+        return f"移除标记={removed} 节目行={ids[:8]}"
+    except Exception as e:  # 诊断失败不应影响判定
+        return f"现场取证失败：{e}"
+
+
 def approval(st, pkg, key):
     return next((a.get("state") for a in st.get("approvals", []) if a.get("pkg") == pkg and a.get("channelKey") == key), None)
 
@@ -337,8 +351,11 @@ def d312(ctx):
         ctx.publish("series", wait=2)
         ctx.seek_row(row)
     need(tag in (ctx.row_items(ctx.L.state(), row) or []),
-         f"系列频道行缺少 {tag}：{ctx.row_items(ctx.L.state(), row)}")
-    long_menu(ctx, tag, row)
+         f"系列频道行缺少 {tag}：{ctx.row_items(ctx.L.state(), row)}；{_series_diag(ctx, pkg)}")
+    try:
+        long_menu(ctx, tag, row)
+    except CheckFailed as e:
+        raise CheckFailed(f"{e}；{_series_diag(ctx, pkg)}")
     need(ctx.L.seek("menu:remove", ("DOWN", "UP"), 8), "菜单里没有 menu:remove")
     ctx.L.press("OK")
     e = ctx.F.wait("series", lambda e: e.get("event") == "bridge_call" and e.get("method") == "hide" and e.get("caller") == PKG, 10)
