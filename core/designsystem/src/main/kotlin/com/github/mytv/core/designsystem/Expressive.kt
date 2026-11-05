@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -68,5 +69,7 @@ fun LauncherWavyProgress(
         modifier = modifier,
         color = color,
         trackColor = trackColor,
+        // 静止波形：持续位移动画会让桌面永不空闲（无障碍树无法稳定快照，也浪费帧预算）
+        waveSpeed = 0.dp,
     )
 }

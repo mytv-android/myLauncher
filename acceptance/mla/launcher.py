@@ -245,6 +245,9 @@ class Fixtures:
         self.certs = {k: raw.get(k) for k in ("certA", "certB")}
         self.index = {e["id"]: {"apk": e["file"], **e} for e in raw.get("apks", [])}
         self.installed: set[str] = set()
+        # 本轮真正 publish 过的夹具（包名），teardown 只给它们发 unpublish，省掉一轮广播
+        self.published: set[str] = getattr(dev, "fixtures_published", None) or set()
+        dev.fixtures_published = self.published
 
     @staticmethod
     def pkg(fid):
@@ -270,6 +273,10 @@ class Fixtures:
 
     def cmd(self, fid, cmd, arg=None):
         a = f" --es arg '{arg}'" if arg is not None else ""
+        if cmd == "publish":
+            self.published.add(self.pkg(fid))
+        elif cmd == "unpublish":
+            self.published.discard(self.pkg(fid))
         return self.dev.sh(f"am broadcast -n {self.pkg(fid)}/{FIX}.CmdReceiver --es cmd {cmd}{a}")
 
     def log(self, fid) -> list[dict]:
@@ -290,9 +297,20 @@ class Fixtures:
             time.sleep(0.15)
         return None
 
-    def cleanup(self):
-        for p in self.dev.packages(FIX):
-            self.dev.uninstall(p)
+    def cleanup(self, uninstall=False, only_published=False):
+        pkgs = self.dev.packages(FIX)
+        if only_published:
+            pkgs = [p for p in pkgs if p in self.published]
+        # 卸载不会清掉夹具写进 TvProvider 的行；不先 unpublish，下一轮会在“没有内容来源”场景里
+        # 读到上一轮残留的继续观看行（D103）
+        for p in pkgs:
+            self.dev.sh(f"am broadcast -n {p}/{FIX}.CmdReceiver --es cmd unpublish", timeout=20)
+        if pkgs:
+            time.sleep(0.3)
+        if uninstall:
+            for p in pkgs:
+                self.dev.uninstall(p)
+            self.installed.clear()
 
 
 def content_strings() -> set[str]:
@@ -319,6 +337,15 @@ def copy_violations(dumps, extra_ok=()) -> list[str]:
     pats = [re.compile(p) for p in cp["patterns"]]
     banned = [re.compile(p) for p in cp["banned"]]
     content = content_strings()
+    # 应用磁贴上的文字来自应用名（含第三方应用），在任何界面里出现都算内容而不是产品文案
+    for _, tree in dumps:
+        for n in tree.nodes:
+            if n.pkg != PKG:
+                continue
+            if any(x.rid.startswith("app:") for x in [n] + list(n.ancestors())):
+                for t in (n.text, n.desc):
+                    if t and t.strip():
+                        content.add(t.strip())
     bad = {}
     for name, tree in dumps:
         for n in tree.nodes:
@@ -329,8 +356,9 @@ def copy_violations(dumps, extra_ok=()) -> list[str]:
                 continue
             if cp.get("exemptWidgetHostSubtree") and any(re.fullmatch(r"widget:\d+", x.rid or "") for x in chain):
                 continue
-            # Hero 的内容标题/副标题来自外部内容（Watch Next），只有按钮等产品文字在 hero:* 标签下
-            if next((x.rid for x in chain if x.rid), "") == "hero":
+            # Hero 的内容标题/副标题与浏览态信息头都来自外部内容（Watch Next）；
+            # 只有按钮等产品文字在 hero:* / info:* 标签下
+            if next((x.rid for x in chain if x.rid), "") in ("hero", "info"):
                 continue
             for t in (n.text, n.desc):
                 t = (t or "").strip()

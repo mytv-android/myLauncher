@@ -205,6 +205,9 @@ def prepare(dev: Device, rep: Report, dbg: Path, ms: str, need_probe=True) -> tu
             rep.meta.setdefault("fallbackHome", {})[dev.name] = orig
             orig = restored
     rep.meta.setdefault("originalHome", {})[dev.name] = orig
+    # 先卸载桌面再删夹具：桌面若还挂着夹具的小组件，先删夹具会让系统留下 provider 为空的小组件记录，
+    # API 28 的 uiautomator 取根节点时会因此在 system_server 里 NPE，整棵树都取不到（A-010）
+    dev.uninstall(PKG)
     Fixtures(dev).cleanup()
     # Play Store 会在后台自更新，更新时间把它顶进“最近更新”应用行、挤掉夹具，导致行内检查不稳定
     dev.disabled_update_apps = []
@@ -260,11 +263,12 @@ def teardown(dev: Device, orig: str):
         if port:
             dev.adb("forward", "--remove", f"tcp:{port}")
             dev.state_forward = None
-        Fixtures(dev).cleanup()
+        # 与 prepare 同理：桌面先卸载（连带清掉它挂的小组件），再清夹具；只清本轮 publish 过的
+        dev.uninstall(PKG)
+        Fixtures(dev).cleanup(only_published=True)
         for pkg in getattr(dev, "disabled_update_apps", []):
             dev.sh(f"pm enable --user 0 {pkg}")
         dev.disabled_update_apps = []
-        dev.uninstall(PKG)
         for cmd in ("cmd connectivity airplane-mode disable", "svc wifi enable", "svc data enable"):
             dev.sh(cmd)
         disabled = getattr(dev, "disabled_home", "")

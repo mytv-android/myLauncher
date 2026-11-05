@@ -119,20 +119,32 @@ class ChannelRepository(
                 prefs.edit().putString(approveKey, "pending").remove(certKey).apply()
                 return "pending"
             }
+            // 之前批准过不代表这次安装拿到过回传；重装/更新后按安装版本补发一次
+            ensureApproveSent(channel)
             return "approved"
         }
         if (stored != null) return stored
         if (channel.series || SeriesTrust.isTrusted(context, channel.packageName)) {
             val cert = SeriesTrust.certDigest(context, channel.packageName).orEmpty()
             prefs.edit().putString(approveKey, "approved").putString(certKey, cert).apply()
-            if (!prefs.getBoolean("s|${channel.packageName}|${channel.key}", false)) {
-                prefs.edit().putBoolean("s|${channel.packageName}|${channel.key}", true).apply()
-                series.approve(channel.packageName, channel.key)
-            }
+            ensureApproveSent(channel)
             return "approved"
         }
         prefs.edit().putString(approveKey, "pending").apply()
         return "pending"
+    }
+
+    /** 每个安装版本回传一次 approve：重装/更新后要重新得知频道已批准，进程重启不会重复。 */
+    private fun ensureApproveSent(channel: ChannelEntry) {
+        val stampKey = "u|${channel.packageName}|${channel.key}"
+        val stamp = try {
+            context.packageManager.getPackageInfo(channel.packageName, 0).lastUpdateTime
+        } catch (_: Exception) {
+            0L
+        }
+        if (prefs.getLong(stampKey, -1L) == stamp) return
+        prefs.edit().putLong(stampKey, stamp).apply()
+        series.approve(channel.packageName, channel.key)
     }
 
     private fun hasTvProvider(): Boolean = try {

@@ -25,15 +25,18 @@ class ArtworkLoader(context: Context) {
 
     suspend fun pixels(uri: String, width: Int, height: Int): IntArray? {
         val source = bitmap(uri, width, height) ?: return null
+        // source 可能来自 Coil 的内存缓存，不能回收；只回收这里新建的缩放副本
         val scaled = if (source.width == width && source.height == height) {
             source
         } else {
             Bitmap.createScaledBitmap(source, width, height, true)
         }
-        val pixels = IntArray(width * height)
-        scaled.getPixels(pixels, 0, width, 0, 0, width, height)
-        if (scaled !== source) scaled.recycle()
-        if (source !== scaled) source.recycle()
-        return pixels
+        return try {
+            IntArray(width * height).also {
+                scaled.getPixels(it, 0, width, 0, 0, width, height)
+            }
+        } finally {
+            if (scaled !== source) scaled.recycle()
+        }
     }
 }

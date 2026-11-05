@@ -81,10 +81,18 @@ class WidgetsHost(
 
             is WidgetBindResult.NeedsGrant -> {
                 pendingInfo = info
+                // 没有系统确认界面时走授权指令页，ID 等授权完成后再分配：未绑定的 ID 会以空 provider
+                // 留在系统里，API 28 上无障碍取根节点会因此崩溃
+                val id = if (result.systemBindIntent == null) {
+                    repository.releaseAppWidgetId(result.appWidgetId)
+                    -1
+                } else {
+                    result.appWidgetId
+                }
                 _ui.update {
                     it.copy(
                         overlay = WidgetOverlay.AUTH,
-                        pending = PendingWidget(providerTag, result.appWidgetId, false),
+                        pending = PendingWidget(providerTag, id, false),
                         pendingFocusTag = "picker:auth:adb",
                     )
                 }
@@ -185,10 +193,13 @@ class WidgetsHost(
     fun authDone() {
         val pending = _ui.value.pending ?: return
         val info = pendingInfo ?: return
-        if (repository.retryBind(pending.appWidgetId, info)) {
-            continueAfterBind(info, pending.appWidgetId)
+        val id = if (pending.appWidgetId >= 0) pending.appWidgetId else repository.allocateId()
+        if (id >= 0 && repository.retryBind(id, info)) {
+            continueAfterBind(info, id)
         } else {
-            _ui.update { it.copy(pendingFocusTag = "picker:adb:done") }
+            _ui.update {
+                it.copy(pending = pending.copy(appWidgetId = id), pendingFocusTag = "picker:adb:done")
+            }
         }
     }
 

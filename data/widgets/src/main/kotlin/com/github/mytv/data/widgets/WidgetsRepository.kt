@@ -194,6 +194,13 @@ class WidgetsRepository(context: Context) {
         }
     }
 
+    /** 只分配 ID，不立即绑定；用于授权指令页：页面展示期间不保留未绑定的 ID。 */
+    fun allocateId(): Int = try {
+        host.allocateAppWidgetId()
+    } catch (_: Exception) {
+        -1
+    }
+
     fun retryBind(appWidgetId: Int, info: AppWidgetProviderInfo): Boolean =
         bindInternal(appWidgetId, info)
 

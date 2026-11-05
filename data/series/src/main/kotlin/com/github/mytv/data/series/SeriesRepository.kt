@@ -25,6 +25,8 @@ class SeriesRepository(private val context: Context) {
     private val _watchNext = MutableStateFlow<List<BridgeWatchNext>>(emptyList())
     val watchNext: StateFlow<List<BridgeWatchNext>> = _watchNext.asStateFlow()
     private val initialized = HashSet<String>()
+    // Provider 还没被发现时先把 approve 记住，发现后补发（新装应用在慢设备上可能晚好几秒）
+    private val pendingApprovals = java.util.Collections.synchronizedSet(HashSet<Pair<String, String>>())
 
     private val callback = object : LauncherApps.Callback() {
         override fun onPackageRemoved(packageName: String, user: android.os.UserHandle?) {
@@ -79,6 +81,7 @@ class SeriesRepository(private val context: Context) {
         scope.launch {
             val discovered = bridge.discover()
             _providers.value = discovered
+            flushPendingApprovals(discovered)
             val ch = ArrayList<BridgeChannel>()
             val pr = ArrayList<BridgeProgram>()
             val wn = ArrayList<BridgeWatchNext>()
@@ -108,19 +111,32 @@ class SeriesRepository(private val context: Context) {
 
     fun approve(packageName: String, key: String) {
         // 新装应用的 Provider 可能还没被 discover 到；不能静默丢弃 approve 回传
-        retryApprove(packageName, key, 6)
+        pendingApprovals.add(packageName to key)
+        retryApprove(packageName, key, 20)
     }
 
     private fun retryApprove(packageName: String, key: String, attempts: Int) {
         val provider = _providers.value.firstOrNull { it.packageName == packageName }
         if (provider != null) {
-            scope.launch { bridge.approve(provider, key) }
+            scope.launch {
+                if (bridge.approve(provider, key) != null) pendingApprovals.remove(packageName to key)
+            }
             return
         }
         if (attempts <= 0) return
         scope.launch {
             delay(500)
             retryApprove(packageName, key, attempts - 1)
+        }
+    }
+
+    private fun flushPendingApprovals(discovered: List<SeriesProvider>) {
+        val pending = synchronized(pendingApprovals) { pendingApprovals.toList() }
+        for ((pkg, key) in pending) {
+            val provider = discovered.firstOrNull { it.packageName == pkg } ?: continue
+            scope.launch {
+                if (bridge.approve(provider, key) != null) pendingApprovals.remove(pkg to key)
+            }
         }
     }
 

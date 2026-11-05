@@ -249,7 +249,8 @@ class Device:
         rc, out, err = self.adb(*args, timeout=timeout)
         ok = "Success" in out
         if not ok and "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in (out + err):
-            m = re.search(r"Package (\S+)", out + err)
+            # 新旧包签名不同（series 与 series_impostor 共用包名）：先卸载再装一次
+            m = re.search(r"(?:Existing package|Package) ([A-Za-z0-9_.]+)", out + err)
             if m:
                 self.uninstall(m.group(1))
                 rc, out, err = self.adb(*args, timeout=timeout)
@@ -310,16 +311,20 @@ class Device:
     # ---- 界面
     def dump(self, tries=3) -> UiTree:
         last = ""
+        remote = "/data/local/tmp/mla_ui.xml"
         for i in range(tries):
             rc, out, err = self.adb("exec-out", "uiautomator dump /dev/tty", timeout=40)
             xml = out if isinstance(out, str) else out.decode("utf-8", "replace")
             a, b = xml.find("<?xml"), xml.rfind("</hierarchy>")
             if a >= 0 and b > a:
                 return UiTree(xml[a:b + len("</hierarchy>")])
-            self.sh("uiautomator dump /data/local/tmp/mla_ui.xml >/dev/null 2>&1")
-            xml = self.sh("cat /data/local/tmp/mla_ui.xml", timeout=30)
-            if xml.lstrip().startswith("<?xml") or xml.lstrip().startswith("<hierarchy"):
-                return UiTree(xml[xml.index("<"):])
+            # 先删除旧文件：dump 失败（常见于界面持续动画、拿不到空闲态）时不能把上一次的树当真
+            self.sh(f"rm -f {remote}")
+            self.sh(f"uiautomator dump {remote} >/dev/null 2>&1")
+            if self.sh(f"[ -s {remote} ] && echo yes").strip() == "yes":
+                xml = self.sh(f"cat {remote}", timeout=30)
+                if xml.lstrip().startswith(("<?xml", "<hierarchy")):
+                    return UiTree(xml[xml.index("<"):])
             last = (xml or out or "").strip()[:200]
             time.sleep(0.4 + i * 0.6)
         raise RuntimeError(f"uiautomator dump 失败：{last}")
@@ -424,6 +429,12 @@ class Device:
 
     def kill(self):
         if self.emulator_started:
+            # adb emu kill 直接结束 QEMU，客户机页缓存里还没落盘的数据会丢（脚本安装的夹具、标记文件）。
+            # 常驻夹具依赖这次落盘，先 sync 再关机。
+            try:
+                self.sh("sync", timeout=30)
+            except Exception:
+                pass
             self.adb("emu", "kill", timeout=30)
             p = getattr(self, "proc", None)
             if p is not None:

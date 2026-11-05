@@ -370,3 +370,56 @@ prepare() 不应在停用原桌面时连带停用同一包里的其他系统入�
 ### 验证
 
 - 待填：api31g 三实例全量 M4 的 deviceSeconds 与结果。
+
+## A-010：api28 上无障碍树取不到（焦点永远停在同一个磁贴）
+
+- 发现于：M4，2026-11-05
+- 检查编号：api28 上所有 `snap()`（表现为 STATE_MISMATCH），D316
+- 严重性：阻塞 api28 的全部界面检查
+
+### 现象
+
+api28 上 `snap()` 反复报 `STATE_MISMATCH：无障碍树 app:com.github.mytv.mlfixture.files/…，状态接口 wn:…/hero:…/picker:auth:adb`。无论焦点在继续观看、Hero 还是小组件授权页，无障碍树里的焦点节点始终是同一个应用磁贴；保存下来的 XML 里 `focused="true"` 也确实只有那一个节点。D316 则在授权页报 `uiautomator dump 失败`。
+
+### 实测与原因（三层叠加）
+
+1. 继续观看卡片底部的 Wavy 进度条使用 Material3 的定值波形，默认 `waveSpeed` 等于波长，波形一直平移。首页因此永远拿不到无障碍空闲态，`uiautomator dump` 直接以 `ERROR: could not get idle state.` 退出，不写文件。对照：同设备在设置页、应用页（没有波形进度条）都能正常 dump；`dumpsys gfxinfo` 显示帧数不变，说明是绘制动画而非布局抖动。
+2. `Device.dump()` 的兜底路径在 dump 失败后直接 `cat /data/local/tmp/mla_ui.xml`，没有先删除旧文件，于是把上一次（甚至上一轮）的树当成当前树返回——焦点“永远停在 files 磁贴”就是这么来的。
+3. api28 的 `AppWidgetServiceImpl$AppWidgetManagerLocal.getHostedWidgetPackages()` 在遇到 provider 为空的小组件记录时抛 NPE。桌面在展示“用电脑授权”页时已经 `allocateAppWidgetId()` 但尚未绑定，正好产生这种记录；无障碍服务取根节点时在 system_server 里被远程异常打断，uiautomator 进程崩溃。上一轮 teardown 先删夹具再卸载桌面，又会在系统里留下带空 provider 的小组件记录，使下一轮在打开选择器/授权页时必然复发。
+
+### 处理
+
+- 产品：`LauncherWavyProgress` 传 `waveSpeed = 0.dp`，波形静止（形状不变，界面空闲）。
+- 产品：没有系统确认界面、走授权指令页时，不在授权前保留已分配的组件 ID；授权完成后再分配并绑定（有系统确认界面的路径仍沿用原 ID，供系统界面绑定）。
+- 工具包：`Device.dump()` 兜底前先 `rm -f` 目标文件，且只在文件存在时读取，绝不返回旧树。
+- 工具包：prepare/teardown 改为先卸载桌面、再清理夹具，避免桌面挂着夹具小组件时先删 provider；`Fixtures.cleanup()` 在卸载前先广播 `unpublish`，避免夹具写入 TvProvider 的继续观看行残留（否则 D103 的“没有内容来源”场景不成立）。
+
+### 状态
+
+用户授权修改工具包（2026-11-05），随 A-009 一起重新冻结。
+
+## A-011：夹具安装与 TvProvider 残留
+
+- 发现于：M4，2026-11-05
+- 检查编号：全部设备检查（耗时）；D103（残留行）
+- 严重性：影响每台模拟器 10 分钟预算
+
+### 实测
+
+- 单个夹具 APK 的 `pm install` 在并行实例下要 4–14 秒，一轮里每个实例都要装 10 个以上夹具，安装本身就占掉 1–2 分钟，是单台设备用时的主要部分。
+- 曾尝试把夹具常驻 AVD userdata（读写启动安装一次、写标记文件、后续轮次跳过安装），读写启动之间确实能保留；但工具包的多实例用 `-read-only` 启动，读到的 userdata 不是当前 qcow2 覆盖层（例如 `/data/local/tmp` 里只有 10 月的旧文件），常驻方案在并行实例上无效，已撤回。
+- `adb emu kill` 不经过客户机关机流程，页缓存里的写入会丢；`Device.kill()` 现在先 `sync` 再关机（对读写启动的持久化有效）。
+
+### 修改（工具包）
+
+- `Fixtures` 记录本轮真正 `publish` 过的夹具包名，teardown 只给它们广播 `unpublish`；prepare 仍对全部已安装夹具 `unpublish`，清掉上一轮异常退出留下的行（否则 D103 的“没有内容来源”场景不成立）。
+- 常驻设备上不再卸载夹具（read-only 覆盖层随实例销毁），省掉 teardown 的卸载时间。
+- `Device.install()` 遇到 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 时能解析 `Existing package …`，先卸载再重装（`series` 与 `series_impostor` 共用包名、签名不同）。
+
+### 结果
+
+单台设备的总用时通过分组均衡与减少按键/取树次数控制在预算内，见 A-009 的验证一节。
+
+### 状态
+
+用户授权修改工具包（2026-11-05），随 A-009/A-010 一起重新冻结。

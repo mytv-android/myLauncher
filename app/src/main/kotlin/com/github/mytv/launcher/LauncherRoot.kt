@@ -168,6 +168,8 @@ fun LauncherRoot(model: LauncherModel) {
 
     fun pageFirstFocus(tag: String): String? = when (tag) {
         "nav:home" -> when {
+            // 长辈模式不显示 Hero，首页首焦点是第一个大磁贴
+            model.restrictedMode == "elders" -> model.appRowItems().firstOrNull()?.tag
             model.hero != null -> "hero:play"
             else -> model.appRowItems().firstOrNull()?.tag
         }
@@ -291,7 +293,7 @@ fun LauncherRoot(model: LauncherModel) {
                     return
                 }
                 if (direction == FocusDirection.Up) {
-                    val target = if (model.hero != null) "hero:play" else "nav:home"
+                    val target = if (model.hero != null && model.restrictedMode != "elders") "hero:play" else "nav:home"
                     focus.request(target)
                     playNav(direction)
                     return

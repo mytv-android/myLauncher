@@ -217,12 +217,21 @@ def d118(ctx):
     need(not ctx.row_items(st, "watchlist"), "初始片单不为空")
     need(ctx.L.seek("hero:watchlist", ("RIGHT",), 3), "找不到 hero:watchlist")
     ctx.L.press("OK")
-    st = ctx.L.settle()
+    ctx.L.settle()
+    t0 = time.time()
+    st = ctx.L.state()
+    while time.time() - t0 < 3 and not (st.get("watchlist") and ctx.row_items(st, "watchlist")):
+        time.sleep(0.1)
+        st = ctx.L.state()
     need(st.get("watchlist") and ctx.row_items(st, "watchlist"), "加入后没有片单行")
     img, tree, st = ctx.snap("watchlist-added")
     need(any("已在片单" in t for t in (tree.find("hero:watchlist").texts() if tree.find("hero:watchlist") else [])), "按钮文字没有变成「已在片单」")
     ctx.L.stop()
     st = ctx.L.start()
+    t0 = time.time()
+    while time.time() - t0 < 3 and not st.get("watchlist"):
+        time.sleep(0.1)
+        st = ctx.L.state()
     need(st.get("watchlist"), "重启后片单丢失")
     ctx.home(reset=True)
     need(ctx.L.seek("hero:watchlist", ("RIGHT",), 3), "找不到 hero:watchlist")
@@ -282,7 +291,7 @@ def d311(ctx):
     pkg = P("series")
     need(wait_approval(ctx, pkg, "series.main", "approved"), "系列应用的频道请求没有被自动批准")
     need(ctx.F.wait("series", lambda e: e.get("event") == "bridge_call" and e.get("method") == "approve" and e.get("caller") == PKG, 20),
-         f"没有回传 approve（日志 {ctx.F.log('series')[-4:]}）")
+         f"没有回传 approve（calls {[e for e in ctx.F.log('series') if e.get('event') == 'bridge_call']}）")
     st = ctx.home()
     need(ctx.row_items(st, f"ch:{pkg}:series.main"), "主页没有系列频道行")
 
@@ -456,7 +465,9 @@ def d316(ctx):
     ws = widget_of(st, prov)
     need(ws, f"授权后没有添加小组件（grantbind 输出：{out.strip()[:80]}）")
     wid = ws[0]["id"]
-    need(ctx.F.wait("sky", lambda e: e.get("event") == "widget_update", 10), "provider 没有收到 onUpdate")
+    need(ctx.F.wait("sky", lambda e: e.get("event") == "widget_update", 10),
+         f"provider 没有收到 onUpdate（最近事件 {ctx.F.log('sky')[-6:]}；日志 "
+         f"{ctx.dev.sh('logcat -d | grep -i appwidget | tail -8')}）")
     need(ctx.F.wait("sky", lambda e: e.get("event") == "widget_options", 10), "宿主没有下发尺寸（updateAppWidgetSize）")
     t0 = time.time()
     while time.time() - t0 < 2.5 and ctx.L.focus(st) != f"widget:{wid}":
@@ -633,15 +644,30 @@ def d324(ctx):
     ctx.L.press("DOWN")
     need(ctx.L.seek(f"widget:{wid}", ("RIGHT", "DOWN", "LEFT", "UP"), 24), f"找不到 widget:{wid}")
     w0 = next(w for w in ctx.L.state()["widgets"] if w["id"] == wid)
-    ctx.L.press("OK", long=True)
+    st = {}
+    for _ in range(3):
+        ctx.L.press("OK", long=True)
+        st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
+        if st.get("overlay") == "menu":
+            break
+        ctx.dev.key("BACK", wait=0.3)
+        time.sleep(0.4)
+    need(st.get("overlay") == "menu", f"长按没有打开菜单（overlay={st.get('overlay')}）")
     need(ctx.L.seek("menu:move", ("DOWN", "UP"), 8), "菜单没有 menu:move")
     ctx.L.press("OK")
     ctx.L.press("DOWN")
     ctx.L.press("OK")
     w1 = next(w for w in ctx.L.state()["widgets"] if w["id"] == wid)
     need((w1["x"], w1["y"]) != (w0["x"], w0["y"]), f"移动后位置未变 {w0['x'], w0['y']}")
-    ctx.L.press("OK", long=True)
-    need(ctx.L.seek("menu:resize", ("DOWN", "UP"), 8), "菜单没有 menu:resize")
+    for _ in range(3):
+        ctx.L.press("OK", long=True)
+        st = wait_state(ctx, lambda s: s.get("overlay") == "menu", 2.0)
+        if st.get("overlay") == "menu":
+            break
+        ctx.dev.key("BACK", wait=0.3)
+        time.sleep(0.4)
+    need(ctx.L.seek("menu:resize", ("DOWN", "UP"), 8),
+         f"菜单没有 menu:resize（overlay={ctx.L.state().get('overlay')} 焦点 {ctx.L.focus()}）")
     ctx.L.press("OK")
     ctx.L.press("LEFT")
     ctx.L.press("OK")
@@ -652,22 +678,36 @@ def d324(ctx):
 
 @check("D325", "API 31+：主题稳定 3 秒后才给小组件换色，3 秒内最多重载 1 次", "M3", when=api(31))
 def d325(ctx):
-    ctx.F.install(*PROTO_APPS)
+    ctx.F.install("dolphin", "spark", "pulse", "prism")
     wid = ctx.flags.get("skyWidget") or next((w["id"] for w in ctx.L.state().get("widgets", []) if "WeatherWidget" in w["provider"]), None)
     if not wid:
         raise Skip("没有天气小组件（D316 失败）")
     ctx.home()
     ctx.seek_row("apps")
+    st = ctx.L.state()
+    items = ctx.row_items(st, "apps") or []
+    # 应用行只放最近更新的 10 个，真实应用会挤占；只用行内实际存在的彩色夹具
+    cands = [f for f in ("dolphin", "spark", "pulse", "prism", "cloud") if ctx.app_tag(f) in items]
+    need(len(cands) >= 2, f"应用行里没有可用于取色的夹具：{items}")
     seeds = set()
 
     def seed_of(fid):
-        ctx.L.seek(ctx.app_tag(fid), ("RIGHT", "LEFT"), 12)
-        st = ctx.L.settle()
+        ctx.seek_in_row(ctx.app_tag(fid))
+        ctx.L.settle()
+        # 焦点稳定后 600ms 才换主题；等过渡结束再取值，否则读到的是上一个来源
+        pkg = Fixtures.pkg(fid)
+        t0, st = time.time(), ctx.L.state()
+        while time.time() - t0 < 2.5:
+            th = st.get("theme") or {}
+            if not th.get("transitioning") and pkg in (th.get("sourceKey") or ""):
+                break
+            time.sleep(0.1)
+            st = ctx.L.state()
         seeds.add((st.get("theme") or {}).get("seed"))
 
-    seed_of("dolphin")
+    seed_of(cands[0])
     ctx.L.call("reset_counters")
-    for fid in ("spark", "pulse", "prism"):
+    for fid in cands[1:4]:
         seed_of(fid)
     burst = ((ctx.L.state().get("counters") or {}).get("widgetReloads") or {}).get(str(wid), 0)
     need(len(seeds) >= 2, f"换焦点后主题没有变化，无法判断小组件换色：{seeds}")

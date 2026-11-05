@@ -205,6 +205,10 @@ def d119(ctx):
     need(n and any("工具" in t for t in n.texts()), "文件夹磁贴下没有名称")
     ctx.L.press("OK")
     st = ctx.L.settle()
+    t0 = time.time()
+    while time.time() - t0 < 2 and not (st.get("overlay") == "folder_open" and ctx.L.focus(st).startswith("app:")):
+        time.sleep(0.1)
+        st = ctx.L.state()
     need(st.get("overlay") == "folder_open" and ctx.L.focus(st).startswith("app:"), f"打开后 overlay={st.get('overlay')} 焦点 {ctx.L.focus(st)}")
     ctx.snap("folder-open")
     st = ctx.L.press("BACK")
@@ -396,7 +400,8 @@ def d328(ctx):
                 # 重启后仍观察 3.5 秒：若出现重复请求，计数会提前变化
                 while time.time() - t1 < 3.5 and len(m.hits("/v1/forecast")) == 1:
                     time.sleep(0.2)
-            need(len(m.hits("/v1/forecast")) == 1, f"一小时内请求了 {len(m.hits('/v1/forecast'))} 次")
+            hs = m.hits("/v1/forecast")
+            need(len(hs) == 1, f"一小时内请求了 {len(hs)} 次：{[round(h.get('t', 0) % 1000, 1) for h in hs]}")
         finally:
             ctx.L.pref("weather_base_url", "")
 
@@ -603,13 +608,16 @@ def d411(ctx):
         t0 = time.time()
         while time.time() - t0 < 5 and "mWakefulness=Asleep" not in ctx.dev.sh("dumpsys power"):
             time.sleep(0.2)
+        # 熄屏广播可能晚于 mWakefulness 更新；等屏幕稳定再唤醒，否则会在唤醒后收到迟到的 SCREEN_OFF
+        time.sleep(1.5)
         ctx.F.cmd("dolphin", "clear_log")
         time.sleep(0.3)
         ctx.dev.key("KEYCODE_WAKEUP", wait=0.5)
         ctx.F.wait("dolphin", lambda e: e.get("event") == "launched", 8)
         time.sleep(1.5)
         n1 = len(launches(ctx, "dolphin"))
-        need(n1 == 1, f"唤醒后打开 {n1} 次")
+        bootlog = ctx.dev.sh("logcat -d -s MLBOOT:D").strip().splitlines()[-6:]
+        need(n1 == 1, f"唤醒后打开 {n1} 次：{[e.get('ts') for e in launches(ctx, 'dolphin')][:4]} / {bootlog}")
         ctx.dev.key("HOME", wait=1.5)
         need(len(launches(ctx, "dolphin")) == 1, "回到主页后又打开了目标应用")
         reboot(ctx)
@@ -761,7 +769,8 @@ def d413(ctx):
         ctx.L.pref("restricted_allowed", ",".join(P(f) for f in allowed))
         ctx.L.pref("restricted_mode", "elders")
         st = ctx.home()
-        need(ctx.seek_row("apps"), "到不了应用行")
+        need(ctx.seek_row("apps"),
+             f"到不了应用行（rows={[r['id'] for r in ctx.L.state().get('rows', [])]}，焦点 {ctx.L.focus()}）")
         img, tree, st = ctx.snap("elders")
         tiles = [n for n in tree.nodes if n.rid in {app_tag(f) for f in allowed}]
         need(len(tiles) == len(allowed), f"屏幕上有 {len(tiles)} 个允许的应用磁贴，应为 {len(allowed)}")

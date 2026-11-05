@@ -1319,7 +1319,8 @@ class LauncherModel(context: Context) {
         when {
             entry == null -> focus.request("nav:home")
             entry.tag.startsWith("hero:") -> focus.request("nav:home")
-            entry.rowId != null -> focus.request(if (hero != null) "hero:play" else "nav:home")
+            entry.rowId != null ->
+                focus.request(if (hero != null && restrictedMode != "elders") "hero:play" else "nav:home")
             entry.tag.startsWith("nav:") -> Unit
             else -> focus.request("nav:home")
         }
