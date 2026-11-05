@@ -43,8 +43,8 @@ class WeatherRepository(
             val owner = prefs.getInt(KEY_REQUEST_PID, 0)
             val mine = android.os.Process.myPid()
             // 只在“另一个仍然活着的进程”刚发过请求时跳过；进程被强杀留下的标记不影响重启后的刷新
-            val living = owner != 0 && owner != mine &&
-                java.io.File("/proc/" + owner).exists()
+            // 同一进程里桌面与屏保各有一个仓库实例（各自的互斥锁互不相干），也要互相避让
+            val living = owner == mine || (owner != 0 && java.io.File("/proc/" + owner).exists())
             if (living && started > 0L && now - started in 0L..5_000L) return@withContext _state.value
             prefs.edit().putLong(KEY_REQUEST_AT, now).putInt(KEY_REQUEST_PID, mine).commit()
             try {

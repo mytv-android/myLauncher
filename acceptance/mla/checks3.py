@@ -261,24 +261,27 @@ def d310(ctx):
     ctx.publish("spark", wait=1)
     pkg = P("spark")
     ctx.approve(pkg, "spark.weekly")
-    tag = f"prog:{pkg}:spark.jelly"
+    wanted = f"prog:{pkg}:spark.jelly"
     row = f"ch:{pkg}:spark.weekly"
     need(ctx.seek_row(row), "到不了频道行")
-    # TvProvider 逐条插入节目，桌面偶尔会读到发布到一半的行；缺目标时重新发布再等一次
+    # TvProvider 逐条插入节目，桌面偶尔读到发布到一半的行；每次长按前按当时行内实际节目重选目标
+    tag = wanted
     for attempt in range(3):
         t0 = time.time()
-        while time.time() - t0 < 12 and tag not in (ctx.row_items(ctx.L.state(), row) or []):
+        while time.time() - t0 < 12 and wanted not in (ctx.row_items(ctx.L.state(), row) or []):
             time.sleep(0.2)
-        if tag in (ctx.row_items(ctx.L.state(), row) or []):
+        items = ctx.row_items(ctx.L.state(), row) or []
+        cands = [i for i in items if i.startswith(f"prog:{pkg}:")]
+        need(cands, f"频道行里没有可移除的节目：{items}")
+        tag = wanted if wanted in items else cands[0]
+        try:
+            long_menu(ctx, tag, row)
             break
-        ctx.publish("spark", wait=2)
-        ctx.seek_row(row)
-    items = ctx.row_items(ctx.L.state(), row) or []
-    if tag not in items:
-        # 目标是“移除任意节目并保持移除”，行内没有预定项时用同排实际存在的节目
-        tag = next((i for i in items if i.startswith(f"prog:{pkg}:")), tag)
-    need(tag in items, f"频道行里没有可移除的节目：{items}")
-    long_menu(ctx, tag, row)
+        except CheckFailed:
+            if attempt == 2:
+                raise
+            ctx.publish("spark", wait=2)
+            ctx.seek_row(row)
     need(ctx.L.seek("menu:remove", ("DOWN", "UP"), 8), "菜单里没有 menu:remove")
     ctx.L.press("OK")
     st = ctx.L.settle()
