@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.provider.Settings
 import android.text.format.DateFormat
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +70,7 @@ import com.github.mytv.feature.apps.AppsGridItem
 import com.github.mytv.feature.organizer.OrganizerState
 import com.github.mytv.feature.organizer.PhoneOrganizerServer
 import com.github.mytv.feature.widgets.WidgetsUiState
+import com.github.mytv.feature.home.HeroItem
 import com.github.mytv.feature.home.HomeItem
 import com.github.mytv.feature.home.HomeRowData
 import java.text.SimpleDateFormat
@@ -180,6 +182,9 @@ data class LauncherSnapshot(
         )
     }
 }
+
+private const val HERO_MAX = 5
+private const val HERO_AUTO_MS = 9_000L
 
 class LauncherModel(context: Context) {
     private val appContext = context.applicationContext
@@ -326,6 +331,9 @@ class LauncherModel(context: Context) {
         private set
     var channelsLoaded by mutableStateOf(false)
         private set
+    /** 频道与节目（Hero 的第一来源）第一次读完。 */
+    var channelRowsLoaded by mutableStateOf(false)
+        private set
     var userActionVersion by mutableIntStateOf(0)
         private set
     var restoreFocusPending by mutableStateOf(false)
@@ -342,14 +350,131 @@ class LauncherModel(context: Context) {
     private var lastStableTag: String? = null
     private var persistJob: Job? = null
 
-    val hero: WatchNextEntry?
-        get() = if (restrictedMode == "kids") null else continueItems.firstOrNull()
+    /**
+     * Hero 精选（PLAN 第 3 节第 1 条）：每个已批准频道取权重最高的 1 个节目，按频道在主页的顺序，
+     * 最多 5 个；不足时用继续观看的前几项补足；两者都没有时为空，主页从第一个内容行开始。
+     */
+    private val heroItemsState = derivedStateOf { buildHeroItems() }
+    val heroItems: List<HeroItem>
+        get() = heroItemsState.value
+
+    /** 当前精选的序号；列表变短时按末项显示。 */
+    var heroIndex by mutableIntStateOf(0)
+        private set
+    private var heroSwitchedAt = 0L
+
+    val hero: HeroItem?
+        get() {
+            val items = heroItems
+            if (items.isEmpty()) return null
+            return items[heroIndex.coerceIn(0, items.lastIndex)]
+        }
 
     val heroInWatchlist: Boolean
         get() {
             val item = hero ?: return false
-            return watchlistEntries.any { it.watchlistKey == item.watchlistKey }
+            return watchlistEntries.any { it.watchlistKey == item.entry.watchlistKey }
         }
+
+    private fun buildHeroItems(): List<HeroItem> {
+        if (restrictedMode == "kids" || restrictedMode == "elders") return emptyList()
+        val out = ArrayList<HeroItem>(HERO_MAX)
+        val seen = HashSet<String>()
+        for (channel in channelEntries) {
+            if (out.size >= HERO_MAX) break
+            if (!channel.approved) continue
+            // 同权重时保留频道里的原有顺序
+            val best = channelPrograms[channel.rowId].orEmpty().maxByOrNull { it.weight } ?: continue
+            if (!seen.add("${best.packageName}:${best.internalId.ifEmpty { "#${best.id}" }}")) continue
+            out += HeroItem(
+                key = best.tag,
+                entry = best.asWatchEntry(),
+                source = channel.title,
+                badge = appOf(best.packageName)?.icon,
+                fromChannel = true,
+                genre = best.genre,
+                releaseDate = best.releaseDate,
+                program = best,
+            )
+        }
+        for (entry in continueItems) {
+            if (out.size >= HERO_MAX) break
+            if (!seen.add("${entry.packageName}:${entry.internalProviderId.ifEmpty { "#${entry.id}" }}")) continue
+            val app = appOf(entry.packageName)
+            out += HeroItem(
+                key = entry.key,
+                entry = entry,
+                source = app?.label.orEmpty(),
+                badge = app?.icon,
+                fromChannel = false,
+            )
+        }
+        return out
+    }
+
+    private fun ChannelProgram.asWatchEntry() = WatchNextEntry(
+        packageName = packageName,
+        internalProviderId = internalId,
+        id = id,
+        title = title,
+        posterArtUri = posterArtUri,
+        intentUri = intentUri,
+        durationMillis = durationMillis,
+        playbackPositionMillis = playbackPositionMillis,
+        type = type,
+        seasonNumber = seasonNumber,
+        episodeNumber = episodeNumber,
+        lastEngagementTimeMillis = lastEngagementTimeMillis,
+        description = description,
+    )
+
+    fun appOf(packageName: String): AppEntry? = apps.firstOrNull { it.packageName == packageName }
+
+    /**
+     * 方向键切换精选：[delta] 为 ±1，到两端不循环（§09）。切换成功返回 true。
+     */
+    fun stepHero(delta: Int): Boolean {
+        val items = heroItems
+        if (items.size < 2) return false
+        val current = heroIndex.coerceIn(0, items.lastIndex)
+        val next = current + delta
+        if (next !in items.indices) return false
+        showHero(next)
+        return true
+    }
+
+    private fun showHero(index: Int) {
+        heroIndex = index
+        heroSwitchedAt = System.currentTimeMillis()
+        val tag = focus.current?.tag ?: return
+        if (!tag.startsWith("hero:")) return
+        // 背景交叉淡入、主题跟随新的精选；不经过焦点停留延迟
+        updateBackdropForTag(tag)
+        scope.launch { applyThemeForTag(tag, animate = true) }
+    }
+
+    /** 焦点停在 Hero、界面在前台且 9 秒没有操作时，自动切到下一个精选（末项之后回到第一个）。 */
+    private suspend fun heroLoop() {
+        while (true) {
+            delay(1_000L)
+            val items = heroItems
+            if (!hostResumed || items.size < 2 || page != "home" || overlay != null || idleMode != null) continue
+            if (focus.current?.tag?.startsWith("hero:") != true) continue
+            val now = System.currentTimeMillis()
+            if (now - maxOf(lastInteraction, heroSwitchedAt) < HERO_AUTO_MS) continue
+            showHero((heroIndex.coerceIn(0, items.lastIndex) + 1) % items.size)
+        }
+    }
+
+    private var hostResumed = false
+
+    fun onHostResumed() {
+        hostResumed = true
+    }
+
+    fun onHostPaused() {
+        hostResumed = false
+    }
 
     init {
         com.github.mytv.launcher.config.RestrictedConfigEvents.onPinCleared = {
@@ -378,6 +503,9 @@ class LauncherModel(context: Context) {
         }
         scope.launch {
             channelsRepo.loaded.collect { channelsLoaded = it }
+        }
+        scope.launch {
+            channelRepo.loaded.collect { channelRowsLoaded = it }
         }
         scope.launch {
             watchlistRepo.entries.collect { watchlistEntries = it }
@@ -468,6 +596,7 @@ class LauncherModel(context: Context) {
         }
         scope.launch { weatherLoop() }
         scope.launch { idleLoop() }
+        scope.launch { heroLoop() }
         scope.launch { restrictedLoop() }
         scope.launch {
             ambientController.state.collect { ambientState = it }
@@ -1061,8 +1190,16 @@ class LauncherModel(context: Context) {
                 ?: watchlistEntries.firstOrNull { it.watchlistKey == tag }
             entry?.let { artSeed(it) }
         }
-        tag.startsWith("hero:") -> hero?.let { artSeed(it) }
+        tag.startsWith("hero:") -> hero?.let { artSeed(it.entry) }
+        tag.startsWith("prog:") -> programForTag(tag)?.posterArtUri?.let { artSeedForUri(it) }
         else -> null
+    }
+
+    private fun programForTag(tag: String): ChannelProgram? {
+        for (list in channelPrograms.values) {
+            list.firstOrNull { it.tag == tag }?.let { return it }
+        }
+        return null
     }
 
     private suspend fun appSeedForTag(tag: String): Pair<Int, String>? {
@@ -1079,8 +1216,10 @@ class LauncherModel(context: Context) {
         return (result as? SeedResult.Seed)?.let { it.argb to key }
     }
 
-    private suspend fun artSeed(entry: WatchNextEntry): Pair<Int, String>? {
-        val uri = entry.posterArtUri ?: return null
+    private suspend fun artSeed(entry: WatchNextEntry): Pair<Int, String>? =
+        entry.posterArtUri?.let { artSeedForUri(it) }
+
+    private suspend fun artSeedForUri(uri: String): Pair<Int, String>? {
         val key = "art:$uri"
         val existing = seedMemory[key]
         val result = existing ?: seedExtractor.seedFor(SourceKey(key)) {
@@ -1122,7 +1261,8 @@ class LauncherModel(context: Context) {
         if (BackdropOverride.state.value != null) return
         if (tag == null) return
         val uri = when {
-            tag.startsWith("hero:") -> hero?.posterArtUri
+            tag.startsWith("hero:") -> hero?.entry?.posterArtUri
+            tag.startsWith("prog:") -> programForTag(tag)?.posterArtUri
             tag.startsWith("wn:") || tag.startsWith("wl:") ->
                 (continueItems.firstOrNull { it.key == tag || it.watchlistKey == tag }
                     ?: watchlistEntries.firstOrNull { it.watchlistKey == tag })?.posterArtUri
@@ -1277,6 +1417,7 @@ class LauncherModel(context: Context) {
         folderPickStage = "folders"
         settingsHiddenExpanded = false
         page = "home"
+        heroIndex = 0
         homeRequestVersion++
         homeRequested = true
         homeFocusPending = true
@@ -1552,15 +1693,13 @@ class LauncherModel(context: Context) {
 
     fun toggleHeroWatchlist() {
         val item = hero ?: return
-        scope.launch { watchlistRepo.toggle(item) }
+        scope.launch { watchlistRepo.toggle(item.entry) }
     }
 
     fun playHero() {
-        hero?.let(::launchWatchNext)
-    }
-
-    fun heroDetails() {
-        hero?.let(::launchWatchNext)
+        val item = hero ?: return
+        val program = item.program
+        if (program != null) launchProgram(program) else launchWatchNext(item.entry)
     }
 
     fun launchWatchNext(entry: WatchNextEntry) {
@@ -1744,7 +1883,7 @@ class LauncherModel(context: Context) {
                 )
             },
             heroVisible = heroItem != null && restrictedMode != "kids" && restrictedMode != "elders",
-            heroIndex = if (heroItem != null) 0 else null,
+            heroIndex = if (heroItem != null) heroIndex.coerceIn(0, heroItems.lastIndex) else null,
             heroKey = heroItem?.key,
             rows = currentRows(),
             approvals = channelApprovals,
@@ -1811,7 +1950,7 @@ class LauncherModel(context: Context) {
     }
 
     private fun dataReadyForPage(): Boolean = when (page) {
-        "home" -> appsLoaded && channelsLoaded
+        "home" -> appsLoaded && channelsLoaded && channelRowsLoaded
         "kids_lock" -> true
         "apps" -> appsLoaded && apps.isNotEmpty()
         "settings" -> appsLoaded
@@ -1847,7 +1986,7 @@ class LauncherModel(context: Context) {
         if (tag.startsWith("nav:")) return true
         return when (page) {
             "home" -> when {
-                tag == "hero:play" || tag == "hero:watchlist" || tag == "hero:info" -> hero != null
+                tag == "hero:play" || tag == "hero:watchlist" -> hero != null
                 tag.startsWith("wn:") -> continueItems.any { it.key == tag }
                 tag.startsWith("wl:") -> watchlistEntries.any { it.watchlistKey == tag }
                 tag.startsWith("folder:") -> folders.any { "folder:${it.id}" == tag }

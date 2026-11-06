@@ -17,6 +17,9 @@ data class LauncherColors(
     val surfaceContainerHigh: Color = LauncherSurfaceContainerHigh,
     val outline: Color = LauncherOutline,
     val focusRing: Color = LauncherFocusRing,
+    /** 主色调色板 tone 12：Hero 与浏览态背景左侧的压暗色（原型的 --amb）。 */
+    val ambient: Color = LauncherAmbient,
+    val tertiary: Color = LauncherTertiary,
 ) {
     companion object {
         val Default = LauncherColors()
@@ -38,4 +41,6 @@ fun lerpColors(start: LauncherColors, stop: LauncherColors, fraction: Float): La
         surfaceContainerHigh = lerp(start.surfaceContainerHigh, stop.surfaceContainerHigh, fraction),
         outline = lerp(start.outline, stop.outline, fraction),
         focusRing = lerp(start.focusRing, stop.focusRing, fraction),
+        ambient = lerp(start.ambient, stop.ambient, fraction),
+        tertiary = lerp(start.tertiary, stop.tertiary, fraction),
     )

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.Image
@@ -48,13 +49,24 @@ object BackdropOverride {
     }
 }
 
+/**
+ * 背景层与两层遮罩（原型 `.tv-scrim` / `.tv-scrim2`）：
+ * - 常驻：左侧主色 tone 12 压暗（92% → 66% → 0），底部 surface 渐变；
+ * - [browse] 时再叠一层自下而上的 surface（100% → 88% → 30%），内容行更易读。
+ */
 @Composable
 fun AmbientBackdrop(
     source: BackdropSource,
     modifier: Modifier = Modifier,
-    crossfadeMillis: Int = 600,
+    crossfadeMillis: Int = 900,
+    browse: Boolean = false,
 ) {
     val colors = LocalLauncherColors.current
+    val browseAlpha by animateFloatAsState(
+        targetValue = if (browse) 1f else 0f,
+        animationSpec = tween(600),
+        label = "browseScrim",
+    )
     Box(modifier = modifier.fillMaxSize()) {
         Crossfade(
             targetState = source,
@@ -70,24 +82,28 @@ fun AmbientBackdrop(
                     val dynamic = colors.value
                     drawRect(
                         brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                dynamic.primary.copy(alpha = 0.55f),
-                                Color.Transparent,
-                            ),
-                            startX = 0f,
-                            endX = size.width * 0.62f,
+                            0f to dynamic.ambient.copy(alpha = 0.92f),
+                            0.36f to dynamic.ambient.copy(alpha = 0.66f),
+                            0.72f to Color.Transparent,
                         ),
                     )
                     drawRect(
                         brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                dynamic.surface.copy(alpha = 0.88f),
-                            ),
-                            startY = size.height * 0.52f,
-                            endY = size.height,
+                            0.36f to Color.Transparent,
+                            0.70f to dynamic.surface.copy(alpha = 0.78f),
+                            1f to dynamic.surface,
                         ),
                     )
+                    if (browseAlpha > 0f) {
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                0f to dynamic.surface.copy(alpha = 0.30f),
+                                0.48f to dynamic.surface.copy(alpha = 0.88f),
+                                1f to dynamic.surface,
+                            ),
+                            alpha = browseAlpha,
+                        )
+                    }
                 },
         )
     }

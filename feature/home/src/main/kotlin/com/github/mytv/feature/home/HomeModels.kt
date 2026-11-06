@@ -44,6 +44,24 @@ sealed interface HomeItem {
     }
 }
 
+/**
+ * Hero 精选的一项（PLAN 第 3 节第 1 条）：已批准频道各取权重最高的节目，不足时用继续观看补足。
+ *
+ * [entry] 是可播放、可加入片单的形式；频道节目也转换成它，片单里统一按 `wl:` 键保存。
+ */
+data class HeroItem(
+    /** 状态接口里的 hero.key：频道节目是 `prog:…`，继续观看是 `wn:…`。 */
+    val key: String,
+    val entry: WatchNextEntry,
+    /** 来源：频道名，或继续观看所属应用的名称。 */
+    val source: String,
+    val badge: android.graphics.Bitmap?,
+    val fromChannel: Boolean,
+    val genre: String? = null,
+    val releaseDate: String? = null,
+    val program: com.github.mytv.data.channels.ChannelProgram? = null,
+)
+
 data class HomeRowData(
     val id: String,
     val title: String,

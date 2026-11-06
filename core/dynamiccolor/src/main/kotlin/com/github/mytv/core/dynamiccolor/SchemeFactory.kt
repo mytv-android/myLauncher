@@ -39,6 +39,8 @@ object SchemeFactory {
             surfaceContainerHigh = Color(scheme.surfaceContainerHigh),
             outline = Color(scheme.outline),
             focusRing = Color(scheme.primaryPalette.tone(90)),
+            ambient = Color(scheme.primaryPalette.tone(12)),
+            tertiary = Color(scheme.tertiary),
         )
     }
 

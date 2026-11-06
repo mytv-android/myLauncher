@@ -147,7 +147,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        model.onHostResumed()
         model.refresh()
+    }
+
+    override fun onPause() {
+        model.onHostPaused()
+        super.onPause()
     }
 
     override fun onStop() {

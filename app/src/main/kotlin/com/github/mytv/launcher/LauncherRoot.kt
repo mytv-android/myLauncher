@@ -105,8 +105,10 @@ fun LauncherRoot(model: LauncherModel) {
         model.restored,
         model.appsLoaded,
         model.channelsLoaded,
+        model.channelRowsLoaded,
         model.apps,
         model.continueItems,
+        model.heroItems.isEmpty(),
         model.folders,
         model.watchlistEntries,
         model.page,
@@ -258,6 +260,23 @@ fun LauncherRoot(model: LauncherModel) {
             }
         }
         if (model.page == "home" && tag != null && tag.startsWith("hero:")) {
+            if (direction == FocusDirection.Left || direction == FocusDirection.Right) {
+                // 按钮之间移动；到最左或最右的按钮后再按，切换上一个或下一个精选，两端不循环（§09）。
+                // 切换后焦点回到主按钮（原型 heroRender 之后 focus(heroBtns[0])）。
+                val buttons = listOf("hero:play", "hero:watchlist")
+                val delta = if (direction == FocusDirection.Right) 1 else -1
+                val next = buttons.indexOf(tag) + delta
+                if (next in buttons.indices) {
+                    focus.request(buttons[next])
+                    playNav(direction)
+                } else if (model.stepHero(delta)) {
+                    if (tag != "hero:play") focus.request("hero:play")
+                    playNav(direction)
+                } else {
+                    playInvalid()
+                }
+                return
+            }
             if (direction == FocusDirection.Down) {
                 val row = model.homeRows().firstOrNull()
                 val target = row?.let { focus.tagForRow(it.id)?.takeIf { candidate -> focus.isRegistered(candidate) } ?: it.items.firstOrNull()?.tag }
@@ -388,6 +407,9 @@ fun LauncherRoot(model: LauncherModel) {
     ) {
         AmbientBackdrop(
             source = model.backdropSource,
+            // Hero 展开（主页、有精选、焦点不在内容行）用较轻的遮罩；其余状态叠加浏览态遮罩
+            browse = !(page == "home" && model.heroItems.isNotEmpty() && focus.current?.rowId == null) &&
+                model.idleMode == null,
             modifier = Modifier
                 .fillMaxSize()
                 .then(
@@ -406,12 +428,13 @@ fun LauncherRoot(model: LauncherModel) {
                 onAppClick = model::launchApp,
             ) else HomeScreen(
                 enabled = overlay == null,
-                hero = model.hero,
+                heroItems = model.heroItems,
+                heroIndex = model.heroIndex.coerceIn(0, (model.heroItems.size - 1).coerceAtLeast(0)),
                 heroInWatchlist = model.heroInWatchlist,
+                appOf = model::appOf,
                 rows = model.homeRows(),
                 onPlayHero = model::playHero,
                 onToggleWatchlist = model::toggleHeroWatchlist,
-                onHeroDetails = model::heroDetails,
                 onNextClick = model::launchWatchNext,
                 onAppClick = model::launchApp,
                 onAppLongClick = { app, _ -> model.openMenu(app) },

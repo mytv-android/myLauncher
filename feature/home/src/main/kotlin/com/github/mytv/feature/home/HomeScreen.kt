@@ -1,5 +1,6 @@
 package com.github.mytv.feature.home
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -27,6 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,13 +37,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -50,6 +57,8 @@ import androidx.compose.ui.zIndex
 import com.github.mytv.core.designsystem.AppIconSize
 import com.github.mytv.core.designsystem.ContinueCardHeight
 import com.github.mytv.core.designsystem.ContinueCardWidth
+import com.github.mytv.core.designsystem.Glyphs
+import com.github.mytv.core.designsystem.LauncherGlyph
 import com.github.mytv.core.designsystem.LauncherCard
 import com.github.mytv.core.designsystem.LauncherCardFocused
 import com.github.mytv.core.designsystem.LauncherColors
@@ -78,12 +87,13 @@ import com.github.mytv.core.designsystem.R as DsR
 @Composable
 fun HomeScreen(
     enabled: Boolean,
-    hero: WatchNextEntry?,
+    heroItems: List<HeroItem>,
+    heroIndex: Int,
     heroInWatchlist: Boolean,
     rows: List<HomeRowData>,
+    appOf: (String) -> AppEntry?,
     onPlayHero: () -> Unit,
     onToggleWatchlist: () -> Unit,
-    onHeroDetails: () -> Unit,
     onNextClick: (WatchNextEntry) -> Unit,
     onAppClick: (AppEntry) -> Unit,
     onAppLongClick: (AppEntry, String) -> Unit,
@@ -101,24 +111,34 @@ fun HomeScreen(
     val density = LocalDensity.current
     val focusedRow = rows.indexOfFirst { row -> row.items.any { it.tag == focusTag } }
     val rowMode = !forceHero && focusedRow >= 0
-    val scrollTarget = if (rowMode) {
-        with(density) { (RowStride * focusedRow).roundToPx() }
-    } else {
-        0
+    val heroShown = heroItems.isNotEmpty() && !rowMode
+    val scrollTarget = when {
+        rowMode -> with(density) { (RowStride * focusedRow).roundToPx() }
+        // Hero 展开：第一行露在 Hero 下方（y 392），其余行在屏幕外
+        heroShown -> with(density) { (RowTop - HeroRowsTop).roundToPx() }
+        else -> 0
     }
-    val scroll = animateIntAsState(targetValue = scrollTarget, animationSpec = tween(260))
+    val scroll = animateIntAsState(targetValue = scrollTarget, animationSpec = tween(320))
+    val heroAlpha by animateFloatAsState(
+        targetValue = if (rowMode) 0f else 1f,
+        animationSpec = tween(320),
+        label = "heroAlpha",
+    )
 
     Box(modifier = modifier.fillMaxSize()) {
         HeroPanel(
-            hero = hero,
+            items = heroItems,
+            index = heroIndex,
             inWatchlist = heroInWatchlist,
-            enabled = enabled,
+            enabled = enabled && !rowMode,
             onPlay = onPlayHero,
             onToggleWatchlist = onToggleWatchlist,
-            onDetails = onHeroDetails,
             modifier = Modifier
                 .zIndex(if (rowMode) 0f else 1f)
-                .alpha(if (rowMode) 0f else 1f),
+                .graphicsLayer {
+                    alpha = heroAlpha
+                    translationY = (heroAlpha - 1f) * 28.dp.toPx()
+                },
         )
         if (rowMode) {
             Box(
@@ -127,7 +147,7 @@ fun HomeScreen(
                     .height(RowTop)
                     .pointerInput(Unit) { detectTapGestures { } },
             )
-            InfoHeader(focusTag, rows)
+            InfoHeader(focusTag, rows, appOf)
         }
         Box(
             modifier = Modifier
@@ -180,106 +200,165 @@ fun HomeScreen(
 }
 
 @Composable
-private fun InfoHeader(focusTag: String?, rows: List<HomeRowData>) {
-    val entry = rows.asSequence()
-        .flatMap { it.items.asSequence() }
-        .filterIsInstance<HomeItem.Next>()
-        .firstOrNull { it.tag == focusTag }
-        ?.entry ?: return
+private fun InfoHeader(
+    focusTag: String?,
+    rows: List<HomeRowData>,
+    appOf: (String) -> AppEntry?,
+) {
+    var source: String? = null
+    var badgePkg: String? = null
+    var title: String? = null
+    var meta: String? = null
+    var description: String? = null
+    for (row in rows) {
+        val item = row.items.firstOrNull { it.tag == focusTag } ?: continue
+        when (item) {
+            is HomeItem.Next -> {
+                source = appOf(item.entry.packageName)?.label
+                badgePkg = item.entry.packageName
+                title = item.entry.title
+                meta = watchSubtitle(item.entry)
+                description = item.entry.description
+            }
+            is HomeItem.Program -> {
+                source = row.title
+                badgePkg = item.program.packageName
+                title = item.program.title
+                meta = programMeta(item.program.genre, item.program.releaseDate)
+                description = item.program.description
+            }
+            else -> Unit
+        }
+        break
+    }
+    val shownTitle = title ?: return
+    val colors = LocalLauncherColors.current.value
     Column(
         modifier = Modifier
             .padding(start = RowLeft, top = 86.dp)
-            .width(640.dp)
+            .width(560.dp)
             .testTag("info"),
     ) {
+        SourceLine(source, badgePkg?.let { appOf(it)?.icon }, colors)
         Text(
-            text = entry.title,
-            color = Color.White,
+            text = shownTitle,
+            color = colors.onSurface,
             fontSize = 30.sp,
+            lineHeight = 34.sp,
             fontWeight = FontWeight.ExtraBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp),
         )
-        Text(
-            text = watchSubtitle(entry),
-            color = Color(0xFFDAD6E0),
-            fontSize = 14.sp,
-            maxLines = 1,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-        entry.description?.takeIf { it.isNotBlank() }?.let {
+        meta?.takeIf { it.isNotBlank() }?.let {
             Text(
                 text = it,
-                color = Color(0xFFCAC4D0),
-                fontSize = 14.sp,
+                color = colors.onSurfaceVariant,
+                fontSize = 12.5.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
+        description?.takeIf { it.isNotBlank() }?.let {
+            Text(
+                text = it,
+                color = colors.onSurfaceVariant,
+                fontSize = 13.sp,
+                lineHeight = 20.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 6.dp),
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .width(520.dp),
             )
         }
     }
 }
 
 @Composable
+private fun SourceLine(text: String?, badge: android.graphics.Bitmap?, colors: LauncherColors) {
+    if (text.isNullOrBlank() && badge == null) return
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.height(20.dp),
+    ) {
+        if (badge != null) {
+            Image(
+                bitmap = badge.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clip(CircleShape),
+            )
+        }
+        if (!text.isNullOrBlank()) {
+            Text(
+                text = text,
+                color = colors.onSurfaceVariant,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.25.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+private fun programMeta(genre: String?, releaseDate: String?): String =
+    listOfNotNull(
+        genre?.split(',')?.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() },
+        releaseDate?.trim()?.takeIf { it.isNotEmpty() },
+    ).joinToString(" · ")
+
+/** Hero 展开时内容行的顶部（原型 layout()：hero 模式 translateY 392）。 */
+internal val HeroRowsTop = 392.dp
+
+@Composable
 private fun HeroPanel(
-    hero: WatchNextEntry?,
+    items: List<HeroItem>,
+    index: Int,
     inWatchlist: Boolean,
     enabled: Boolean,
     onPlay: () -> Unit,
     onToggleWatchlist: () -> Unit,
-    onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (hero == null) return
+    val hero = items.getOrNull(index) ?: return
     val colors = LocalLauncherColors.current.value
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .height(HeroRowsTop)
             .testTag("hero"),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(RowTop)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0x33000000),
-                            Color(0x11000000),
-                            Color(0x99000000),
-                        ),
-                    ),
-                ),
-        )
         Column(
             modifier = Modifier
-                .padding(start = RowLeft, top = 88.dp)
+                .padding(start = RowLeft, top = 98.dp)
                 .width(500.dp),
         ) {
-            Text(
-                text = hero.title,
-                color = Color.White,
-                fontSize = 48.sp,
-                lineHeight = 51.sp,
-                fontWeight = FontWeight.ExtraBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = watchSubtitle(hero),
-                color = Color(0xFFE0E0E6),
-                fontSize = 14.sp,
-                maxLines = 1,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            Crossfade(
+                targetState = hero,
+                animationSpec = tween(320),
+                label = "heroText",
+            ) { item ->
+                HeroText(item, colors)
+            }
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 20.dp)
+                    .height(48.dp),
             ) {
                 HeroButton(
                     tag = "hero:play",
-                    label = androidx.compose.ui.res.stringResource(DsR.string.hero_play),
+                    label = stringResource(
+                        if (hero.entry.playbackPositionMillis > 0) DsR.string.hero_resume else DsR.string.hero_play,
+                    ),
+                    glyph = Glyphs.PLAY,
                     primary = true,
                     colors = colors,
                     enabled = enabled,
@@ -287,23 +366,86 @@ private fun HeroPanel(
                 )
                 HeroButton(
                     tag = "hero:watchlist",
-                    label = androidx.compose.ui.res.stringResource(
+                    label = stringResource(
                         if (inWatchlist) DsR.string.hero_watchlist_added else DsR.string.hero_watchlist,
                     ),
+                    glyph = if (inWatchlist) Glyphs.CHECK else Glyphs.PLUS,
                     primary = false,
                     colors = colors,
                     enabled = enabled,
                     onClick = onToggleWatchlist,
                 )
-                HeroButton(
-                    tag = "hero:info",
-                    label = androidx.compose.ui.res.stringResource(DsR.string.hero_details),
-                    primary = false,
-                    colors = colors,
-                    enabled = enabled,
-                    onClick = onDetails,
-                )
             }
+            if (items.size > 1) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 18.dp),
+                ) {
+                    items.forEachIndexed { i, _ ->
+                        val on = i == index
+                        val width by animateDpAsState(
+                            targetValue = if (on) 28.dp else 8.dp,
+                            animationSpec = launcherDefaultSpatialSpec(),
+                            label = "heroDot",
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(width)
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(if (on) colors.onSurface else colors.onSurface.copy(alpha = 0.32f)),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroText(item: HeroItem, colors: LauncherColors) {
+    var titleLines by remember(item.key) { mutableIntStateOf(1) }
+    Column {
+        SourceLine(item.source, item.badge, colors)
+        Text(
+            text = item.entry.title,
+            color = colors.onSurface,
+            fontSize = 48.sp,
+            lineHeight = 51.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.48.sp,
+            style = TextStyle(
+                shadow = Shadow(color = Color(0x40000000), offset = Offset(0f, 2f), blurRadius = 24f),
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { titleLines = it.lineCount },
+            modifier = Modifier.padding(top = 10.dp),
+        )
+        val meta = if (item.fromChannel) programMeta(item.genre, item.releaseDate) else watchSubtitle(item.entry)
+        if (meta.isNotBlank()) {
+            Text(
+                text = meta,
+                color = colors.onSurfaceVariant,
+                fontSize = 12.5.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+        }
+        item.entry.description?.takeIf { it.isNotBlank() }?.let {
+            Text(
+                text = it,
+                color = colors.onSurfaceVariant,
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
+                // 标题占两行时描述只留一行，按钮与指示点不压到第一行内容
+                maxLines = if (titleLines >= 2) 1 else 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .width(450.dp),
+            )
         }
     }
 }
@@ -312,13 +454,12 @@ private fun HeroPanel(
 private fun HeroButton(
     tag: String,
     label: String,
+    glyph: String,
     primary: Boolean,
     colors: LauncherColors,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val background = if (primary) colors.primary else colors.surfaceContainerHigh
-    val foreground = if (primary) colors.onPrimary else colors.onSurface
     TvFocusable(
         tag = tag,
         enabled = enabled,
@@ -332,21 +473,33 @@ private fun HeroButton(
             label = "buttonRadius",
         )
         val horizontal by animateDpAsState(
-            targetValue = if (focused) 34.dp else 24.dp,
+            targetValue = if (focused) 30.dp else 20.dp,
             animationSpec = launcherDefaultSpatialSpec(),
             label = "buttonPadding",
         )
+        val background = when {
+            primary -> colors.primary
+            focused -> colors.onSurface
+            else -> colors.onSurface.copy(alpha = 0.15f)
+        }
+        val foreground = when {
+            primary -> colors.onPrimary
+            focused -> colors.surface
+            else -> colors.onSurface
+        }
         val shape = RoundedCornerShape(radius)
-        Box(
+        Row(
             modifier = Modifier
                 .height(46.dp)
                 .clip(shape)
                 .background(background)
                 .launcherFocusRing(focused, shape)
                 .padding(horizontal = horizontal),
-            contentAlignment = Alignment.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(text = label, color = foreground, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            LauncherGlyph(path = glyph, color = foreground, size = 18.dp)
+            Text(text = label, color = foreground, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -889,19 +1042,18 @@ private fun FolderTile(
 
 @Composable
 fun watchSubtitle(entry: WatchNextEntry): String {
-    val remaining = androidx.compose.ui.res.stringResource(
-        R.string.watch_next_remaining,
-        entry.remainingMinutes,
-    )
+    // 时长未知时算不出剩余时间，不显示「剩 0 分钟」
+    val remaining = if (entry.durationMillis > 0) {
+        stringResource(R.string.watch_next_remaining, entry.remainingMinutes)
+    } else {
+        null
+    }
     val episode = entry.episodeNumber
     val season = entry.seasonNumber
-    return when {
-        season != null && episode != null -> {
-            androidx.compose.ui.res.stringResource(R.string.watch_next_season, season, episode) + " · " + remaining
-        }
-        episode != null -> {
-            androidx.compose.ui.res.stringResource(R.string.watch_next_episode, episode) + " · " + remaining
-        }
-        else -> remaining
+    val head = when {
+        season != null && episode != null -> stringResource(R.string.watch_next_season, season, episode)
+        episode != null -> stringResource(R.string.watch_next_episode, episode)
+        else -> null
     }
+    return listOfNotNull(head, remaining).joinToString(" · ")
 }

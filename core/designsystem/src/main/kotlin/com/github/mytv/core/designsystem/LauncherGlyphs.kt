@@ -1,0 +1,57 @@
+package com.github.mytv.core.designsystem
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+/** 原型里用到的 24 单位 SVG 路径。填充型用于按钮，描边型用于顶栏与快速设置。 */
+object Glyphs {
+    // 填充
+    const val PLAY = "M8 5.5v13l10.5-6.5z"
+    const val PLUS = "M11 5h2v14h-2zM5 11h14v2H5z"
+    const val CHECK = "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+
+    // 描边（stroke-width 2，圆头圆角）
+    const val SEARCH = "M11 4.5a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM20 20l-4.2-4.2"
+    const val AMBIENT = "M6 5h12a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3zM6.5 15l3.5-4 3 3 2-2 2.5 3"
+    const val GEAR = "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM12 2.8v2.4M12 18.8v2.4M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2"
+}
+
+/**
+ * 画一个 24 单位视框的路径。[stroke] 为空时填充，否则按该线宽（视框单位）描边。
+ */
+@Composable
+fun LauncherGlyph(
+    path: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 18.dp,
+    stroke: Float? = null,
+) {
+    val parsed: Path = remember(path) { PathParser().parsePathString(path).toPath() }
+    Canvas(modifier = modifier.size(size)) {
+        val unit = this.size.minDimension / 24f
+        scale(unit, unit, pivot = androidx.compose.ui.geometry.Offset.Zero) {
+            if (stroke == null) {
+                drawPath(parsed, color)
+            } else {
+                drawPath(
+                    parsed,
+                    color,
+                    style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+                )
+            }
+        }
+    }
+}
