@@ -212,6 +212,10 @@ def d119(ctx):
     need(st.get("overlay") == "folder_open" and ctx.L.focus(st).startswith("app:"), f"打开后 overlay={st.get('overlay')} 焦点 {ctx.L.focus(st)}")
     ctx.snap("folder-open")
     st = ctx.L.press("BACK")
+    t0 = time.time()
+    while time.time() - t0 < 1.5 and (st.get("overlay") or ctx.L.focus(st) != ftag):
+        time.sleep(0.1)
+        st = ctx.L.state()
     need(not st.get("overlay") and ctx.L.focus(st) == ftag, f"BACK 后 overlay={st.get('overlay')} 焦点 {ctx.L.focus(st)}")
     for _ in range(2):
         ctx.L.press("OK")

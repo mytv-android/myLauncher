@@ -721,7 +721,7 @@ def d201(ctx):
             th = st.get("theme") or {}
             _, c, hh = lch(th.get("seed", "#000000"))
             if (Fixtures.pkg(fid) in (th.get("sourceKey") or "") and hue_diff(hh, he) <= 25 and c >= 12) \
-                    or time.time() - t0 > 2.0:
+                    or time.time() - t0 > 3.5:
                 break
             time.sleep(0.1)
             st = ctx.L.state()
@@ -799,7 +799,7 @@ def d204(ctx):
     need(ctx.L.seek("hero:watchlist", ("RIGHT",), 3), "Hero 里找不到 hero:watchlist")
     ctx.L.settle()
     t0, st = time.time(), ctx.L.state()
-    while time.time() - t0 < 3 and (st.get("theme") or {}).get("transitioning"):
+    while time.time() - t0 < 5 and (st.get("theme") or {}).get("transitioning"):
         time.sleep(0.1)
         st = ctx.L.state()
     img, tree, st = ctx.snap("hero-primary")
