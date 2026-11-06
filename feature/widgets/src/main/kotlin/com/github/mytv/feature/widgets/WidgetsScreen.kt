@@ -115,6 +115,8 @@ fun WidgetsScreen(
     weatherText: String? = null,
     host: WidgetsHost = rememberWidgetsHost(repository),
     onUiState: (WidgetsUiState) -> Unit = {},
+    /** 内置时钟小组件上按 OK：宿主进入环境模式（大时钟）。 */
+    onBuiltinClock: () -> Unit = {},
 ) {
     val ui by host.ui.collectAsState()
     val providers by repository.installedProviders.collectAsState()
@@ -196,6 +198,7 @@ fun WidgetsScreen(
                 hostViews = hostViews,
                 pageEnabled = enabled,
                 weatherText = weatherText,
+                onBuiltinClock = onBuiltinClock,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -279,6 +282,7 @@ private fun WidgetGrid(
     hostViews: MutableMap<Int, LauncherWidgetHostView>,
     pageEnabled: Boolean,
     weatherText: String?,
+    onBuiltinClock: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -320,6 +324,7 @@ private fun WidgetGrid(
                 val idle = pageEnabled && ui.overlay == WidgetOverlay.NONE
                 BuiltinClockTile(
                     weatherText = weatherText,
+                    onClick = onBuiltinClock,
                     modifier = Modifier
                         .offset(x = 0.dp, y = 0.dp)
                         .size(cellWidth * 2 + GridGap, GridCellHeight),
@@ -392,6 +397,7 @@ private fun WidgetGrid(
 @Composable
 private fun BuiltinClockTile(
     weatherText: String?,
+    onClick: () -> Unit,
     enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -416,7 +422,7 @@ private fun BuiltinClockTile(
         enabled = enabled,
         scaleOnFocus = 1.06f,
         shape = WidgetShape,
-        onClick = {},
+        onClick = onClick,
         modifier = modifier,
     ) { focused ->
         Column(

@@ -42,7 +42,6 @@ import com.github.mytv.feature.home.HomeScreen
 import com.github.mytv.feature.home.MenuAction
 import com.github.mytv.feature.home.MenuOverlay
 import com.github.mytv.feature.home.PickerOverlay
-import com.github.mytv.feature.home.WidgetsPage
 import com.github.mytv.feature.organizer.ConfirmPhoneOverlay
 import com.github.mytv.feature.organizer.PhoneOrganizerScreen
 import com.github.mytv.feature.quicksettings.QuickSettingsOverlay
@@ -472,6 +471,7 @@ fun LauncherRoot(model: LauncherModel) {
                     null
                 },
                 onUiState = model::onWidgetsUiState,
+                onBuiltinClock = model::startAmbient,
             )
             "organizer" -> PhoneOrganizerScreen(
                 state = model.organizerState,
