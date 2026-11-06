@@ -36,4 +36,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.haze)
     implementation(libs.coil)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.okhttp)
 }

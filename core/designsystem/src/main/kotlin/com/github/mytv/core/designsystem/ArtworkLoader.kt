@@ -2,26 +2,12 @@ package com.github.mytv.core.designsystem
 
 import android.content.Context
 import android.graphics.Bitmap
-import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.request.allowHardware
-import coil3.toBitmap
 
 class ArtworkLoader(context: Context) {
     private val appContext = context.applicationContext
-    private val loader by lazy { ImageLoader.Builder(appContext).build() }
 
-    suspend fun bitmap(uri: String, width: Int, height: Int): Bitmap? = try {
-        val request = ImageRequest.Builder(appContext)
-            .data(uri)
-            .size(width, height)
-            .allowHardware(false)
-            .build()
-        (loader.execute(request) as? SuccessResult)?.image?.toBitmap()
-    } catch (_: Exception) {
-        null
-    }
+    suspend fun bitmap(uri: String, width: Int, height: Int): Bitmap? =
+        loadArtworkBitmap(appContext, uri, width, height)
 
     suspend fun pixels(uri: String, width: Int, height: Int): IntArray? {
         val source = bitmap(uri, width, height) ?: return null
