@@ -521,8 +521,6 @@ fun LauncherRoot(model: LauncherModel) {
             onSettings = model::openQuickSettings,
             onSearch = { model.openSearch() },
             onAmbient = model::startAmbient,
-            dateText = model.dateText,
-            lunarText = model.lunarText,
             weatherVisible = model.weatherVisible,
             weatherTempC = model.weatherTempC,
             weatherCode = model.weatherCode,

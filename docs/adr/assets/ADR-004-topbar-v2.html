@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>顶栏右侧 · 第二版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#f3f1f6; --ink:#1c1a21; --ink2:#5d5966; --rule:#dcd8e2; --accent:#6b4fd8; --card:#ffffff;
+  --sans:"Roboto Flex","Noto Sans SC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--page:#121016;--ink:#ece8f2;--ink2:#a49fae;--rule:#2c2833;--accent:#b9a6ff;--card:#1b1820;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#121016;--ink:#ece8f2;--ink2:#a49fae;--rule:#2c2833;--accent:#b9a6ff;--card:#1b1820;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.6 var(--sans)}
+.wrap{max-width:1040px;margin:0 auto;padding:40px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
+h1{font-size:30px;font-weight:800;letter-spacing:-.01em;margin:0 0 6px}
+.lede{color:var(--ink2);max-width:66ch;margin:0 0 22px}
+.ctl{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--page) 88%,transparent);backdrop-filter:blur(10px);padding:10px 0;display:flex;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);margin-bottom:26px}
+.seg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
+.seg div{display:flex;background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:3px}
+.seg button{all:unset;cursor:pointer;padding:5px 12px;border-radius:999px;font-size:13px;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+section.opt{margin:0 0 54px}
+.oh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.oh h2{font-size:22px;margin:0;font-weight:800}
+.oh .tag{font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid var(--rule);color:var(--ink2)}
+.oh .tag.kit{border-color:#d9822b;color:#d9822b}
+.stage{width:100%;aspect-ratio:16/9;position:relative;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(20,10,40,.28);background:#000}
+.stage>.tv{position:absolute;left:0;top:0;width:960px;height:540px;transform-origin:0 0}
+.zoom{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.zoom .z{position:relative;aspect-ratio:560/150;border-radius:14px;overflow:hidden;background:#000}
+.zoom .z>.tv{position:absolute;width:960px;height:540px;transform-origin:0 0}
+.zoom .cap{font-size:12px;color:var(--ink2);margin-top:4px}
+.spec{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 28px;margin-top:16px}
+.spec p{margin:0;min-width:0}
+.spec dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;min-width:0}
+.spec dt{color:var(--ink2)}
+.spec dd{margin:0}
+@media (max-width:720px){.spec{grid-template-columns:1fr}.zoom{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+.tbl{overflow-x:auto}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{color:var(--ink2);font-weight:600}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+
+/* ============ TV canvas (960 x 540 dp) — always the launcher's dark theme ============ */
+.tv{font-family:var(--sans);color:#ECE6F0;overflow:hidden;
+  --surface:#141218;--sc:#211F26;--sch:#2B2930;--on:#ECE6F0;--onv:#CAC4D0;--primary:#D0BCFF;--amb:#1F0F3D}
+.tv .bd{position:absolute;inset:0}
+.tv[data-bg="dark"] .bd{background:
+  radial-gradient(60% 45% at 70% 28%,rgba(70,230,190,.55),transparent 70%),
+  radial-gradient(40% 30% at 86% 18%,rgba(120,255,210,.45),transparent 70%),
+  radial-gradient(50% 40% at 55% 12%,rgba(150,110,255,.35),transparent 70%),
+  linear-gradient(180deg,#06121f 0%,#0d2436 45%,#163447 70%,#0b1620 100%)}
+.tv[data-bg="dark"] .bd::after{content:"";position:absolute;inset:auto 0 0 0;height:46%;background:
+  linear-gradient(170deg,transparent 40%,#07111a 41%),
+  linear-gradient(195deg,transparent 52%,#0a1822 53%);}
+.tv[data-bg="bright"] .bd{background:
+  radial-gradient(28% 34% at 86% 10%,#ffffff 0%,rgba(255,255,255,.9) 30%,transparent 70%),
+  radial-gradient(70% 60% at 75% 20%,#f7fbff,transparent 70%),
+  linear-gradient(180deg,#dfe9f3 0%,#eef3f8 40%,#c9d6e2 64%,#8ea2b4 100%)}
+.tv[data-bg="bright"] .bd::after{content:"";position:absolute;inset:auto 0 0 0;height:44%;background:
+  linear-gradient(165deg,transparent 46%,#7f93a6 47%),
+  linear-gradient(200deg,transparent 54%,#64788c 55%);}
+.tv .scrim{position:absolute;inset:0;background:
+  linear-gradient(90deg,color-mix(in srgb,var(--amb) 92%,transparent) 0%,color-mix(in srgb,var(--amb) 66%,transparent) 36%,transparent 72%),
+  linear-gradient(180deg,transparent 36%,color-mix(in srgb,var(--surface) 78%,transparent) 70%,var(--surface) 100%)}
+.tv .band{position:absolute;left:0;right:0;top:0;height:150px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,6,14,.62) 0%,rgba(8,6,14,.34) 45%,transparent 100%);display:none}
+.tv .glass{background:color-mix(in srgb,var(--sc) 52%,transparent);-webkit-backdrop-filter:blur(24px) saturate(1.25);backdrop-filter:blur(24px) saturate(1.25);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.tv .tabs{position:absolute;left:48px;top:21px;height:46px;border-radius:23px;display:flex;align-items:center;padding:4px;gap:2px}
+.tv .tabs span{height:38px;padding:0 17px;border-radius:19px;display:grid;place-items:center;font-size:15px;font-weight:600;color:var(--onv)}
+.tv .tabs span.on{background:color-mix(in srgb,var(--on) 14%,transparent);color:var(--on)}
+.tv .right{position:absolute;right:48px;top:21px;height:46px;display:flex;align-items:center;gap:12px}
+.tv .tools{height:46px;border-radius:23px;display:flex;align-items:center;padding:0 4px}
+.tv .ib{width:38px;height:38px;display:grid;place-items:center}
+.tv .ib svg{width:20px;height:20px;fill:none;stroke:var(--on);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tv .hero{position:absolute;left:48px;top:98px;width:500px}
+.tv .src{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--onv)}
+.tv .src i{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#7cf3c9,#3a8fd6)}
+.tv .ttl{font-size:48px;font-weight:800;line-height:1.06;margin:10px 0 8px;letter-spacing:-.01em}
+.tv .meta{font-size:13px;color:var(--onv)}
+.tv .btns{display:flex;gap:10px;margin-top:22px}
+.tv .btn{height:46px;border-radius:23px;padding:0 22px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.tv .btn.p{background:var(--primary);color:#381E72}
+.tv .btn.s{background:color-mix(in srgb,var(--on) 15%,transparent)}
+.tv .dots{display:flex;gap:6px;margin-top:22px}.tv .dots b{width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.35)}.tv .dots b:first-child{width:28px;background:var(--on)}
+.tv .row{position:absolute;left:48px;top:440px;display:flex;gap:14px}
+.tv .row div{width:220px;height:124px;border-radius:16px;background:linear-gradient(135deg,#3a3550,#24212d)}
+.tv .row div:nth-child(2){background:linear-gradient(135deg,#5b3b2e,#2a1d18)}.tv .row div:nth-child(3){background:linear-gradient(135deg,#2e4b5b,#18242a)}.tv .row div:nth-child(4){background:linear-gradient(135deg,#4d2e5b,#21182a)}
+.tv .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.tv .wx svg{display:block}
+.tv .shadow{text-shadow:0 1px 8px rgba(0,0,0,.45)}
+
+/* option 1 · all-in-one capsule */
+.o1 .tools{padding:0 18px 0 4px}
+.o1 .div{width:1px;height:18px;background:color-mix(in srgb,var(--on) 24%,transparent);margin:0 12px 0 8px}
+.o1 .wx{display:flex;align-items:center;gap:6px;font-size:17px;font-weight:650}
+.o1 .clk{font-size:18px;font-weight:620;margin-left:14px}
+
+/* option 2 · weather tonal chip */
+.o2 .chip{height:46px;border-radius:23px;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;font-size:16px;font-weight:650;background:var(--wxbg);color:var(--wxfg);
+  box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.o2 .chip small{font-size:13px;font-weight:550;opacity:.86}
+.o2 .clk{font-size:28px;font-weight:640;letter-spacing:-.01em;margin-left:6px}
+
+/* option 3 · expressive shape */
+.o3 .shape{width:52px;height:52px;position:relative;display:grid;place-items:center;margin-right:2px}
+.o3 .shape svg.s{position:absolute;inset:0;width:52px;height:52px}
+.o3 .shape svg.s path{fill:var(--shp)}
+.o3 .shape .g{position:relative;width:24px;height:24px}
+.o3 .shape .g svg{width:24px;height:24px}
+.o3 .t{font-size:26px;font-weight:560}
+.o3 .sep{width:5px;height:5px;border-radius:50%;background:color-mix(in srgb,var(--on) 55%,transparent);margin:0 2px}
+.o3 .clk{font-size:26px;font-weight:560}
+
+/* option 4 · no boxes at all */
+.o4 .tabs{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;padding:4px 0;gap:6px;left:40px}
+.o4 .tabs span{color:color-mix(in srgb,var(--on) 72%,transparent)}
+.o4 .tabs span.on{background:none;color:var(--on);position:relative}
+.o4 .tabs span.on::after{content:"";position:absolute;left:50%;bottom:2px;width:18px;height:3px;border-radius:2px;background:var(--on);transform:translateX(-50%)}
+.o4 .tools{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+.o4 .stat{display:flex;align-items:center;gap:10px;margin-left:10px}
+.o4 .wx{display:flex;align-items:center;gap:6px;font-size:19px;font-weight:620}
+.o4 .vr{width:1px;height:26px;background:color-mix(in srgb,var(--on) 30%,transparent);margin:0 6px}
+.o4 .tblk{display:flex;flex-direction:column;align-items:flex-end;line-height:1.05}
+.o4 .tblk b{font-size:24px;font-weight:650}
+.o4 .tblk span{font-size:11.5px;color:color-mix(in srgb,var(--on) 78%,transparent);margin-top:3px;font-weight:500}
+.tv[data-flat="1"] .tabs:not(.keep){background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>顶栏右侧 · 第二版</h1>
+  <p class="lede">第一版的四个方案都是"框 + 小字"或"小字浮在海报上"的变体。这一版换了四个思路：把状态并进已有的胶囊、只给天气一块有颜色的色片、用 M3 Expressive 的形状承载天气、整条顶栏都不要框。每个方案都可以切换背景和天气，最难的是"明亮海报"。画面按 960×540 dp 绘制，和电视上的实际比例一致。</p>
+
+  <div class="ctl" role="toolbar">
+    <div class="seg">背景<div data-k="bg"><button data-v="dark" aria-pressed="true">深色海报</button><button data-v="bright" aria-pressed="false">明亮海报</button></div></div>
+    <div class="seg">天气<div data-k="wx"><button data-v="clear" aria-pressed="true">晴</button><button data-v="cloudy" aria-pressed="false">多云</button><button data-v="rain" aria-pressed="false">小雨</button><button data-v="night" aria-pressed="false">夜间</button><button data-v="none" aria-pressed="false">无数据</button></div></div>
+  </div>
+
+  <section class="opt" id="o1">
+    <div class="oh"><h2>方案 A · 合一胶囊</h2><span class="tag">框最少</span></div>
+    <div class="stage"><div class="tv o1"></div></div>
+    <div class="zoom"><div><div class="z"><div class="tv o1" data-fix="dark"></div></div><div class="cap">右上角放大 · 深色海报</div></div><div><div class="z"><div class="tv o1" data-fix="bright"></div></div><div class="cap">右上角放大 · 明亮海报</div></div></div>
+    <div class="spec">
+      <p>工具胶囊往右延长，分隔线后面是天气和时钟，这一段不可聚焦。顶栏只剩两块玻璃，左右对称；文字都在玻璃上，海报再亮也清楚。日期和农历离开顶栏，改到快速设置的标题行，环境模式与时钟小组件照旧显示。</p>
+      <dl><dt>字号</dt><dd>温度 17sp / 650 · 时钟 18sp / 620，等宽数字</dd><dt>宽度</dt><dd>胶囊约 270dp（无天气约 200dp），右缘 x 912</dd><dt>玻璃</dt><dd>2 块（现状 3 块）</dd><dt>对补充 A</dt><dd>取消状态底板；日期农历移到快速设置</dd><dt>工具包</dt><dd>不涉及</dd></dl>
+    </div>
+  </section>
+
+  <section class="opt" id="o2">
+    <div class="oh"><h2>方案 B · 天气色片</h2><span class="tag">一眼看天气</span></div>
+    <div class="stage"><div class="tv o2"></div></div>
+    <div class="zoom"><div><div class="z"><div class="tv o2" data-fix="dark"></div></div><div class="cap">右上角放大 · 深色海报</div></div><div><div class="z"><div class="tv o2" data-fix="bright"></div></div><div class="cap">右上角放大 · 明亮海报</div></div></div>
+    <div class="spec">
+      <p>只有天气是一块实色胶囊，颜色跟着天气走：晴是琥珀、多云是灰蓝、雨是蓝、夜间是靛青，色调取 HCT 的 30 / 90，和主题色不打架。时钟 28sp 直接写在海报上，顶边一条电影式渐暗保证白字可读。胶囊里带状况名，"晴 19°"已在白名单的模式里。</p>
+      <dl><dt>字号</dt><dd>温度 16sp / 650 · 状况 13sp · 时钟 28sp / 640</dd><dt>色片</dt><dd>高 46，圆角 23；底色 = 天气色相 T30，文字 T90</dd><dt>可读性</dt><dd>顶边渐暗：62% → 0，高 150dp</dd><dt>对补充 A</dt><dd>状态底板改为天气色片；日期农历移到快速设置</dd><dt>工具包</dt><dd>不涉及</dd></dl>
+    </div>
+  </section>
+
+  <section class="opt" id="o3">
+    <div class="oh"><h2>方案 C · Expressive 形状</h2><span class="tag">最有品牌感</span></div>
+    <div class="stage"><div class="tv o3"></div></div>
+    <div class="zoom"><div><div class="z"><div class="tv o3" data-fix="dark"></div></div><div class="cap">右上角放大 · 深色海报</div></div><div><div class="z"><div class="tv o3" data-fix="bright"></div></div><div class="cap">右上角放大 · 明亮海报</div></div></div>
+    <div class="spec">
+      <p>天气装进一个 M3 Expressive 形状：晴天是 Sunny，多云是 Cookie，雨天是 Clover，夜间是 Circle；形状按天气上色（晴琥珀、多云灰蓝、雨浅蓝、夜间淡紫，色调 T90），图标是 T10 的单色线稿。天气变化时形状用 MaterialShapes 的 Morph 过渡，和应用图标聚焦时变 Cookie 是同一套语言。温度和时钟同字号并排，中间一个圆点。</p>
+      <dl><dt>字号</dt><dd>温度、时钟 26sp / 560，等宽数字</dd><dt>形状</dt><dd>52dp；底色为天气色相 T90，图标 T10</dd><dt>可读性</dt><dd>顶边渐暗 + 1dp 偏移、8dp 模糊、45% 黑的文字阴影</dd><dt>对补充 A</dt><dd>状态底板改为形状 + 浮字；日期农历移到快速设置</dd><dt>工具包</dt><dd>不涉及</dd></dl>
+    </div>
+  </section>
+
+  <section class="opt" id="o4">
+    <div class="oh"><h2>方案 D · 整条顶栏不要框</h2><span class="tag kit">需改工具包</span></div>
+    <div class="stage"><div class="tv o4"></div></div>
+    <div class="zoom"><div><div class="z"><div class="tv o4" data-fix="dark"></div></div><div class="cap">右上角放大 · 深色海报</div></div><div><div class="z"><div class="tv o4" data-fix="bright"></div></div><div class="cap">右上角放大 · 明亮海报</div></div></div>
+    <div class="spec">
+      <p>Tab、工具、状态全部去掉底板，靠一条贯穿顶边的渐暗托住。当前 Tab 用 3dp 短横线标出，焦点仍是反色胶囊（聚焦时才出现）。右侧是天气 + 竖线 + 两行的时钟与日期农历，日期农历留在顶栏。顶栏零块玻璃，打开快速设置时模糊区域更宽裕。</p>
+      <dl><dt>字号</dt><dd>Tab 15sp · 温度 19sp · 时钟 24sp / 650 · 日期 11.5sp</dd><dt>可读性</dt><dd>顶边渐暗：62% → 0，高 150dp</dd><dt>玻璃</dt><dd>0 块</dd><dt>对补充 A</dt><dd>取消状态底板；日期农历保留</dd><dt>工具包</dt><dd>D207–D209 量的是 Tab 胶囊下的玻璃，去掉后要改这三项并重新冻结</dd></dl>
+    </div>
+  </section>
+
+  <section>
+    <h2 style="font-size:20px;margin:0 0 10px">对比</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>方案</th><th>顶栏的框</th><th>天气</th><th>时钟</th><th>日期农历</th><th>工具包</th></tr></thead>
+      <tbody>
+        <tr><td>现状（补充 A）</td><td>3</td><td>底板内 18sp</td><td>18sp</td><td>底板内</td><td>—</td></tr>
+        <tr><td>A · 合一胶囊</td><td>2</td><td>胶囊内 17sp</td><td>胶囊内 18sp</td><td>快速设置标题行</td><td>不改</td></tr>
+        <tr><td>B · 天气色片</td><td>2 + 色片</td><td>彩色胶囊</td><td>浮字 28sp</td><td>快速设置标题行</td><td>不改</td></tr>
+        <tr><td>C · Expressive 形状</td><td>2</td><td>形状 52dp</td><td>浮字 26sp</td><td>快速设置标题行</td><td>不改</td></tr>
+        <tr><td>D · 不要框</td><td>0</td><td>浮字 19sp</td><td>浮字 24sp</td><td>时钟下方</td><td>改 D207–D209</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<template id="ico">
+  <svg data-k="search" viewBox="0 0 24 24"><path d="M11 4.5a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM20 20l-4.2-4.2"/></svg>
+  <svg data-k="amb" viewBox="0 0 24 24"><path d="M6 5h12a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3zM6.5 15l3.5-4 3 3 2-2 2.5 3"/></svg>
+  <svg data-k="gear" viewBox="0 0 24 24"><path d="M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM12 2.8v2.4M12 18.8v2.4M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2"/></svg>
+</template>
+
+<script>
+const WX = {
+  clear:  {name:'晴', t:'19°', hue:'#FFB300', bg:'#5C4200', fg:'#FFDFA0', shp:'#FFDDB3', on:'#2B1700', shape:'sunny'},
+  cloudy: {name:'多云', t:'14°', hue:'#C9D3E0', bg:'#36475A', fg:'#D3E4F8', shp:'#D3E3F5', on:'#0E1D2C', shape:'cookie'},
+  rain:   {name:'小雨', t:'9°', hue:'#8EC5FF', bg:'#004A77', fg:'#CDE5FF', shp:'#CDE5FF', on:'#001D33', shape:'clover'},
+  night:  {name:'晴', t:'12°', hue:'#F1E6B0', bg:'#2F3170', fg:'#E0E0FF', shp:'#E0DFFF', on:'#14134A', shape:'circle'},
+  none: null
+};
+const S = {bg:'dark', wx:'clear'};
+
+function colorGlyph(k, size){
+  const s = size||22;
+  if(k==='clear') return `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="sg" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#FFE68A"/><stop offset="1" stop-color="#FFAE00"/></radialGradient></defs><g stroke="#FFC233" stroke-width="2" stroke-linecap="round"><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6M4.8 4.8l1.8 1.8M17.4 17.4l1.8 1.8M4.8 19.2l1.8-1.8M17.4 6.6l1.8-1.8"/></g><circle cx="12" cy="12" r="5.2" fill="url(#sg)"/></svg>`;
+  if(k==='cloudy') return `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><circle cx="8.6" cy="8.4" r="4" fill="#FFC233"/><path fill="#E6ECF4" d="M7.6 19h10a4 4 0 0 0 .6-7.95A5.8 5.8 0 0 0 7.1 10a4.5 4.5 0 0 0 .5 9z"/></svg>`;
+  if(k==='rain') return `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="#DCE4EE" d="M7.4 15h10a3.9 3.9 0 0 0 .5-7.76A5.6 5.6 0 0 0 6.7 6.6 4.2 4.2 0 0 0 7.4 15z"/><g stroke="#8EC5FF" stroke-width="1.9" stroke-linecap="round"><path d="m8.6 17.4-1 2.6M12.6 17.4l-1 2.6M16.6 17.4l-1 2.6"/></g></svg>`;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="#F1E6B0" d="M19.6 14.6A7.9 7.9 0 0 1 9.4 4.4a7.9 7.9 0 1 0 10.2 10.2z"/></svg>`;
+}
+function lineGlyph(k, color){
+  const a = `fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  if(k==='clear') return `<svg viewBox="0 0 24 24"><g ${a}><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg>`;
+  if(k==='cloudy') return `<svg viewBox="0 0 24 24"><g ${a}><path d="M7.5 18.5h9.8a3.8 3.8 0 0 0 .4-7.58A5.5 5.5 0 0 0 7.2 9.6a4.45 4.45 0 0 0 .3 8.9z"/></g></svg>`;
+  if(k==='rain') return `<svg viewBox="0 0 24 24"><g ${a}><path d="M7.4 14.5h9.6a3.7 3.7 0 0 0 .5-7.37A5.3 5.3 0 0 0 7 6.8a3.9 3.9 0 0 0 .4 7.7zM9 17.5l-.9 2.4M13 17.5l-.9 2.4M17 17.5l-.9 2.4"/></g></svg>`;
+  return `<svg viewBox="0 0 24 24"><g ${a}><path d="M19.2 14.8A7.6 7.6 0 0 1 9.2 4.8a7.6 7.6 0 1 0 10 10z"/></g></svg>`;
+}
+/* MaterialShapes-like outlines: r(θ) = R·(1 + a·cos(nθ)) sampled into a smooth path */
+function shapePath(kind){
+  const R = 24, cx = 26, cy = 26;
+  const p = {sunny:[8,.09], cookie:[9,.055], clover:[4,.16], circle:[1,0]}[kind];
+  const pts = [];
+  for(let i=0;i<=240;i++){
+    const t = i/240*Math.PI*2;
+    const r = R*(1 - p[1]) * (1 + p[1]*Math.cos(p[0]*t + (kind==='clover'?Math.PI/4:0)));
+    pts.push([cx + r*Math.cos(t - Math.PI/2), cy + r*Math.sin(t - Math.PI/2)]);
+  }
+  return 'M' + pts.map(q => q[0].toFixed(2)+' '+q[1].toFixed(2)).join('L') + 'Z';
+}
+
+function tools(){
+  const t = document.getElementById('ico').content;
+  return ['search','amb','gear'].map(k => `<span class="ib">${t.querySelector(`[data-k="${k}"]`).outerHTML}</span>`).join('');
+}
+
+function right(opt){
+  const w = WX[S.wx];
+  const clock = '<span class="num">20:08</span>';
+  if(opt==='o1'){
+    const wx = w ? `<span class="div"></span><span class="wx">${colorGlyph(S.wx,22)}<span class="num">${w.t}</span></span>` : '<span class="div"></span>';
+    return `<div class="tools glass">${tools()}${wx}<span class="clk num">20:08</span></div>`;
+  }
+  if(opt==='o2'){
+    const chip = w ? `<div class="chip" style="--wxbg:${w.bg};--wxfg:${w.fg}">${colorGlyph(S.wx,24)}<span class="num">${w.t}</span><small>${w.name}</small></div>` : '';
+    return `<div class="tools glass">${tools()}</div>${chip}<span class="clk shadow">${clock}</span>`;
+  }
+  if(opt==='o3'){
+    const sh = w ? `<div class="shape" style="--shp:${w.shp}"><svg class="s" viewBox="0 0 52 52"><path d="${shapePath(w.shape)}"/></svg><span class="g">${lineGlyph(S.wx, w.on)}</span></div><span class="t num shadow">${w.t}</span><span class="sep"></span>` : '';
+    return `<div class="tools glass">${tools()}</div><div style="display:flex;align-items:center;gap:10px;margin-left:6px">${sh}<span class="clk shadow">${clock}</span></div>`;
+  }
+  const wx = w ? `<span class="wx shadow">${colorGlyph(S.wx,26)}<span class="num">${w.t}</span></span><span class="vr"></span>` : '';
+  return `<div class="tools">${tools()}</div><div class="stat">${wx}<div class="tblk shadow"><b class="num">20:08</b><span>11月6日 周五 · 九月廿八</span></div></div>`;
+}
+
+function tvHTML(opt, bg){
+  const bright = bg==='bright';
+  return `<div class="bd"></div><div class="scrim"></div><div class="band"${opt!=='o1'?' style="display:block"':''}></div>
+  <div class="hero"><div class="src"><i></i>云相册 · 精选</div><div class="ttl">${bright?'冰川来信':'北境极光'}</div><div class="meta">自然 · 航拍 · 4K HDR</div>
+  <div class="btns"><div class="btn p">▶ 播放</div><div class="btn s">＋ 片单</div></div><div class="dots"><b></b><b></b><b></b></div></div>
+  <div class="row"><div></div><div></div><div></div><div></div></div>
+  <div class="tabs glass"><span class="on">主页</span><span>应用</span><span>小组件</span></div>
+  <div class="right">${right(opt)}</div>`;
+}
+
+function render(){
+  document.querySelectorAll('.tv').forEach(tv => {
+    const opt = [...tv.classList].find(c => /^o\d$/.test(c));
+    const bg = tv.dataset.fix || S.bg;
+    tv.dataset.bg = bg;
+    tv.innerHTML = tvHTML(opt, bg);
+  });
+  fit();
+}
+function fit(){
+  document.querySelectorAll('.stage').forEach(st => {
+    const tv = st.querySelector('.tv'); tv.style.transform = `scale(${st.clientWidth/960})`;
+  });
+  document.querySelectorAll('.zoom .z').forEach(z => {
+    const tv = z.querySelector('.tv'); const s = z.clientWidth/560;
+    tv.style.transform = `scale(${s}) translate(-400px,-8px)`;
+  });
+}
+document.querySelectorAll('.seg [data-k]').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  S[g.dataset.k] = b.dataset.v;
+  g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+  render();
+}));
+addEventListener('resize', fit);
+render();
+</script>
+</body>
+</html>

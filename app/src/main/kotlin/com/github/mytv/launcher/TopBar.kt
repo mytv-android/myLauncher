@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,8 +58,6 @@ fun TopBar(
     onSearch: () -> Unit,
     onAmbient: () -> Unit,
     modifier: Modifier = Modifier,
-    dateText: String = "",
-    lunarText: String = "",
     weatherVisible: Boolean = false,
     weatherTempC: Int? = null,
     weatherCode: Int? = null,
@@ -116,6 +115,8 @@ fun TopBar(
             }
         }
         Spacer(Modifier.weight(1f))
+        // 工具与状态合成一块玻璃（用户选定的顶栏方案 A）：搜索、环境模式、快速设置，
+        // 分隔线后是天气与时钟；状态部分不可聚焦。日期与农历在快速设置的标题行。
         GlassSurface(
             tier = tier,
             colors = colors,
@@ -125,7 +126,7 @@ fun TopBar(
             chromeAlpha = chromeAlpha,
         ) {
             Row(
-                modifier = Modifier.height(46.dp).padding(horizontal = 6.dp),
+                modifier = Modifier.height(46.dp).padding(start = 6.dp, end = 18.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -150,34 +151,25 @@ fun TopBar(
                     onClick = onSettings,
                     glyph = Glyphs.GEAR,
                 )
+                StatusInline(
+                    colors = colors,
+                    clockText = clockText,
+                    weatherVisible = weatherVisible,
+                    weatherTempC = weatherTempC,
+                    weatherCode = weatherCode,
+                    weatherIsDay = weatherIsDay,
+                    highContrast = highContrast,
+                )
             }
         }
-        Spacer(Modifier.width(12.dp))
-        StatusPlate(
-            tier = tier,
-            colors = colors,
-            hazeInput = hazeInput,
-            chromeAlpha = chromeAlpha,
-            dateText = dateText,
-            lunarText = lunarText,
-            clockText = clockText,
-            weatherVisible = weatherVisible,
-            weatherTempC = weatherTempC,
-            weatherCode = weatherCode,
-            weatherIsDay = weatherIsDay,
-            highContrast = highContrast,
-        )
     }
 }
 
+private val TabularNumbers = TextStyle(fontFeatureSettings = "tnum")
+
 @Composable
-private fun StatusPlate(
-    tier: GlassTier,
+private fun StatusInline(
     colors: LauncherColors,
-    hazeInput: HazeInput?,
-    chromeAlpha: Float,
-    dateText: String,
-    lunarText: String,
     clockText: String,
     weatherVisible: Boolean,
     weatherTempC: Int?,
@@ -186,73 +178,50 @@ private fun StatusPlate(
     highContrast: Boolean,
 ) {
     val look = weatherCode?.let { lookOf(it) }
-    val showWeather = weatherVisible && weatherTempC != null
-    val temperature = weatherTempC?.let { "$it°" }
+    val temperature = weatherTempC?.takeIf { weatherVisible }?.let { "$it°" }
     val label = look?.let { stringResource(it.label) }
-    GlassSurface(
-        tier = tier,
-        colors = colors,
-        input = hazeInput,
-        style = GlassStyle.Chrome,
-        shape = RoundedCornerShape(23.dp),
-        chromeAlpha = chromeAlpha,
-    ) {
+    Box(
+        modifier = Modifier
+            .padding(start = 8.dp, end = 12.dp)
+            .width(1.dp)
+            .height(18.dp)
+            .background(colors.onSurface.copy(alpha = 0.24f)),
+    )
+    if (temperature != null) {
         Row(
             modifier = Modifier
-                .height(46.dp)
-                .padding(start = if (showWeather) 14.dp else 18.dp, end = 18.dp),
+                .padding(end = 12.dp)
+                .semantics { contentDescription = listOfNotNull(label, temperature).joinToString(" ") },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (showWeather && temperature != null) {
-                Row(
-                    modifier = Modifier.semantics {
-                        contentDescription = listOfNotNull(label, temperature).joinToString(" ")
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (look != null) {
-                        WeatherGlyph(
-                            sky = look.sky,
-                            code = weatherCode ?: 0,
-                            isDay = weatherIsDay,
-                            cloudColor = colors.onSurfaceVariant,
-                            size = 24.dp,
-                            highContrast = highContrast,
-                        )
-                        Spacer(Modifier.width(6.dp))
-                    }
-                    Text(
-                        text = temperature,
-                        color = colors.onSurface,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 14.dp)
-                        .width(1.dp)
-                        .height(18.dp)
-                        .background(colors.onSurface.copy(alpha = 0.24f)),
+            if (look != null) {
+                WeatherGlyph(
+                    sky = look.sky,
+                    code = weatherCode ?: 0,
+                    isDay = weatherIsDay,
+                    cloudColor = colors.onSurfaceVariant,
+                    size = 22.dp,
+                    highContrast = highContrast,
                 )
+                Spacer(Modifier.width(6.dp))
             }
-            val grouped = if (lunarText.isBlank()) dateText else "$dateText · $lunarText"
             Text(
-                text = grouped,
-                color = colors.onSurfaceVariant,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = clockText,
+                text = temperature,
                 color = colors.onSurface,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.testTag("clock"),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                style = TabularNumbers,
             )
         }
     }
+    Text(
+        text = clockText,
+        color = colors.onSurface,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+        style = TabularNumbers,
+        modifier = Modifier.testTag("clock"),
+    )
 }
 
 @Composable

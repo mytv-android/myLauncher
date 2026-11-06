@@ -961,7 +961,7 @@ class LauncherModel(context: Context) {
         colorSource = settingsValues["color_source"] ?: "content",
         glassTier = settingsValues["glass_tier"] ?: "auto",
         schemeStyle = settingsValues["scheme_style"] ?: "tonal",
-        clock = clockText,
+        date = if (lunarText.isBlank()) dateText else "$dateText · $lunarText",
         volume = qsVolume,
         volumeMax = qsVolumeMax,
         muted = qsMuted,

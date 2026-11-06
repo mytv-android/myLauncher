@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +32,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +56,8 @@ data class QuickSettingsValues(
     val colorSource: String = "content",
     val glassTier: String = "auto",
     val schemeStyle: String = "tonal",
-    val clock: String = "",
+    /** 「11月6日 周五 · 九月廿八」：顶栏只放时钟，日期与农历在快速设置标题下。 */
+    val date: String = "",
     val volume: Int = 0,
     val volumeMax: Int = 15,
     val muted: Boolean = false,
@@ -142,12 +147,12 @@ fun QuickSettingsOverlay(
                     .fillMaxHeight()
                     .padding(start = 18.dp, top = 16.dp, end = 18.dp, bottom = 14.dp)
                     .testTag("qs"),
-                verticalArrangement = Arrangement.spacedBy(9.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Header(values, colors, onLauncherSettings)
                 val tileRows = rows.filter { row -> row.any { it in TILE_TAGS } }
-                // 原型磁贴高 46；多出第四行时压到 40，面板不滚动也能放下全部条目
-                val tileHeight = if (tileRows.size > 3) 40.dp else 46.dp
+                // 原型磁贴高 46；多出第四行（儿童 / 长辈模式、可用勿扰）时压到 36，面板不滚动也能放下全部条目
+                val tileHeight = if (tileRows.size > 3) 36.dp else 46.dp
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (row in tileRows) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -197,33 +202,43 @@ fun QuickSettingsOverlay(
     }
 }
 
+/** 标题与日期不加字体内边距，两行贴紧。 */
+private val TightLines = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+
 private val TILE_TAGS = setOf(
     "qs:wifi", "qs:bt", "qs:dnd", "qs:ambient", "qs:inputs", "qs:saver", "qs:parent", "qs:transfer",
 )
 
 @Composable
 private fun Header(values: QuickSettingsValues, colors: LauncherColors, onLauncherSettings: () -> Unit) {
+    // 两行（标题、日期与农历）按内容定高：中文走回退字体，系统会按回退字体的字高放大行距，固定行高会裁掉第二行
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(30.dp),
+            .heightIn(min = 30.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResource(DsR.string.quick_settings_title),
-            color = colors.onSurface,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.ExtraBold,
-        )
-        if (values.clock.isNotEmpty()) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = values.clock,
-                color = colors.onSurfaceVariant,
-                fontSize = 13.sp,
-                modifier = Modifier.padding(start = 10.dp, top = 3.dp),
+                text = stringResource(DsR.string.quick_settings_title),
+                color = colors.onSurface,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.ExtraBold,
+                style = TightLines,
             )
+            if (values.date.isNotEmpty()) {
+                Text(
+                    text = values.date,
+                    color = colors.onSurfaceVariant,
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    style = TightLines,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.width(8.dp))
         val shape = RoundedCornerShape(15.dp)
         TvFocusable(
             tag = "qs:launcher_settings",
