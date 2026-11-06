@@ -30,6 +30,7 @@ kotlin {
 dependencies {
     api(project(":core:designsystem"))
     api(project(":core:tvfocus"))
+    api(project(":core:glass"))
     api(project(":data:widgets"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui)

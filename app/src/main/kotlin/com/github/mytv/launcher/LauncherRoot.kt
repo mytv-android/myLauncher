@@ -69,6 +69,7 @@ fun LauncherRoot(model: LauncherModel) {
     val overlay = model.overlay
     val tier = model.glassTier
     val hazeState = rememberHazeState()
+    val widgetsHost = com.github.mytv.feature.widgets.rememberWidgetsHost(model.widgetsRepository)
     val hazeInput = remember(hazeState, tier) {
         if (tier == GlassTier.T1) {
             HazeInput.Sources(
@@ -465,8 +466,12 @@ fun LauncherRoot(model: LauncherModel) {
             "widgets" -> com.github.mytv.feature.widgets.WidgetsScreen(
                 repository = model.widgetsRepository,
                 enabled = overlay == null,
+                host = widgetsHost,
                 weatherText = if (model.weatherVisible && model.weatherTempC != null) {
-                    "${model.weatherTempC}°"
+                    // 「多云 19°」：天气状况与气温（原型 .wdg-sub）
+                    val look = model.weatherCode?.let { com.github.mytv.data.weather.lookOf(it) }
+                    val label = look?.let { stringResource(it.label) }
+                    listOfNotNull(label, "${model.weatherTempC}°").joinToString(" ")
                 } else {
                     null
                 },
@@ -525,6 +530,18 @@ fun LauncherRoot(model: LauncherModel) {
             backdrop = model.backdropSource,
             highContrast = model.highContrastFocus,
         )
+
+        if (page == "widgets") {
+            // 小组件选择器等浮层画在顶栏之上（原型 .tv-pk 是 top 14 的右侧面板）
+            com.github.mytv.feature.widgets.WidgetsOverlayLayer(
+                repository = model.widgetsRepository,
+                host = widgetsHost,
+                tier = tier,
+                colors = model.theme.colors.value,
+                input = hazeInput,
+                clockText = model.clockText,
+            )
+        }
 
         if (overlay == "quick_settings") {
             QuickSettingsOverlay(

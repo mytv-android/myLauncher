@@ -8,6 +8,7 @@ import android.view.ViewTreeObserver
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -51,7 +52,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -75,6 +81,7 @@ import com.github.mytv.core.designsystem.LauncherCard
 import com.github.mytv.core.designsystem.LauncherCardFocused
 import com.github.mytv.core.designsystem.LauncherScrim
 import com.github.mytv.core.designsystem.LauncherSurfaceContainerHigh
+import com.github.mytv.core.designsystem.LocalLauncherColors
 import com.github.mytv.core.designsystem.launcherFastSpatialSpec
 import com.github.mytv.core.designsystem.launcherFocusRing
 import com.github.mytv.core.tvfocus.FocusEntry
@@ -201,40 +208,6 @@ fun WidgetsScreen(
                 onBuiltinClock = onBuiltinClock,
                 modifier = Modifier.fillMaxSize(),
             )
-        }
-
-        when (ui.overlay) {
-            WidgetOverlay.PICKER -> PickerOverlay(
-                providers = providers,
-                label = repository::providerLabel,
-                providerTag = repository::providerTag,
-                onPick = host::selectProvider,
-                onDismiss = host::dismissOverlay,
-            )
-
-            WidgetOverlay.AUTH -> AuthOverlay(
-                onAdb = host::authShowAdb,
-                onCancel = host::authCancel,
-            )
-
-            WidgetOverlay.ADB -> AdbOverlay(
-                onDone = host::authDone,
-                onBack = host::authBack,
-                onDismiss = host::dismissOverlay,
-            )
-
-            WidgetOverlay.MENU -> {
-                val id = ui.menuBindingId
-                if (id != null) {
-                    MenuOverlay(
-                        actions = host.menuActions(id),
-                        onAction = host::onMenuAction,
-                        onDismiss = host::dismissOverlay,
-                    )
-                }
-            }
-
-            WidgetOverlay.NONE -> Unit
         }
     }
 }
@@ -425,33 +398,42 @@ private fun BuiltinClockTile(
         onClick = onClick,
         modifier = modifier,
     ) { focused ->
+        val colors = LocalLauncherColors.current.value
+        val radius by animateDpAsState(if (focused) 30.dp else 24.dp, launcherFastSpatialSpec(), label = "clockRadius")
+        val shape = RoundedCornerShape(radius)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(WidgetShape)
-                .background(if (focused) LauncherCardFocused else LauncherCard)
-                .launcherFocusRing(focused, WidgetShape)
-                .padding(16.dp),
+                .clip(shape)
+                .background(colors.surfaceContainerHigh.copy(alpha = if (focused) 0.92f else 0.66f))
+                .launcherFocusRing(focused, shape)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
-                text = text,
-                color = Color.White,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
+                text = title,
+                color = colors.onSurfaceVariant,
+                fontSize = 11.sp,
+                lineHeight = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.4.sp,
             )
             Text(
-                text = title,
-                color = Color.White.copy(alpha = 0.7f),
-                fontSize = 13.sp,
+                text = text,
+                color = colors.onSurface,
+                fontSize = 38.sp,
+                lineHeight = 40.sp,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier.padding(top = 4.dp),
             )
             if (!weatherText.isNullOrEmpty()) {
                 Text(
                     text = weatherText,
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    color = colors.onSurfaceVariant,
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
         }
@@ -468,26 +450,46 @@ private fun AddTile(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = 
         onClick = onClick,
         modifier = modifier,
     ) { focused ->
+        val colors = LocalLauncherColors.current.value
+        val radius by animateDpAsState(if (focused) 30.dp else 24.dp, launcherFastSpatialSpec(), label = "addRadius")
+        val shape = RoundedCornerShape(radius)
+        val ink = if (focused) colors.onSurface else colors.onSurfaceVariant
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(WidgetShape)
-                .background(LauncherSurfaceContainerHigh)
-                .launcherFocusRing(focused, WidgetShape),
+                .clip(shape)
+                .background(if (focused) colors.surfaceContainerHigh.copy(alpha = 0.66f) else Color.Transparent)
+                .drawBehind {
+                    if (!focused) {
+                        val w = 2.dp.toPx()
+                        val r = radius.toPx()
+                        drawRoundRect(
+                            color = colors.onSurface.copy(alpha = 0.30f),
+                            topLeft = Offset(w / 2, w / 2),
+                            size = Size(size.width - w, size.height - w),
+                            cornerRadius = CornerRadius(r, r),
+                            style = Stroke(
+                                width = w,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx())),
+                            ),
+                        )
+                    }
+                }
+                .launcherFocusRing(focused, shape),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Canvas(modifier = Modifier.size(22.dp)) {
-                val stroke = 2.dp.toPx()
+            Canvas(modifier = Modifier.size(24.dp)) {
+                val stroke = 1.6.dp.toPx()
                 drawLine(
-                    color = Color.White,
+                    color = ink,
                     start = Offset(size.width / 2f, 0f),
                     end = Offset(size.width / 2f, size.height),
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
                 drawLine(
-                    color = Color.White,
+                    color = ink,
                     start = Offset(0f, size.height / 2f),
                     end = Offset(size.width, size.height / 2f),
                     strokeWidth = stroke,
@@ -497,7 +499,7 @@ private fun AddTile(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.widgets_add),
-                color = Color.White,
+                color = ink,
                 fontSize = 13.sp,
             )
         }
@@ -856,213 +858,6 @@ private fun WidgetFocusable(
 }
 
 // ------------------------------------------------------------------ 浮层
-
-@Composable
-private fun PickerOverlay(
-    providers: List<AppWidgetProviderInfo>,
-    label: (AppWidgetProviderInfo) -> String,
-    providerTag: (AppWidgetProviderInfo) -> String,
-    onPick: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    OverlayScrim(onDismiss = onDismiss) {
-        Column(
-            modifier = Modifier
-                .width(640.dp)
-                .heightIn(max = 460.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(LauncherCard)
-                .padding(20.dp)
-                .testTag("picker"),
-        ) {
-            Text(
-                text = stringResource(R.string.widgets_add),
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OverlayItem(
-                    tag = "picker:builtin:clock",
-                    label = stringResource(WidgetsDataR.string.builtin_clock_title),
-                    onClick = { onPick(BuiltinWidgets.CLOCK) },
-                )
-                providers.forEach { info ->
-                    OverlayItem(
-                        tag = "picker:${providerTag(info)}",
-                        label = label(info),
-                        onClick = { onPick(providerTag(info)) },
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AuthOverlay(onAdb: () -> Unit, onCancel: () -> Unit) {
-    OverlayScrim(onDismiss = onCancel) {
-        Column(
-            modifier = Modifier
-                .width(640.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(LauncherCard)
-                .padding(24.dp)
-                .testTag("picker"),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.widget_auth_title),
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(R.string.widget_auth_body),
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 14.sp,
-            )
-            OverlayItem(
-                tag = "picker:auth:adb",
-                label = stringResource(R.string.widget_auth_adb),
-                onClick = onAdb,
-            )
-            OverlayItem(
-                tag = "picker:auth:cancel",
-                label = stringResource(R.string.cancel),
-                onClick = onCancel,
-            )
-        }
-    }
-}
-
-@Composable
-private fun AdbOverlay(onDone: () -> Unit, onBack: () -> Unit, onDismiss: () -> Unit) {
-    OverlayScrim(onDismiss = onDismiss) {
-        Column(
-            modifier = Modifier
-                .width(680.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(LauncherCard)
-                .padding(24.dp)
-                .testTag("picker"),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.widget_auth_adb),
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(R.string.widget_auth_adb_body),
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 14.sp,
-            )
-            Text(
-                text = stringResource(R.string.widget_auth_command),
-                color = Color.White,
-                fontSize = 13.sp,
-            )
-            OverlayItem(
-                tag = "picker:adb:done",
-                label = stringResource(R.string.widget_auth_done),
-                onClick = onDone,
-            )
-            OverlayItem(
-                tag = "picker:adb:back",
-                label = stringResource(R.string.back),
-                onClick = onBack,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MenuOverlay(
-    actions: List<WidgetMenuAction>,
-    onAction: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LauncherScrim)
-            .pointerInput(Unit) {
-                detectTapGestures { onDismiss() }
-            },
-    ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 64.dp)
-                .width(340.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(LauncherCard)
-                .padding(16.dp)
-                .testTag("menu"),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            actions.forEach { action ->
-                OverlayItem(
-                    tag = action.tag,
-                    label = stringResource(action.labelRes),
-                    onClick = { onAction(action.tag) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun OverlayScrim(onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LauncherScrim)
-            .pointerInput(Unit) {
-                detectTapGestures { onDismiss() }
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures { }
-            },
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun OverlayItem(tag: String, label: String, onClick: () -> Unit) {
-    TvFocusable(
-        tag = tag,
-        scaleOnFocus = 1.02f,
-        shape = RoundedCornerShape(14.dp),
-        onClick = onClick,
-    ) { focused ->
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (focused) LauncherCardFocused else LauncherSurfaceContainerHigh)
-                .launcherFocusRing(focused, RoundedCornerShape(14.dp))
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Text(text = label, color = Color.White, fontSize = 16.sp)
-        }
-    }
-}
 
 // ------------------------------------------------------------------ 主页速览
 
