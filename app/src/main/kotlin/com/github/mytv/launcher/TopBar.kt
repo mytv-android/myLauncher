@@ -1,6 +1,5 @@
 package com.github.mytv.launcher
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,11 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
@@ -33,7 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.mytv.core.ambient.BackdropSource
+import com.github.mytv.core.designsystem.Glyphs
 import com.github.mytv.core.designsystem.LauncherColors
+import com.github.mytv.core.designsystem.LauncherGlyph
 import com.github.mytv.core.designsystem.LocalLauncherColors
 import com.github.mytv.core.designsystem.RowLeft
 import com.github.mytv.core.designsystem.launcherFocusRing
@@ -57,6 +54,8 @@ fun TopBar(
     hazeInput: HazeInput?,
     onTab: (String) -> Unit,
     onSettings: () -> Unit,
+    onSearch: () -> Unit,
+    onAmbient: () -> Unit,
     modifier: Modifier = Modifier,
     dateText: String = "",
     lunarText: String = "",
@@ -134,22 +133,22 @@ fun TopBar(
                     tag = "nav:search",
                     enabled = enabled,
                     colors = colors,
-                    onClick = {},
-                    draw = { drawSearch(it) },
+                    onClick = onSearch,
+                    glyph = Glyphs.SEARCH,
                 )
                 CapsuleIcon(
                     tag = "nav:ambient",
                     enabled = enabled,
                     colors = colors,
-                    onClick = {},
-                    draw = { drawAmbient(it) },
+                    onClick = onAmbient,
+                    glyph = Glyphs.AMBIENT,
                 )
                 CapsuleIcon(
                     tag = "nav:settings",
                     enabled = enabled,
                     colors = colors,
                     onClick = onSettings,
-                    draw = { drawSettings(it) },
+                    glyph = Glyphs.GEAR,
                 )
             }
         }
@@ -368,7 +367,7 @@ private fun CapsuleIcon(
     enabled: Boolean,
     colors: LauncherColors,
     onClick: () -> Unit,
-    draw: DrawScope.(Color) -> Unit,
+    glyph: String,
 ) {
     val shape = RoundedCornerShape(12.dp)
     TvFocusable(
@@ -387,57 +386,13 @@ private fun CapsuleIcon(
                 .padding(9.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Canvas(modifier = Modifier.size(20.dp)) {
-                draw(if (focused) colors.surface else colors.onSurface)
-            }
+            LauncherGlyph(
+                path = glyph,
+                color = if (focused) colors.surface else colors.onSurface,
+                size = 20.dp,
+                stroke = 2f,
+            )
         }
     }
 }
 
-private fun DrawScope.drawSearch(color: Color) {
-    val stroke = 1.8.dp.toPx()
-    drawCircle(
-        color = color,
-        radius = size.minDimension * 0.30f,
-        center = Offset(size.width * 0.43f, size.height * 0.43f),
-        style = Stroke(width = stroke),
-    )
-    drawLine(
-        color = color,
-        start = Offset(size.width * 0.64f, size.height * 0.64f),
-        end = Offset(size.width * 0.86f, size.height * 0.86f),
-        strokeWidth = stroke,
-        cap = StrokeCap.Round,
-    )
-}
-
-private fun DrawScope.drawAmbient(color: Color) {
-    val cx = size.width / 2f
-    val cy = size.height / 2f
-    val outer = size.minDimension * 0.44f
-    val inner = size.minDimension * 0.12f
-    val path = androidx.compose.ui.graphics.Path().apply {
-        moveTo(cx, cy - outer)
-        quadraticTo(cx + inner, cy - inner, cx + outer, cy)
-        quadraticTo(cx + inner, cy + inner, cx, cy + outer)
-        quadraticTo(cx - inner, cy + inner, cx - outer, cy)
-        quadraticTo(cx - inner, cy - inner, cx, cy - outer)
-        close()
-    }
-    drawPath(path, color)
-}
-
-private fun DrawScope.drawSettings(color: Color) {
-    val stroke = 1.8.dp.toPx()
-    val center = Offset(size.width / 2f, size.height / 2f)
-    drawCircle(color = color, radius = size.minDimension * 0.30f, center = center, style = Stroke(width = stroke))
-    drawCircle(color = color, radius = size.minDimension * 0.10f, center = center)
-    for (i in 0 until 6) {
-        val angle = Math.toRadians(i * 60.0)
-        val sx = center.x + kotlin.math.cos(angle).toFloat() * size.minDimension * 0.30f
-        val sy = center.y + kotlin.math.sin(angle).toFloat() * size.minDimension * 0.30f
-        val ex = center.x + kotlin.math.cos(angle).toFloat() * size.minDimension * 0.44f
-        val ey = center.y + kotlin.math.sin(angle).toFloat() * size.minDimension * 0.44f
-        drawLine(color, Offset(sx, sy), Offset(ex, ey), strokeWidth = stroke, cap = StrokeCap.Round)
-    }
-}

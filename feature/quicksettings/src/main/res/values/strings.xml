@@ -20,4 +20,8 @@
     <string name="qs_parent">家长</string>
     <string name="qs_transfer">传文件</string>
     <string name="qs_ambient">环境模式</string>
+    <string name="qs_style_tonal">Tonal</string>
+    <string name="qs_style_content">Content</string>
+    <string name="qs_style_vibrant">Vibrant</string>
+    <string name="qs_style_expressive">Express</string>
 </resources>

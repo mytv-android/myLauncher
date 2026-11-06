@@ -122,7 +122,10 @@ fun GlassSurface(
     var position by remember { mutableStateOf(Offset.Zero) }
     val surface = when (tier) {
         GlassTier.T1 -> if (input != null) {
-            Modifier.hazeBlur(input = input, style = styleFor(style, colors, chromeAlpha))
+            // 靠屏幕边缘的大面板：模糊在屏幕边界外取样为透明，边缘一圈会透出没有参与模糊的内容层
+            // （顶栏、卡片），先垫一层不透明底色
+            val base = if (style == GlassStyle.Panel) Modifier.background(colors.surface) else Modifier
+            base.hazeBlur(input = input, style = styleFor(style, colors, chromeAlpha))
         } else {
             Modifier.background(tint.first)
         }

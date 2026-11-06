@@ -848,6 +848,29 @@ class LauncherModel(context: Context) {
         enterIdle("ambient")
     }
 
+    /** 系统搜索（Google TV 上是 Katniss）：先找全局搜索，再找 ASSIST；占位桩应用不算。 */
+    private fun searchIntent(): Intent? {
+        val pm = appContext.packageManager
+        for (action in listOf(android.app.SearchManager.INTENT_ACTION_GLOBAL_SEARCH, Intent.ACTION_ASSIST)) {
+            val intent = Intent(action)
+            val info = pm.resolveActivity(intent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY) ?: continue
+            val pkg = info.activityInfo?.packageName ?: continue
+            if (pkg == "android" || pkg.endsWith(".frameworkpackagestubs")) continue
+            return intent.setPackage(pkg)
+        }
+        return null
+    }
+
+    fun openSearch(): Boolean {
+        val intent = searchIntent() ?: return false
+        return try {
+            appContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun openWifiSettings() {
         overlay = null
         val intents = listOf(
@@ -878,28 +901,139 @@ class LauncherModel(context: Context) {
         }
     }
 
-    fun toggleDnd() {
-        val audio = appContext.getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager ?: return
-        val next = if (audio.ringerMode == android.media.AudioManager.RINGER_MODE_SILENT) {
-            android.media.AudioManager.RINGER_MODE_NORMAL
-        } else {
-            android.media.AudioManager.RINGER_MODE_SILENT
+    // ---- 快速设置的实时状态（§14：Wi-Fi / 蓝牙显示状态，音量粗轨滑块，勿扰直接生效）
+    var qsVolume by mutableIntStateOf(0)
+        private set
+    var qsVolumeMax by mutableIntStateOf(15)
+        private set
+    var qsMuted by mutableStateOf(false)
+        private set
+    var qsWifiOn by mutableStateOf(false)
+        private set
+    var qsBluetoothOn by mutableStateOf(false)
+        private set
+    var qsDndOn by mutableStateOf(false)
+        private set
+    var qsDndAvailable by mutableStateOf(false)
+        private set
+
+    private val audioManager: android.media.AudioManager?
+        get() = appContext.getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager
+
+    private val notificationManager: android.app.NotificationManager?
+        get() = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager
+
+    private fun dndPolicyPage(): Intent? {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+        return if (intent.resolveActivity(appContext.packageManager) != null) intent else null
+    }
+
+    fun refreshQuickSettings() {
+        val audio = audioManager
+        if (audio != null) {
+            val stream = android.media.AudioManager.STREAM_MUSIC
+            qsVolumeMax = audio.getStreamMaxVolume(stream).coerceAtLeast(1)
+            qsVolume = audio.getStreamVolume(stream)
+            qsMuted = audio.isStreamMute(stream)
         }
+        val cr = appContext.contentResolver
+        qsWifiOn = try {
+            (appContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager)
+                ?.isWifiEnabled
+                ?: (Settings.Global.getInt(cr, Settings.Global.WIFI_ON, 0) != 0)
+        } catch (_: Exception) {
+            Settings.Global.getInt(cr, Settings.Global.WIFI_ON, 0) != 0
+        }
+        qsBluetoothOn = try {
+            Settings.Global.getInt(cr, Settings.Global.BLUETOOTH_ON, 0) != 0
+        } catch (_: Exception) {
+            false
+        }
+        val nm = notificationManager
+        val granted = nm?.isNotificationPolicyAccessGranted == true
+        qsDndAvailable = granted || dndPolicyPage() != null
+        qsDndOn = nm != null &&
+            nm.currentInterruptionFilter != android.app.NotificationManager.INTERRUPTION_FILTER_ALL &&
+            nm.currentInterruptionFilter != android.app.NotificationManager.INTERRUPTION_FILTER_UNKNOWN
+    }
+
+    fun quickSettingsValues() = com.github.mytv.feature.quicksettings.QuickSettingsValues(
+        colorSource = settingsValues["color_source"] ?: "content",
+        glassTier = settingsValues["glass_tier"] ?: "auto",
+        schemeStyle = settingsValues["scheme_style"] ?: "tonal",
+        clock = clockText,
+        volume = qsVolume,
+        volumeMax = qsVolumeMax,
+        muted = qsMuted,
+        wifiOn = qsWifiOn,
+        bluetoothOn = qsBluetoothOn,
+        dndOn = qsDndOn,
+        dndAvailable = qsDndAvailable,
+        restricted = restrictedMode == "kids" || restrictedMode == "elders",
+    )
+
+    /** 快速设置打开期间每 0.5 秒同步一次（遥控器音量键、系统里改了 Wi-Fi 等）。 */
+    private suspend fun quickSettingsLoop() {
+        while (overlay == "quick_settings") {
+            refreshQuickSettings()
+            delay(500L)
+        }
+    }
+
+    /**
+     * 勿扰：已获勿扰权限时直接切换系统的打扰模式（仅允许优先打扰 ↔ 全部）；
+     * 没有权限时打开系统的授权页。两者都没有的设备上不显示这一项。
+     */
+    fun toggleDnd() {
+        val nm = notificationManager ?: return
+        if (nm.isNotificationPolicyAccessGranted) {
+            val next = if (qsDndOn) {
+                android.app.NotificationManager.INTERRUPTION_FILTER_ALL
+            } else {
+                android.app.NotificationManager.INTERRUPTION_FILTER_PRIORITY
+            }
+            try {
+                nm.setInterruptionFilter(next)
+            } catch (_: Exception) {
+            }
+            refreshQuickSettings()
+            return
+        }
+        val page = dndPolicyPage() ?: return
+        overlay = null
         try {
-            audio.ringerMode = next
+            appContext.startActivity(page.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (_: Exception) {
         }
     }
 
+    /** 音量滑块的左右键；不弹系统音量条，数值显示在滑块上。 */
     fun adjustVolume(delta: Int) {
-        val audio = appContext.getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager
-            ?: return
-        audio.adjustStreamVolume(
-            android.media.AudioManager.STREAM_MUSIC,
-            if (delta > 0) android.media.AudioManager.ADJUST_RAISE
-            else android.media.AudioManager.ADJUST_LOWER,
-            android.media.AudioManager.FLAG_SHOW_UI,
-        )
+        val audio = audioManager ?: return
+        try {
+            audio.adjustStreamVolume(
+                android.media.AudioManager.STREAM_MUSIC,
+                if (delta > 0) android.media.AudioManager.ADJUST_RAISE
+                else android.media.AudioManager.ADJUST_LOWER,
+                0,
+            )
+        } catch (_: Exception) {
+        }
+        refreshQuickSettings()
+    }
+
+    /** 音量滑块上按 OK：静音 / 取消静音。 */
+    fun toggleMute() {
+        val audio = audioManager ?: return
+        try {
+            audio.adjustStreamVolume(
+                android.media.AudioManager.STREAM_MUSIC,
+                android.media.AudioManager.ADJUST_TOGGLE_MUTE,
+                0,
+            )
+        } catch (_: Exception) {
+        }
+        refreshQuickSettings()
     }
 
     fun openInputs() {
@@ -1471,7 +1605,9 @@ class LauncherModel(context: Context) {
         homeReset = false
         overlayReturnTag = focus.current?.tag
         overlay = "quick_settings"
-        focus.request("qs:source")
+        refreshQuickSettings()
+        focus.request(com.github.mytv.feature.quicksettings.QUICK_SETTINGS_FIRST_FOCUS)
+        scope.launch { quickSettingsLoop() }
     }
 
     fun openSettings() {

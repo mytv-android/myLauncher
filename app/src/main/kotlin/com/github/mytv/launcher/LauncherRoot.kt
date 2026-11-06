@@ -47,6 +47,7 @@ import com.github.mytv.feature.organizer.ConfirmPhoneOverlay
 import com.github.mytv.feature.organizer.PhoneOrganizerScreen
 import com.github.mytv.feature.quicksettings.QuickSettingsOverlay
 import com.github.mytv.feature.quicksettings.QuickSettingsValues
+import com.github.mytv.feature.quicksettings.quickSettingsRows
 import com.github.mytv.feature.settings.SettingsPage
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeSourceSelection
@@ -200,18 +201,22 @@ fun LauncherRoot(model: LauncherModel) {
                 return
             }
         }
-        if (model.overlay == "quick_settings" && (direction == FocusDirection.Up || direction == FocusDirection.Down)) {
-            val order = listOf(
-                "qs:source", "qs:glass", "qs:style", "qs:volume",
-                "qs:wifi", "qs:bt", "qs:dnd", "qs:inputs",
-                "qs:saver", "qs:parent", "qs:ambient", "qs:transfer",
-                "qs:launcher_settings",
-            )
-            val index = order.indexOf(focus.current?.tag)
-            if (index >= 0) {
-                val next = index + if (direction == FocusDirection.Down) 1 else -1
-                if (next in order.indices) {
-                    focus.request(order[next])
+        if (model.overlay == "quick_settings") {
+            // 面板是一张网格（feature:quicksettings 的 quickSettingsRows）：上下换行并保持列，左右在行内移动
+            val rows = quickSettingsRows(model.quickSettingsValues())
+            val tag = focus.current?.tag
+            val r = rows.indexOfFirst { tag in it }
+            if (r >= 0) {
+                val c = rows[r].indexOf(tag)
+                val target = when (direction) {
+                    FocusDirection.Up -> rows.getOrNull(r - 1)?.let { it[minOf(c, it.lastIndex)] }
+                    FocusDirection.Down -> rows.getOrNull(r + 1)?.let { it[minOf(c, it.lastIndex)] }
+                    FocusDirection.Left -> rows[r].getOrNull(c - 1)
+                    FocusDirection.Right -> rows[r].getOrNull(c + 1)
+                    else -> null
+                }
+                if (target != null) {
+                    focus.request(target)
                     playNav(direction)
                 } else {
                     playInvalid()
@@ -509,6 +514,8 @@ fun LauncherRoot(model: LauncherModel) {
             hazeInput = hazeInput,
             onTab = model::switchPage,
             onSettings = model::openQuickSettings,
+            onSearch = { model.openSearch() },
+            onAmbient = model::startAmbient,
             dateText = model.dateText,
             lunarText = model.lunarText,
             weatherVisible = model.weatherVisible,
@@ -521,11 +528,7 @@ fun LauncherRoot(model: LauncherModel) {
 
         if (overlay == "quick_settings") {
             QuickSettingsOverlay(
-                values = QuickSettingsValues(
-                    colorSource = model.settingsValues["color_source"] ?: "content",
-                    glassTier = model.settingsValues["glass_tier"] ?: "auto",
-                    schemeStyle = model.settingsValues["scheme_style"] ?: "tonal",
-                ),
+                values = model.quickSettingsValues(),
                 tier = tier,
                 colors = model.theme.colors.value,
                 input = hazeInput,
@@ -542,6 +545,7 @@ fun LauncherRoot(model: LauncherModel) {
                         "ambient" -> model.startAmbient()
                         "parent" -> model.openParentPin()
                         "transfer" -> model.openTransfer()
+                        "mute" -> model.toggleMute()
                         else -> Unit
                     }
                 },
