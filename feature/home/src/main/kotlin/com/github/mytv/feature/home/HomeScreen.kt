@@ -130,7 +130,8 @@ fun HomeScreen(
             items = heroItems,
             index = heroIndex,
             inWatchlist = heroInWatchlist,
-            enabled = enabled && !rowMode,
+            // 行内时 Hero 透明但按钮仍可接收焦点请求：BACK 链 行 → Hero → 顶栏（§09）
+            enabled = enabled,
             onPlay = onPlayHero,
             onToggleWatchlist = onToggleWatchlist,
             modifier = Modifier

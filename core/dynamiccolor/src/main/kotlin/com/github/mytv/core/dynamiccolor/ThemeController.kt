@@ -19,8 +19,10 @@ import kotlinx.coroutines.launch
 const val FIXED_SEED = -0x98af5c
 
 class ThemeController(private val scope: CoroutineScope) {
-    private var from = LauncherColors.Default
-    private var target = LauncherColors.Default
+    // 两端必须是快照状态：不带动画的切换（设置项变化）里 progress 已是 1、snapTo(1f) 不改值，
+    // 只有 from / target 本身可观察，colors 才会重算，屏幕与状态接口的 roles 才一致。
+    private var from by mutableStateOf(LauncherColors.Default)
+    private var target by mutableStateOf(LauncherColors.Default)
     private val progress = Animatable(1f)
     private var job: Job? = null
 
