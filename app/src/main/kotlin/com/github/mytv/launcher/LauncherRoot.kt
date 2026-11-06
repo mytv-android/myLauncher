@@ -44,6 +44,7 @@ import com.github.mytv.feature.home.MenuOverlay
 import com.github.mytv.feature.home.PickerOverlay
 import com.github.mytv.feature.organizer.ConfirmPhoneOverlay
 import com.github.mytv.feature.organizer.PhoneOrganizerScreen
+import com.github.mytv.feature.quicksettings.QUICK_SETTINGS_FIRST_FOCUS
 import com.github.mytv.feature.quicksettings.QuickSettingsOverlay
 import com.github.mytv.feature.quicksettings.QuickSettingsValues
 import com.github.mytv.feature.quicksettings.quickSettingsRows
@@ -206,23 +207,27 @@ fun LauncherRoot(model: LauncherModel) {
             val rows = quickSettingsRows(model.quickSettingsValues())
             val tag = focus.current?.tag
             val r = rows.indexOfFirst { tag in it }
-            if (r >= 0) {
-                val c = rows[r].indexOf(tag)
-                val target = when (direction) {
-                    FocusDirection.Up -> rows.getOrNull(r - 1)?.let { it[minOf(c, it.lastIndex)] }
-                    FocusDirection.Down -> rows.getOrNull(r + 1)?.let { it[minOf(c, it.lastIndex)] }
-                    FocusDirection.Left -> rows[r].getOrNull(c - 1)
-                    FocusDirection.Right -> rows[r].getOrNull(c + 1)
-                    else -> null
-                }
-                if (target != null) {
-                    focus.request(target)
-                    playNav(direction)
-                } else {
-                    playInvalid()
-                }
+            if (r < 0) {
+                // 焦点还没落进面板（打开瞬间）：面板是模态的，任何方向键都先把它接住
+                focus.request(QUICK_SETTINGS_FIRST_FOCUS)
+                playNav(direction)
                 return
             }
+            val c = rows[r].indexOf(tag)
+            val target = when (direction) {
+                FocusDirection.Up -> rows.getOrNull(r - 1)?.let { it[minOf(c, it.lastIndex)] }
+                FocusDirection.Down -> rows.getOrNull(r + 1)?.let { it[minOf(c, it.lastIndex)] }
+                FocusDirection.Left -> rows[r].getOrNull(c - 1)
+                FocusDirection.Right -> rows[r].getOrNull(c + 1)
+                else -> null
+            }
+            if (target != null) {
+                focus.request(target)
+                playNav(direction)
+            } else {
+                playInvalid()
+            }
+            return
         }
         if (model.overlay == "confirm_phone" && focus.current?.rowId == "confirm_phone" &&
             (direction == FocusDirection.Up || direction == FocusDirection.Down)

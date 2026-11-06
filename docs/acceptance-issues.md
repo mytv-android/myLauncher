@@ -430,3 +430,54 @@ api28 上 `snap()` 反复报 `STATE_MISMATCH：无障碍树 app:com.github.mytv.
 ### 状态
 
 用户授权修改工具包（2026-11-05），随 A-009/A-010 一起重新冻结。
+
+## A-012：D316 的 revokebind 在 api31g 上无效，授权一旦发生就无法再复现授权页
+
+- 发现于：M4，2026-11-06
+- 检查编号：D316（连带 D324、D325 在部分运行中被跳过）
+- 严重性：D316 在同一台设备上只能通过一次，之后每次运行都失败
+
+### 现象
+
+同一天的多次全量设备运行里，D316 只有第一次通过：
+
+- `acceptance/out/20261106-212205-M4-device-api31g`：D316 PASS。检查末尾执行了 `appwidget grantbind`。
+- `acceptance/out/20261106-214631-M4-device-api31g`：D316 FAIL，`授权页缺少 picker:auth:adb`。
+- `acceptance/out/20261106-223522-M4-device-api31g`：D316 FAIL，同样报错；`042-auth.state.json` 里 `widgets` 已经有 `widget:22`（provider `com.github.mytv.mlfixture.sky/...WeatherWidget`，`state: ok`），说明 `bindAppWidgetIdIfAllowed` 直接成功，桌面正确地没有显示授权页。
+
+### 实测（emulator-5564，api31g，API 31）
+
+D316 在 API≥24 上用来撤销授权的是 `checks3.py:498` 的：
+
+```bash
+adb -s emulator-5564 shell cmd appwidget revokebind --package com.github.mytv.launcher --user 0
+# No shell command implementation.
+```
+
+命令返回 0，但服务端没有实现，撤销不生效。`cmd appwidget` 的任何子命令在这台设备上都返回同一句。
+
+旧式命令存在、usage 完整，但同样不改 Grants：
+
+```bash
+adb -s emulator-5564 shell appwidget
+# usage: ... grantbind / revokebind ...
+adb -s emulator-5564 shell appwidget revokebind --package com.github.mytv.launcher --user 0
+adb -s emulator-5564 shell dumpsys appwidget | sed -n '/Grants:/,$p'
+# Grants:
+#   [0] user=0 package=com.github.mytv.launcher
+```
+
+用 `--user current` 时进程以 137 退出，Grants 依旧保留。卸载桌面也不清授权（工具包的 prepare/teardown 本来就会 `uninstall PKG`，卸载后 Grants 仍在）。
+
+### 结论
+
+桌面侧行为是对的：有绑定权限时直接添加，没有时才显示「用电脑授权」页。失败来自检查无法把设备恢复到“未授权”状态，因此同一台设备上第二次及以后的 D316 必然失败。
+
+### 期望行为
+
+- 工具包在 API≥24 上的撤销路径要在矩阵设备上真正生效：先试旧式 `appwidget revokebind`，失败再回退 `cmd appwidget revokebind`，并用 `dumpsys appwidget` 的 `Grants` 校验撤销结果（不能只看命令退出码）。
+- 或者由工具包在 D316 前用能真正清掉授权的方式（例如重置 AVD 的 appwidget 状态）保证检查可重复。
+
+### 状态
+
+待用户裁决。实现方未修改工具包，也没有为通过该检查改动产品代码。

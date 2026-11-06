@@ -14,6 +14,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shape
@@ -54,6 +56,14 @@ fun blurRegionCount(tier: GlassTier, quickSettingsOpen: Boolean): Int {
     return 2 + if (quickSettingsOpen) 1 else 0
 }
 
+/**
+ * 设计稿 `.glass` 的 `backdrop-filter: blur() saturate(150%)`：Haze 先按色度放大背后的画面，
+ * 再叠 tint。少了这一档，背景的彩度被压暗层稀释，玻璃看上去几乎不透色。
+ */
+private val GLASS_SATURATION: HazeColorEffect = HazeColorEffect.colorFilter(
+    ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(1.5f) }),
+)
+
 private fun styleFor(
     style: GlassStyle,
     colors: LauncherColors,
@@ -64,6 +74,7 @@ private fun styleFor(
         noiseFactor(0.12f)
         colorEffects(
             listOf(
+                GLASS_SATURATION,
                 HazeColorEffect.tint(colors.surfaceContainer.copy(alpha = chromeAlpha)),
                 HazeColorEffect.tint(colors.primary.copy(alpha = 0.06f)),
             ),
@@ -73,24 +84,40 @@ private fun styleFor(
     GlassStyle.Frame -> HazeBlurStyle {
         blurRadius(20.dp)
         noiseFactor(0.10f)
-        colorEffects(listOf(HazeColorEffect.tint(colors.surfaceContainer.copy(alpha = 0.45f))))
+        colorEffects(
+            listOf(
+                GLASS_SATURATION,
+                HazeColorEffect.tint(colors.surfaceContainer.copy(alpha = 0.45f)),
+            ),
+        )
         fallbackColorEffect(HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.94f)))
     }
     GlassStyle.Panel -> HazeBlurStyle {
         blurRadius(36.dp)
         noiseFactor(0.15f)
-        colorEffects(listOf(HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.62f))))
+        colorEffects(
+            listOf(
+                GLASS_SATURATION,
+                HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.62f)),
+            ),
+        )
         fallbackColorEffect(HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.94f)))
     }
     GlassStyle.Toast -> HazeBlurStyle {
         blurRadius(24.dp)
         noiseFactor(0.10f)
-        colorEffects(listOf(HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.70f))))
+        colorEffects(
+            listOf(
+                GLASS_SATURATION,
+                HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.70f)),
+            ),
+        )
         fallbackColorEffect(HazeColorEffect.tint(colors.surfaceContainerHigh.copy(alpha = 0.94f)))
     }
     GlassStyle.Band -> HazeBlurStyle {
         blurRadius(16.dp)
         noiseFactor(0f)
+        colorEffects(listOf(GLASS_SATURATION))
     }
 }
 

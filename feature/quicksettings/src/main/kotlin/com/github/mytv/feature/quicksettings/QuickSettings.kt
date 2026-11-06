@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,8 +49,10 @@ import com.github.mytv.core.designsystem.launcherFocusRing
 import com.github.mytv.core.glass.GlassStyle
 import com.github.mytv.core.glass.GlassSurface
 import com.github.mytv.core.glass.GlassTier
+import com.github.mytv.core.tvfocus.LocalTvFocus
 import com.github.mytv.core.tvfocus.TvFocusable
 import dev.chrisbanes.haze.HazeInput
+import kotlinx.coroutines.withTimeoutOrNull
 import com.github.mytv.core.designsystem.R as DsR
 
 data class QuickSettingsValues(
@@ -119,6 +122,19 @@ fun QuickSettingsOverlay(
     val slide = remember { Animatable(1f) }
     val slideSpec = launcherDefaultSpatialSpec<Float>()
     LaunchedEffect(Unit) { slide.animateTo(0f, slideSpec) }
+    // 面板是模态的，打开后由它接管焦点。打开瞬间节点可能还没排布完成（滑入动画与高负载下更慢），
+    // 逐帧重试到焦点落进面板为止，避免焦点留在顶栏、方向键推不动面板。
+    val focusState = LocalTvFocus.current
+    LaunchedEffect(Unit) {
+        withTimeoutOrNull(2000) {
+            while (true) {
+                val tag = focusState.current?.tag
+                if (tag != null && tag.startsWith("qs:") && focusState.isRegistered(tag)) return@withTimeoutOrNull
+                focusState.request(QUICK_SETTINGS_FIRST_FOCUS)
+                withFrameNanos { }
+            }
+        }
+    }
     val rows = quickSettingsRows(values)
     Box(
         modifier = modifier
