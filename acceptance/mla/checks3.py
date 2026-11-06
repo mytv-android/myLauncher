@@ -12,6 +12,18 @@ P = Fixtures.pkg
 RATIOS = {"16:9": 16 / 9, "3:2": 1.5, "4:3": 4 / 3, "1:1": 1.0, "2:3": 2 / 3, "movie": 1 / 1.441}
 
 
+def _stable_row(ctx, row, timeout=8.0):
+    """等频道行的节目列表连续两次读取一致（发布逐条写入时不稳定的行不能拿来选目标）。"""
+    t0, prev = time.time(), None
+    while time.time() - t0 < timeout:
+        items = ctx.row_items(ctx.L.state(), row) or []
+        if items and items == prev:
+            return items
+        prev = items
+        time.sleep(0.25)
+    return prev or []
+
+
 def _series_diag(ctx, pkg):
     """系列行缺项时的现场：桌面移除标记与 TvProvider 里的节目行。"""
     try:
@@ -278,13 +290,10 @@ def d310(ctx):
     wanted = f"prog:{pkg}:spark.jelly"
     row = f"ch:{pkg}:spark.weekly"
     need(ctx.seek_row(row), "到不了频道行")
-    # TvProvider 逐条插入节目，桌面偶尔读到发布到一半的行；每次长按前按当时行内实际节目重选目标
+    # TvProvider 逐条插入节目，桌面偶尔读到发布到一半的行；等行稳定后再选目标，失败则重发
     tag = wanted
     for attempt in range(3):
-        t0 = time.time()
-        while time.time() - t0 < 12 and wanted not in (ctx.row_items(ctx.L.state(), row) or []):
-            time.sleep(0.2)
-        items = ctx.row_items(ctx.L.state(), row) or []
+        items = _stable_row(ctx, row)
         cands = [i for i in items if i.startswith(f"prog:{pkg}:")]
         need(cands, f"频道行里没有可移除的节目：{items}")
         tag = wanted if wanted in items else cands[0]

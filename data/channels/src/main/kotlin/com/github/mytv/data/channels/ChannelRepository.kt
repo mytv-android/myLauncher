@@ -79,7 +79,7 @@ class ChannelRepository(
         val seq = rebuildSeq.incrementAndGet()
         rebuildJob?.cancel()
         rebuildJob = scope.launch {
-            delay(120)
+            delay(30)
             rebuildLock.withLock {
                 if (seq != rebuildSeq.get()) return@withLock
                 rebuild(seq)
@@ -420,6 +420,10 @@ class ChannelRepository(
     fun removeProgram(pkg: String, internalId: String) {
         if (internalId.isEmpty()) return
         prefs.edit().putBoolean("r|$pkg|$internalId", true).apply()
+        // 先从内存里拿掉，界面立即少一项；随后的重建再与 TvProvider 对齐
+        _programs.value = _programs.value.mapValues { (_, list) ->
+            list.filterNot { it.packageName == pkg && it.internalId == internalId }
+        }
         if (SeriesTrust.isTrusted(context, pkg)) series.hide(pkg, internalId)
         refresh()
     }

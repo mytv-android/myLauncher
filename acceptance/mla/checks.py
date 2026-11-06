@@ -184,27 +184,40 @@ class Ctx:
         return self.L.seek_state(lambda st: (st.get("focus") or {}).get("rowId") == rid, ("DOWN", "UP"), max_steps)
 
 
-def seek_grid(ctx, tag, rows=8, cols=8):
-    """在应用页网格里蛇形找焦点：先沿一行 RIGHT，再 DOWN 换行（四方向 seek 只能走 L 形）。"""
-    st = ctx.L.state()
-    if ctx.L.focus(st) == tag:
-        return True
-    for _ in range(rows):
-        for _ in range(cols):
-            before = ctx.L.focus()
-            ctx.L.press("RIGHT", settle=False)
-            st = ctx.L.settle(0.8)
-            if ctx.L.focus(st) == tag:
-                return True
-            if ctx.L.focus(st) == before:
-                break
-        before = ctx.L.focus()
-        ctx.L.press("DOWN")
-        st = ctx.L.settle()
-        if ctx.L.focus(st) == tag:
-            return True
-        if ctx.L.focus(st) == before:
+def seek_grid_bounds(ctx, tag, attempts=3):
+    """按无障碍树里的磁贴位置走焦点：网格的焦点顺序不一定是蛇形，按坐标移动更稳。"""
+    for _ in range(attempts):
+        tree = ctx.dev.dump()
+        by = {n.rid: n for n in tree.nodes if (n.rid or "").startswith("app:")}
+        tgt = by.get(tag)
+        if tgt is None:
             return False
+        for _ in range(24):
+            cur = ctx.L.focus()
+            if cur == tag:
+                return True
+            n = by.get(cur)
+            if n is None:
+                break
+            ty = (tgt.bounds[1] + tgt.bounds[3]) / 2
+            cy = (n.bounds[1] + n.bounds[3]) / 2
+            tx = (tgt.bounds[0] + tgt.bounds[2]) / 2
+            cx = (n.bounds[0] + n.bounds[2]) / 2
+            if abs(ty - cy) > 10:
+                d = "DOWN" if ty > cy else "UP"
+            elif abs(tx - cx) > 10:
+                d = "RIGHT" if tx > cx else "LEFT"
+            else:
+                break
+            before = cur
+            ctx.L.press(d, settle=False)
+            st = ctx.L.settle(0.8)
+            if ctx.L.focus(st) == before:
+                alt = "RIGHT" if d in ("UP", "DOWN") else "DOWN"
+                ctx.L.press(alt, settle=False)
+                ctx.L.settle(0.8)
+        ctx.dev.key("HOME", wait=0.6)
+        apps_page(ctx)
     return False
 
 
@@ -728,12 +741,13 @@ def d201(ctx):
 
 @check("D202", "低彩度来源（灰色图标）不改变全局主题", "M2")
 def d202(ctx):
-    ctx.F.install("dolphin", "files")
+    ctx.F.install(*PROTO_APPS)
     ctx.home()
     # 应用行的前 10 个会被真实应用挤占；应用页列出全部夹具，先做彩色应用的正向对照
     apps_page(ctx)
-    colorful, gray = ctx.app_tag("dolphin"), ctx.app_tag("files")
-    need(seek_grid(ctx, colorful), "应用页找不到 dolphin")
+    gray = ctx.app_tag("files")
+    colorful = ctx.app_tag("dolphin")
+    need(seek_grid_bounds(ctx, colorful), "应用页找不到 dolphin")
     t0, source = time.time(), ""
     while time.time() - t0 < 3:
         source = ((ctx.L.state().get("theme") or {}).get("sourceKey") or "")
@@ -741,8 +755,8 @@ def d202(ctx):
             break
         time.sleep(0.1)
     need("mlfixture.dolphin" in source, f"彩色应用没有成为主题来源：{source}")
-    apps_page(ctx)   # 重新从网格左上角开始，蛇形只能向右/向下
-    need(seek_grid(ctx, gray), "应用页找不到 files")
+    apps_page(ctx)
+    need(seek_grid_bounds(ctx, gray), "应用页找不到 files")
     time.sleep(0.2)
     at_focus = ctx.L.state()
     transitions = (at_focus.get("counters") or {}).get("themeTransitions", 0)
@@ -757,7 +771,7 @@ def d202(ctx):
 
 @check("D203", "对比度：onPrimary/primary ≥ 4.5，onSurface/surface ≥ 7，焦点环/surface ≥ 3（三个对比度级别）", "M2")
 def d203(ctx):
-    ctx.F.install("dolphin", "prism")
+    ctx.F.install(*PROTO_APPS)
     msgs = []
     for lvl in ("0", "0.5", "1"):
         ctx.L.pref("contrast", lvl)

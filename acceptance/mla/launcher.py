@@ -281,6 +281,8 @@ class Fixtures:
             if not ok:
                 raise CheckFailed(f"夹具 {fid} 安装失败：{msg}")
             self.installed.add(fid)
+        # 并发安装完成得很快，给桌面处理包广播留一点时间，否则紧接着的应用页导航可能读到旧列表
+        time.sleep(0.4)
 
     def uninstall(self, *fids):
         for f in fids:
