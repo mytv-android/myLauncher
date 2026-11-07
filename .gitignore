@@ -10,6 +10,10 @@ captures/
 .cxx/
 *.apk.idsig
 
+# 签名材料：CI 由 secrets 生成，不入库
+signing.properties
+keystore.jks
+
 # 验收产物与 Python 缓存（AGENTS.md 硬规则 9）
 acceptance/out/
 __pycache__/

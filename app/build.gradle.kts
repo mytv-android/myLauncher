@@ -1,7 +1,23 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+val keystorePropertiesFile = rootProject.file("signing.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+val localKeystore = rootProject.file("keystore.jks")
+val userKeystore = project.file(
+    System.getenv("KEYSTORE") ?: keystoreProperties.getProperty("storeFile")
+        ?: "keystore.jks"
+)
+val hasReleaseKeystore = userKeystore.exists() || localKeystore.exists()
 
 android {
     namespace = "com.github.mytv.launcher"
@@ -11,7 +27,7 @@ android {
         applicationId = "com.github.mytv.launcher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
+        versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
         versionName = "0.1.0"
     }
 
@@ -34,10 +50,24 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = if (userKeystore.exists()) userKeystore else localKeystore
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: keystoreProperties.getProperty("storePassword")
+            keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
+            keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

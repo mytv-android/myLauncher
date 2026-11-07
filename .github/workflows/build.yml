@@ -1,0 +1,97 @@
+name: Build
+
+on:
+  push:
+    branches: [main, m4, m5]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | head -1)
+          fi
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-37.0" "build-tools;36.0.0" "build-tools;36.1.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x ./gradlew && ./gradlew test
+
+  release:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | head -1)
+          fi
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-37.0" "build-tools;36.0.0" "build-tools;36.1.0"
+      - name: Add signing properties
+        run: |
+          echo ${{ secrets.SIGNING_PROPERTIES }} > encoded_signing_properties
+          base64 -d -i encoded_signing_properties > signing.properties
+      - name: Add jks file
+        run: |
+          echo ${{ secrets.SIGN_KEY }} > ./encoded_key
+          base64 -d -i encoded_key > keystore.jks
+      - name: Build release
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: chmod +x ./gradlew && ./gradlew assembleStandardRelease --no-daemon --max-workers=1 -Porg.gradle.jvmargs=-Xmx3g
+      - name: Prepare release assets
+        id: apk
+        run: |
+          metadata=$(find app/build/outputs/apk/standard/release -name output-metadata.json | head -1)
+          version=$(jq -r '.elements[0].versionName' "$metadata")
+          code=$(jq -r '.elements[0].versionCode' "$metadata")
+          # versionName 固定为 0.1.0，标签带上 versionCode（运行号），每次构建的发布互不覆盖
+          tag="v${version}.${code}"
+          mkdir -p dist
+          find app/build/outputs/apk/standard/release -name '*.apk' -exec cp {} dist/ \;
+          apk=$(find dist -name '*.apk' | head -1)
+          apk_name=$(basename "$apk")
+          sha=$(sha256sum "$apk" | awk '{print $1}')
+          size=$(stat -c%s "$apk")
+          note=$(git log -1 --pretty=%s)
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${apk_name}"
+          # 桌面设置的「更新」页读取该文件（CONTRACT §9）
+          jq -n \
+            --argjson versionCode "$code" \
+            --arg versionName "$version" \
+            --arg url "$url" \
+            --argjson size "$size" \
+            --arg sha "$sha" \
+            --arg note "$note" \
+            '{versionCode:$versionCode,versionName:$versionName,minSdk:23,url:$url,size:$size,sha256:$sha,dm:null,notes:[{versionCode:$versionCode,text:$note}]}' > dist/update.json
+          echo "$sha  $apk_name" > dist/update.apk.sha256
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.apk.outputs.tag }}
+          name: myLauncher ${{ steps.apk.outputs.version }} (${{ steps.apk.outputs.code }})
+          body: Android 6.0+ 通用安装包。versionCode ${{ steps.apk.outputs.code }}。应用内更新会读取 update.json 并校验 SHA-256 与签名。
+          files: |
+            dist/*.apk
+            dist/update.json
+            dist/update.apk.sha256
+          prerelease: ${{ github.ref_name != 'main' }}
+          make_latest: ${{ github.ref_name == 'main' && 'true' || 'false' }}
