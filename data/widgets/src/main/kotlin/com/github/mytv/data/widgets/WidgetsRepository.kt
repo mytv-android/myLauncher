@@ -77,6 +77,12 @@ class WidgetsRepository(context: Context) {
         override fun onReceive(context: Context?, intent: Intent?) {
             refreshProviders()
             refreshBindingStates()
+            // 卸载广播到达时 AppWidget 服务可能还没把 provider 摘掉，当场对账会误判为 ok，
+            // 之后又没有别的触发点。稍后再对账一次，让失效占位稳定出现。
+            mainHandler.postDelayed({
+                refreshProviders()
+                refreshBindingStates()
+            }, PACKAGE_SETTLE_MS)
         }
     }
 
@@ -554,5 +560,8 @@ class WidgetsRepository(context: Context) {
         const val GRID_COLUMNS = 4
         const val GRID_ROWS = 3
         const val CELL_DP = 70
+
+        /** 包变更广播之后，等系统把 provider 状态改完再对账一次。 */
+        private const val PACKAGE_SETTLE_MS = 900L
     }
 }
