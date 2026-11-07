@@ -12,17 +12,20 @@
 
 ## 方案
 
-1. `app/build.gradle.kts`：`targetSdk = 37`（standard / oem 共用 defaultConfig）。
-2. 清单声明 `android.permission.ACCESS_LOCAL_NETWORK`（属 `NEARBY_DEVICES` 权限组；用户给过蓝牙等同组权限时不再弹窗）。
-3. 新增 `LocalNetworkAccess`（`feature:phone-organizer`）：
+SDK 级别按用户 2026-11-07 的要求统一为「minSdk 23，其余全部 37」：
+
+1. `app/build.gradle.kts`：`targetSdk = 37`（standard / oem 共用 defaultConfig）。主工程其余模块本就 `compileSdk = 37`、`minSdk = 23`，不动。
+2. `spikes/app/build.gradle.kts`（M0 的独立验证工程，不进主工程 `settings.gradle.kts`）：`targetSdk` 一并改为 37。`docs/m0/evidence/item07-material3.md` 里「targetSdk 36」是 M0 当时的测量记录，不回改。
+3. 清单声明 `android.permission.ACCESS_LOCAL_NETWORK`（属 `NEARBY_DEVICES` 权限组；用户给过蓝牙等同组权限时不再弹窗）。
+4. 新增 `LocalNetworkAccess`（`feature:phone-organizer`）：
    - `isEnforced(sdkInt)`：`sdkInt >= 37` 才执行限制；
    - `isGranted(context, sdkInt)`：未执行限制时视为已授予；
    - `shouldRequest(context, sdkInt)`：仅在「系统 37+ 且未授予」时为真。
-4. `MainActivity` 用 `ActivityResultContracts.RequestPermission()` 申请，两个调用点：
+5. `MainActivity` 用 `ActivityResultContracts.RequestPermission()` 申请，两个调用点：
    - `LauncherModel.openOrganizerFrom()`（快速设置「传文件」与桌面设置两个入口）经 `localNetworkRequester` 钩子触发；
    - `onResume()` 时若当前页是 organizer 再检查一次，覆盖在系统设置里撤销权限后回到页面的情况。
    页面打开与申请同时进行：服务照常启动，权限按 UID 生效，已在监听的 socket 在授予后立刻恢复可达，不需要重启服务。
-5. 不新增界面文字。权限弹窗是系统文案；拒绝后页面表现与「连不上」时一致，不额外解释。解释性文字受 `acceptance/spec/ui_copy.json` 白名单约束（AGENTS.md 硬规则 4），工具包已冻结，本次既不加文字也不改工具包。
+6. 不新增界面文字。权限弹窗是系统文案；拒绝后页面表现与「连不上」时一致，不额外解释。解释性文字受 `acceptance/spec/ui_copy.json` 白名单约束（AGENTS.md 硬规则 4），工具包已冻结，本次既不加文字也不改工具包。
 
 ## 不采用
 
