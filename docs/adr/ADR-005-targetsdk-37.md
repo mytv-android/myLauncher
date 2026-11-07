@@ -60,3 +60,17 @@ SDK 级别按用户 2026-11-07 的要求统一为「minSdk 23，其余全部 37�
 - `adb shell dumpsys package com.github.mytv.launcher | grep ACCESS_LOCAL_NETWORK` 看授予状态。
 - API 37 设备：打开「手机与电脑」，从另一台同局域网设备访问 `<地址>:<端口>` 能出页面；在系统设置里撤销权限后重新访问应回到超时，回到电视页面应再次弹窗。
 - API 36 设备（矩阵 api36）：不出现权限弹窗，`adb forward` 访问服务照旧。
+
+### 已做的自查（2026-11-07，非正式验收）
+
+```
+python acceptance/run.py accept M4 --devices api28 --only D406,D408
+```
+
+结论「通过」，18 项 PASS、0 FAIL：
+
+- 静态 S01–S17 全 PASS，其中 S02 从源码构建 standardDebug 与 standardRelease 均成功（146 秒，release 走 R8）；
+- 设备侧 `D406`（手机与电脑：Host 校验、连接经电视确认、令牌一次性、离开即停止）、`D408`（自己的视频：流式上传、非视频拒绝、Content-Length 预检）、`D199`（界面文案白名单）PASS；
+- api28 用时 101 秒。报告：`acceptance/out/20261107-180618-M4-dev/`。
+
+矩阵里没有 API 37 设备，权限弹窗与授予 / 拒绝 / 撤销后重弹仍待真机确认。
