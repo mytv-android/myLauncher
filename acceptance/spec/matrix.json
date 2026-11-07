@@ -1,7 +1,7 @@
 {
  "_note": "使用本机已有的 AVD；验收不擦除数据，只安装/卸载桌面与 com.github.mytv.mlfixture.* 并在结束后恢复原默认桌面。可改用自己新建的 AVD，改这里即可（会改变工具包哈希，需重新冻结）。",
- "deviceBudgetSeconds": 600,
- "instancesPerDevice": 3,
+ "deviceBudgetSeconds": 1800,
+ "instancesPerDevice": 1,
  "devices": {
   "api23": {
    "avd": "Television_720p_2",
