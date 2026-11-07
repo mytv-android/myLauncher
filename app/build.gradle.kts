@@ -26,7 +26,7 @@ android {
     defaultConfig {
         applicationId = "com.github.mytv.launcher"
         minSdk = 23
-        targetSdk = 36
+        targetSdk = 37
         versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
         versionName = "0.1.0"
     }

@@ -258,6 +258,9 @@ class LauncherModel(context: Context) {
         private set
     var overlay by mutableStateOf<String?>(null)
         private set
+
+    /** Set by the host Activity: asks for ACCESS_LOCAL_NETWORK when the organizer page opens. */
+    var localNetworkRequester: (() -> Unit)? = null
     var apps by mutableStateOf<List<AppEntry>>(emptyList())
         private set
     var continueItems by mutableStateOf<List<WatchNextEntry>>(emptyList())
@@ -1072,6 +1075,7 @@ class LauncherModel(context: Context) {
         organizerOrigin = origin
         overlay = null
         page = "organizer"
+        localNetworkRequester?.invoke()
         organizerServer.onPageOpened()
         focusLater("organizer:target")
     }

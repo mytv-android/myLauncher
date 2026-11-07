@@ -9,14 +9,17 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.FrameMetrics
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import com.github.mytv.core.designsystem.MyLauncherTheme
+import com.github.mytv.feature.organizer.LocalNetworkAccess
 
 class MainActivity : ComponentActivity() {
     private lateinit var model: LauncherModel
@@ -27,6 +30,23 @@ class MainActivity : ComponentActivity() {
     private var frameCount = 0
     private var frameWindowStart = 0L
     private var downgradeNoticeShown = false
+    private val localNetworkPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            Log.i("MainActivity", "ACCESS_LOCAL_NETWORK granted=$granted")
+        }
+
+    /**
+     * Android 17 blocks the transfer server's LAN sockets without
+     * ACCESS_LOCAL_NETWORK (ADR-005). Asked when the page the user is looking at
+     * needs it; the server keeps running either way — the grant is per UID and
+     * already listening sockets become reachable again.
+     */
+    private fun requestLocalNetworkAccess() {
+        if (LocalNetworkAccess.shouldRequest(this)) {
+            localNetworkPermission.launch(LocalNetworkAccess.PERMISSION)
+        }
+    }
+
     private val homeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_CLOSE_SYSTEM_DIALOGS &&
@@ -50,6 +70,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         createdAt = SystemClock.elapsedRealtime()
         model = LauncherModel(this)
+        model.localNetworkRequester = { requestLocalNetworkAccess() }
         val homeFilter = IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
         if (Build.VERSION.SDK_INT >= 33) {
             registerReceiver(homeReceiver, homeFilter, Context.RECEIVER_NOT_EXPORTED)
@@ -149,6 +170,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         model.onHostResumed()
         model.refresh()
+        if (model.page == "organizer") requestLocalNetworkAccess()
     }
 
     override fun onPause() {
