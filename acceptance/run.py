@@ -172,7 +172,9 @@ def guard_tv(dev: Device):
 
 def apk_cert(apk) -> str:
     rc, out, err = run([str(APKSIGNER), "verify", "--print-certs", str(apk)], timeout=120)
-    m = re.search(r"Signer #1 certificate SHA-256 digest: ([0-9a-f]{64})", out)
+    # build-tools 37 起输出改成 "V2 Signer: certificate SHA-256 digest:"，旧版本是
+    # "Signer #1 certificate SHA-256 digest:"，两种都要认。
+    m = re.search(r"(?:Signer #\d+ |V\d+ Signer: )certificate SHA-256 digest: ([0-9a-f]{64})", out)
     return m.group(1) if m else ""
 
 
