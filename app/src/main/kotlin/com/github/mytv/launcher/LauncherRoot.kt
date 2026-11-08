@@ -43,6 +43,7 @@ import com.github.mytv.feature.home.MenuAction
 import com.github.mytv.feature.home.MenuOverlay
 import com.github.mytv.feature.home.PickerOverlay
 import com.github.mytv.feature.organizer.ConfirmPhoneOverlay
+import com.github.mytv.feature.organizer.InstallCardOverlay
 import com.github.mytv.feature.organizer.PhoneOrganizerScreen
 import com.github.mytv.feature.quicksettings.QUICK_SETTINGS_FIRST_FOCUS
 import com.github.mytv.feature.quicksettings.QuickSettingsOverlay
@@ -635,6 +636,19 @@ fun LauncherRoot(model: LauncherModel) {
                 device = model.organizerState.pendingConnection?.device ?: "",
                 onAllow = { model.decideOrganizerConnection(true) },
                 onDeny = { model.decideOrganizerConnection(false) },
+            )
+        }
+
+        if (model.page == "organizer" && model.installCard.state != "idle") {
+            InstallCardOverlay(
+                state = model.installCard,
+                errorText = model.installErrorText(),
+                onInstall = model::installPrepared,
+                onCancel = model::cancelInstall,
+                onOpen = model::openInstalledApp,
+                onDone = model::dismissInstall,
+                onSettings = { model.openInstallSettings() },
+                settingsCommand = model.installSettingsCommand(),
             )
         }
 

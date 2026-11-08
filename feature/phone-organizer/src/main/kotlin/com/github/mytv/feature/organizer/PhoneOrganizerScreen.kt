@@ -762,6 +762,7 @@ fun InstallCardOverlay(
     onOpen: () -> Unit,
     onDone: () -> Unit,
     onSettings: () -> Unit,
+    settingsCommand: String? = null,
     modifier: Modifier = Modifier,
 ) {
     if (state.state == "idle") return
@@ -812,7 +813,16 @@ fun InstallCardOverlay(
                         OverlayButton("install:cancel", stringResource(R.string.organizer_cancel), onCancel)
                     }
                     "blocked" -> {
-                        OverlayButton("install:settings", stringResource(R.string.organizer_settings), onSettings)
+                        // 没有设置页可跳转时，设计稿 §14 给出 ADB 命令作为最后出路
+                        if (settingsCommand == null) {
+                            OverlayButton("install:settings", stringResource(R.string.organizer_settings), onSettings)
+                        } else {
+                            Text(
+                                text = settingsCommand,
+                                color = colors.onSurface.copy(alpha = 0.6f),
+                                fontSize = 13.sp,
+                            )
+                        }
                         OverlayButton("install:cancel", stringResource(R.string.organizer_cancel), onCancel)
                     }
                     "pending_user" -> {

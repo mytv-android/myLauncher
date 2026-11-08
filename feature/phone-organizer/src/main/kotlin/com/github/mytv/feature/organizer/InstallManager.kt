@@ -39,11 +39,17 @@ import kotlinx.coroutines.flow.asStateFlow
  * goes through the system confirmation UI: API 31+ sets
  * `USER_ACTION_REQUIRED`, and `STATUS_PENDING_USER_ACTION` is launched from the
  * foreground.
+ *
+ * Whether the install is *allowed* is never decided here: `canRequestPackageInstalls()`
+ * returns false on firmwares whose installer works fine, which used to dead-end the
+ * whole flow. Only a `SecurityException` from the session, or
+ * `STATUS_FAILURE_BLOCKED`, counts as a real denial (ADR-006).
  */
 class InstallManager(private val context: Context) {
     companion object {
         private const val RESULT_ACTION = "com.github.mytv.feature.organizer.INSTALL_RESULT"
         private const val UNIQUE_INTENT_BASE = 0x4d4c41
+        private const val MAX_SETTINGS_ATTEMPTS = 2
         val ARCHIVE_SUFFIXES = setOf("apks", "apkm", "xapk")
     }
 
@@ -53,6 +59,7 @@ class InstallManager(private val context: Context) {
     private var prepared: PreparedInstall? = null
     private var deleteSourceOnSuccess = false
     private var receiver: BroadcastReceiver? = null
+    private var settingsAttempts = 0
     private val device = object : DeviceFacts {
         override val supportedAbis: List<String> = Build.SUPPORTED_ABIS.toList()
         override val densityDpi: Int = context.resources.displayMetrics.densityDpi
@@ -63,25 +70,70 @@ class InstallManager(private val context: Context) {
     }
     private val selector = SplitSelector(device, metadata = PmMetadataReader())
 
-    fun canRequestInstalls(): Boolean {
-        if (Build.VERSION.SDK_INT >= 26) return context.packageManager.canRequestPackageInstalls()
+    /**
+     * Every known entry point for the "install unknown apps" switch, most specific
+     * first. API 23–25 has no per-app page, only the global security settings.
+     */
+    fun unknownSourcesIntents(): List<Intent> {
+        val intents = ArrayList<Intent>()
+        if (Build.VERSION.SDK_INT >= 26) {
+            val pkg = context.packageName
+            intents += Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:$pkg"),
+            )
+            intents += Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+            intents += Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:$pkg"),
+            )
+        }
+        intents += Intent(Settings.ACTION_SECURITY_SETTINGS)
+        return intents.filter { it.resolveActivity(context.packageManager) != null }
+    }
+
+    fun unknownSourcesIntent(): Intent? = unknownSourcesIntents().firstOrNull()
+
+    /**
+     * ADB command to flip the switch by hand. Null while a settings page is still
+     * worth trying; shown when no page resolves, or when the attempt cap is spent
+     * and the page did not help (设计稿 §14).
+     */
+    fun unknownSourcesCommand(): String? {
+        if (settingsAttempts < MAX_SETTINGS_ATTEMPTS && unknownSourcesIntent() != null) return null
+        return if (Build.VERSION.SDK_INT >= 26) {
+            context.getString(R.string.organizer_unknown_sources_command)
+        } else {
+            context.getString(R.string.organizer_legacy_sources_command)
+        }
+    }
+
+    /**
+     * Opens the "install unknown apps" page. Returns false when no entry point
+     * resolves or the attempt cap is reached, so the caller can fall back to the
+     * manual path instead of bouncing the user between here and the foreground.
+     */
+    fun openUnknownSourcesSettings(): Boolean {
+        if (settingsAttempts >= MAX_SETTINGS_ATTEMPTS) return false
+        val intent = unknownSourcesIntent() ?: return false
         return try {
-            Settings.Secure.getInt(context.contentResolver, Settings.Secure.INSTALL_NON_MARKET_APPS) != 0
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            settingsAttempts++
+            true
         } catch (_: Exception) {
             false
         }
     }
 
-    fun unknownSourcesIntent(): Intent? {
-        if (Build.VERSION.SDK_INT >= 26) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                Uri.parse("package:${context.packageName}"),
-            )
-            if (intent.resolveActivity(context.packageManager) != null) return intent
-        }
-        val security = Intent(Settings.ACTION_SECURITY_SETTINGS)
-        return if (security.resolveActivity(context.packageManager) != null) security else null
+    /**
+     * Retries a prepared install once the host is back in the foreground: the user
+     * may have just flipped the switch in the settings page.
+     */
+    fun retryAfterSettings(): Boolean {
+        if (settingsAttempts <= 0) return false
+        val state = _state.value.state
+        if (state != "blocked" && state != "ready") return false
+        return install()
     }
 
     /** Validates [file] and exposes an install card in ready / blocked state. */
@@ -104,11 +156,13 @@ class InstallManager(private val context: Context) {
             is PreparedResult.Blocked -> fail(result.error)
             is PreparedResult.Ready -> {
                 prepared = result.install
+                // 不预判安装授权：授权是否真的缺失由 createSession / commit 的结果回答
+                // （ADR-006）。这里只呈现真实校验的结果。
                 val state = InstallCardState(
-                    state = if (canRequestInstalls()) "ready" else "blocked",
+                    state = "ready",
                     packageName = result.install.packageName,
                     versionCode = result.install.versionCode,
-                    error = if (canRequestInstalls()) null else "unknown_sources",
+                    error = null,
                     apkPath = file.absolutePath,
                 )
                 _state.value = state
@@ -120,10 +174,6 @@ class InstallManager(private val context: Context) {
     /** Opens the system confirmation path; must be called from the foreground. */
     fun install(): Boolean {
         val install = prepared ?: return false
-        if (!canRequestInstalls()) {
-            _state.value = _state.value.copy(state = "blocked", error = "unknown_sources")
-            return false
-        }
         return try {
             installObbs(install)
             val installer = context.packageManager.packageInstaller
@@ -150,7 +200,12 @@ class InstallManager(private val context: Context) {
             }
             registerResultReceiver()
             _state.value = _state.value.copy(state = "installing", error = null)
+            settingsAttempts = 0
             true
+        } catch (e: SecurityException) {
+            // 真的缺授权（会话被系统拒绝），不是 ROM 的误判——转去设置页或 ADB 命令
+            _state.value = _state.value.copy(state = "blocked", error = "unknown_sources")
+            false
         } catch (e: Exception) {
             _state.value = _state.value.copy(state = "failed", error = "unreadable")
             false
@@ -482,6 +537,7 @@ class InstallManager(private val context: Context) {
     }
 
     private fun mapStatus(status: Int, message: String?): String = when (status) {
+        PackageInstaller.STATUS_FAILURE_BLOCKED -> "unknown_sources"
         PackageInstaller.STATUS_FAILURE_CONFLICT -> "signature"
         PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> "abi"
         PackageInstaller.STATUS_FAILURE_INVALID -> "unreadable"
@@ -500,11 +556,13 @@ class InstallManager(private val context: Context) {
 
     private fun releasePrepared() {
         prepared = null
+        settingsAttempts = 0
         unregisterResultReceiver()
     }
 
     private fun finishPrepared() {
         unregisterResultReceiver()
+        settingsAttempts = 0
         val install = prepared
         if (deleteSourceOnSuccess && install != null) {
             install.source.delete()

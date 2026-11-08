@@ -117,4 +117,6 @@
     <string name="organizer_delete_count">删除 %1$d 项？</string>
     <string name="organizer_conflict_count">已有 %1$d 个同名文件</string>
     <string name="organizer_grant_command">adb shell appwidget grantbind --package com.github.mytv.launcher --user current</string>
+    <string name="organizer_unknown_sources_command">adb shell appops set com.github.mytv.launcher REQUEST_INSTALL_PACKAGES allow</string>
+    <string name="organizer_legacy_sources_command">adb shell settings put secure install_non_market_apps 1</string>
 </resources>

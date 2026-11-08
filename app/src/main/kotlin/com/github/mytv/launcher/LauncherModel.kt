@@ -320,6 +320,8 @@ class LauncherModel(context: Context) {
         private set
     var organizerState by mutableStateOf(organizerServer.state.value)
         private set
+    var installCard by mutableStateOf(organizerServer.installManager.state.value)
+        private set
     var widgetsUiState by mutableStateOf(WidgetsUiState())
         private set
     private var widgetColorJob: Job? = null
@@ -473,6 +475,8 @@ class LauncherModel(context: Context) {
 
     fun onHostResumed() {
         hostResumed = true
+        // 用户可能刚在「安装未知应用」页面里打开了开关，回来无条件重试一次
+        organizerServer.installManager.retryAfterSettings()
     }
 
     fun onHostPaused() {
@@ -617,6 +621,18 @@ class LauncherModel(context: Context) {
                     overlayReturnTag = null
                     focusLater(back ?: "organizer:target")
                 }
+            }
+        }
+        scope.launch {
+            // 安装卡出现时把焦点交给它，否则遥控器焦点还留在页面背后
+            var actionable = false
+            organizerServer.installManager.state.collect { state ->
+                installCard = state
+                val ready = state.state == "ready" || state.state == "blocked"
+                if (ready && !actionable && page == "organizer") {
+                    focusLater(if (state.state == "ready") "install:ok" else "install:cancel")
+                }
+                actionable = ready
             }
         }
         StateHub.organizerProvider = { organizerServer.organizerJson() }
@@ -1125,6 +1141,34 @@ class LauncherModel(context: Context) {
             }
         }
     }
+
+    fun installPrepared() {
+        organizerServer.installManager.install()
+    }
+
+    fun cancelInstall() {
+        organizerServer.installManager.cancel()
+    }
+
+    fun dismissInstall() {
+        organizerServer.installManager.clear()
+        if (page == "organizer") focusLater("organizer:target")
+    }
+
+    fun openInstalledApp() {
+        organizerServer.installManager.openInstalled()
+    }
+
+    fun installErrorText(): String =
+        organizerServer.installManager.errorText(installCard.error)
+
+    /** 没有「安装未知应用」设置页时的 ADB 命令；有设置页时为 null。 */
+    fun installSettingsCommand(): String? =
+        organizerServer.installManager.unknownSourcesCommand()
+
+    /** 打开「安装未知应用」页面；达到尝试上限或没有处理者时返回 false。 */
+    fun openInstallSettings(): Boolean =
+        organizerServer.installManager.openUnknownSourcesSettings()
 
     private fun closeOrganizer() {
         if (page == "organizer") {

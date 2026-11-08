@@ -1770,7 +1770,9 @@ class PhoneOrganizerServer(
                     }
                 }
             }
-            "failed", "blocked" -> {
+            // "blocked" 不终结传输：用户还能在安装卡里打开「安装未知应用」页面再试，
+            // 现在就标失败会让成功的安装也留着一条错误记录。
+            "failed" -> {
                 val pending = synchronized(transfers) {
                     transfers.values
                         .filter { it.action == TransferAction.INSTALL && it.state == TransferState.PENDING }
